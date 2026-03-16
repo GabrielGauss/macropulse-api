@@ -706,6 +706,26 @@
 <!-- REGIME CHART -->
 <div class="chart-section">
   <div class="container">
+    <!-- Current regime status bar -->
+    <div id="chart-current-state" style="display:none;margin-bottom:1.25rem;padding:0.875rem 1.25rem;border-radius:8px;border:1px solid;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <div id="ccs-dot" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;"></div>
+        <div>
+          <div id="ccs-regime" style="font-size:0.95rem;font-weight:700;letter-spacing:-0.01em;"></div>
+          <div id="ccs-sub" style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.35);margin-top:0.1rem;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:1.5rem;">
+        <div style="text-align:right;">
+          <div id="ccs-score" style="font-size:1.1rem;font-weight:600;font-family:'JetBrains Mono',monospace;"></div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.25);">Risk Score</div>
+        </div>
+        <div style="text-align:right;">
+          <div id="ccs-exposure" style="font-size:1.1rem;font-weight:600;font-family:'JetBrains Mono',monospace;"></div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.25);">Eq. Exposure</div>
+        </div>
+      </div>
+    </div>
     <div class="chart-header">
       <div class="chart-title-group">
         <span class="chart-title">Macro regime history</span>
@@ -1328,6 +1348,29 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         daysEl.textContent = payload.stats.total_days + '+';
       }
 
+      // Update current state bar above chart
+      if (_chartData.length) {
+        const latest = _chartData[_chartData.length - 1];
+        const color = REGIME_COLORS[latest.regime] || '#888';
+        const label = REGIME_LABELS[latest.regime] || latest.regime;
+        const exposure = { expansion:'100%', recovery:'75%', tightening:'25%', risk_off:'0%' }[latest.regime] || '—';
+        const ccs = document.getElementById('chart-current-state');
+        if (ccs) {
+          ccs.style.display = 'flex';
+          ccs.style.borderColor = color + '33';
+          ccs.style.background = color + '0d';
+          document.getElementById('ccs-dot').style.background = color;
+          document.getElementById('ccs-regime').style.color = color;
+          document.getElementById('ccs-regime').textContent = label;
+          document.getElementById('ccs-sub').textContent = `As of ${latest.date}`;
+          const score = latest.risk_score;
+          document.getElementById('ccs-score').style.color = score >= 0 ? '#22c55e' : '#ef4444';
+          document.getElementById('ccs-score').textContent = (score >= 0 ? '+' : '') + score;
+          document.getElementById('ccs-exposure').style.color = color;
+          document.getElementById('ccs-exposure').textContent = exposure;
+        }
+      }
+
       // Update hero status line
       if (_chartData.length) {
         const latest = _chartData[_chartData.length - 1];
@@ -1432,6 +1475,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           },
           y: {
             position: 'right',
+            title: { display: true, text: 'risk score', color: 'rgba(255,255,255,0.15)', font: { family: "'JetBrains Mono', monospace", size: 9 } },
             ticks: { color: 'rgba(255,255,255,0.2)', font: { family: "'JetBrains Mono', monospace", size: 10 } },
             grid: { color: 'rgba(255,255,255,0.04)' },
             border: { color: 'rgba(255,255,255,0.08)' },
