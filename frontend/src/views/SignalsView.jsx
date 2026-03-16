@@ -74,12 +74,27 @@ function SignalDocRow({ doc, value }) {
   );
 }
 
+function SignalMetaCard({ label, value, unit }) {
+  return (
+    <div className="card p-4">
+      <div className="label mb-1">{label}</div>
+      <div className="font-mono text-[13px] font-semibold text-white/80">
+        {value != null ? value : '—'}
+        {unit && <span className="text-[10px] text-white/25 ml-1">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function SignalsView() {
   const fetchScorecard = useCallback(() => api.getScorecard(), []);
   const fetchRegime    = useCallback(() => api.getCurrentRegime(), []);
+  const fetchSignals   = useCallback(() => api.getSignals(), []);
   const scorecard = useFetch(fetchScorecard);
   const regime    = useFetch(fetchRegime);
+  const signals   = useFetch(fetchSignals);
   const sc = scorecard.data;
+  const sd = signals.data;
 
   return (
     <div className="space-y-4">
@@ -87,6 +102,43 @@ export default function SignalsView() {
         <h2 className="text-[13px] font-semibold tracking-tight">Macro Signals</h2>
         <span className="text-[10px] text-white/25 font-mono">z-score · 252d normalization</span>
       </div>
+
+      {/* Full signal package — shown when key is present */}
+      {sd && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <SignalMetaCard
+            label="Regime Confidence"
+            value={sd.regime?.confidence != null ? (sd.regime.confidence * 100).toFixed(1) : null}
+            unit="%"
+          />
+          <SignalMetaCard
+            label="Net Liquidity Z-Score"
+            value={sd.net_liquidity?.zscore != null ? (sd.net_liquidity.zscore >= 0 ? '+' : '') + sd.net_liquidity.zscore.toFixed(2) : null}
+          />
+          <SignalMetaCard
+            label="Data Vintage"
+            value={sd.model_metadata?.data_vintage ?? null}
+          />
+        </div>
+      )}
+
+      {/* Callout when signals fetch fails (likely 403 — no key) */}
+      {signals.error && (
+        <div
+          className="rounded-lg border px-4 py-3 text-[11px] font-mono"
+          style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)' }}
+        >
+          Full signal package requires a paid API key.{' '}
+          <a
+            href="https://macropulse.live/#register"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}
+          >
+            Get one →
+          </a>
+        </div>
+      )}
 
       {/* Top: gauges + heatmap */}
       <div className="grid gap-4 lg:grid-cols-2">

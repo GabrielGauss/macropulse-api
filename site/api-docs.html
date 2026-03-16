@@ -469,6 +469,7 @@
     <span class="nav-label">API Reference</span>
   </div>
   <div class="nav-right">
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="font-size:0.82rem;color:var(--muted);font-weight:500;margin-right:0.5rem;">Dashboard</a>
     <a href="/#register">
       <button class="nav-btn">Get Free Key →</button>
     </a>
@@ -521,6 +522,9 @@
       <div class="sidebar-group-label">Authentication</div>
       <a class="sidebar-link" data-target="ep-auth-register" onclick="scrollTo('ep-auth-register')">
         <span class="sidebar-method method-post">POST</span>/v1/auth/register
+      </a>
+      <a class="sidebar-link" data-target="ep-auth-verify" onclick="scrollTo('ep-auth-verify')">
+        <span class="sidebar-method method-post">POST</span>/v1/auth/verify
       </a>
       <a class="sidebar-link" data-target="ep-auth-rotate" onclick="scrollTo('ep-auth-rotate')">
         <span class="sidebar-method method-post">POST</span>/v1/auth/rotate
@@ -1279,7 +1283,7 @@ bt = resp.<span class="t-fn">json</span>()
             <span class="badge badge-public">Public</span>
           </div>
         </div>
-        <p class="section-desc">Register a new account and receive your free API key. No credit card required.</p>
+        <p class="section-desc">Step 1 of 2: submit your email to receive a 6-digit verification code. Registration is a two-step flow to ensure only real email addresses receive API keys.</p>
 
         <h3 class="section-subtitle">Request Body</h3>
         <div class="code-wrap">
@@ -1293,7 +1297,7 @@ bt = resp.<span class="t-fn">json</span>()
           <pre>{ <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span> }</pre>
         </div>
 
-        <h3 class="section-subtitle">Response</h3>
+        <h3 class="section-subtitle">Response (202 Accepted)</h3>
         <div class="code-wrap">
           <div class="code-header">
             <span class="code-lang">json</span>
@@ -1303,10 +1307,55 @@ bt = resp.<span class="t-fn">json</span>()
             </button>
           </div>
           <pre>{
-  <span class="t-key">"api_key"</span>: <span class="t-string">"mp_..."</span>,
-  <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span>,
-  <span class="t-key">"tier"</span>: <span class="t-string">"free"</span>,
-  <span class="t-key">"requests_per_day"</span>: <span class="t-number">50</span>
+  <span class="t-key">"status"</span>: <span class="t-string">"verification_sent"</span>,
+  <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span>
+}</pre>
+        </div>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ</span>
+          <span>A 6-digit code valid for 15 minutes is emailed to you. Pass it to <code>POST /v1/auth/verify</code> to complete registration and receive your API key.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ep-auth-verify">
+      <div class="auth-subsection">
+        <div class="auth-subsection-title">
+          <span class="endpoint-path" style="font-size:0.95rem;">POST /v1/auth/verify</span>
+          <div class="badge-group">
+            <span class="badge badge-post">POST</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+        <p class="section-desc">Step 2 of 2: submit the verification code from your email to create your account and receive your API key.</p>
+
+        <h3 class="section-subtitle">Request Body</h3>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-lang">json</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre>{ <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span>, <span class="t-key">"code"</span>: <span class="t-string">"483921"</span> }</pre>
+        </div>
+
+        <h3 class="section-subtitle">Response (201 Created)</h3>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-lang">json</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre>{
+  <span class="t-key">"api_key"</span>:     <span class="t-string">"mp_..."</span>,
+  <span class="t-key">"email"</span>:       <span class="t-string">"you@example.com"</span>,
+  <span class="t-key">"tier"</span>:        <span class="t-string">"free"</span>,
+  <span class="t-key">"daily_limit"</span>: <span class="t-number">50</span>
 }</pre>
         </div>
 

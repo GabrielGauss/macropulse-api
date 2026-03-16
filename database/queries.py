@@ -326,18 +326,49 @@ def touch_api_key(key_hash: str) -> None:
 
 
 def fetch_subscriber_emails() -> list[str]:
-    """Return emails of all users who have at least one active API key."""
+    """Return emails of all Starter/Pro users with an active API key (paid digest only)."""
     sql = """
         SELECT DISTINCT u.email
         FROM users u
         JOIN api_keys k ON k.user_id = u.id
-        WHERE k.is_active = TRUE
+        WHERE k.is_active = TRUE AND k.tier IN ('starter', 'pro')
         ORDER BY u.email;
     """
     with get_sync_cursor() as cur:
         cur.execute(sql)
         rows = cur.fetchall()
         return [r["email"] for r in rows]
+
+
+# ── Email verification ─────────────────────────────────────────────────
+
+def create_email_verification(email: str, code: str) -> None:
+    """Delete any existing pending code for this email and insert a fresh one."""
+    with get_sync_cursor() as cur:
+        cur.execute("DELETE FROM email_verifications WHERE email = %(email)s;", {"email": email})
+        cur.execute(
+            """
+            INSERT INTO email_verifications (email, code, expires_at)
+            VALUES (%(email)s, %(code)s, NOW() + INTERVAL '15 minutes');
+            """,
+            {"email": email, "code": code},
+        )
+
+
+def verify_email_code(email: str, code: str) -> bool:
+    """Mark code used and return True if valid + unexpired, False otherwise."""
+    sql = """
+        UPDATE email_verifications
+        SET used = TRUE
+        WHERE email = %(email)s
+          AND code  = %(code)s
+          AND expires_at > NOW()
+          AND used = FALSE
+        RETURNING id;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"email": email, "code": code})
+        return cur.fetchone() is not None
 
 
 def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:

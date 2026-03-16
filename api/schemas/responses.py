@@ -195,16 +195,18 @@ class RegisterRequest(BaseModel):
     name: str | None = None
 
 
+class VerifyRequest(BaseModel):
+    email: str
+    code: str
+
+
 class RegisterResponse(BaseModel):
-    """
-    Returned once on registration.  The plaintext api_key is shown ONLY here;
-    it cannot be recovered later.
-    """
+    """Returned after successful email verification. api_key shown once — store securely."""
 
     user_id: int
     email: str
-    api_key: str          # plaintext — shown once, store securely
-    key_prefix: str       # first 12 chars, safe to display
+    api_key: str          # plaintext — shown once
+    key_prefix: str
     tier: str
     daily_limit: int      # 0 = unlimited
 

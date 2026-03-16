@@ -48,6 +48,80 @@ def _post(payload: dict) -> None:
         logger.error("Brevo email unexpected error", exc_info=True)
 
 
+def send_verification_email(to: str, code: str) -> None:
+    """
+    Send a 6-digit email verification code to the registrant.
+    Fire-and-forget — never blocks or raises.
+    """
+    text_content = f"""MacroPulse — verify your email
+
+Your verification code:  {code}
+
+This code expires in 15 minutes.
+
+If you didn't request this, ignore this email.
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Inter',Arial,sans-serif;color:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:48px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+
+  <!-- logo -->
+  <tr><td style="padding-bottom:32px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle;"></td>
+      <td style="padding-left:8px;font-size:15px;font-weight:600;letter-spacing:-0.02em;vertical-align:middle;">MacroPulse</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- headline -->
+  <tr><td style="padding-bottom:24px;">
+    <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.03em;">Verify your email</h1>
+    <p style="margin:8px 0 0;font-size:13px;color:#888;">Enter this code on the MacroPulse site to receive your API key.</p>
+  </td></tr>
+
+  <!-- code box -->
+  <tr><td style="padding-bottom:28px;">
+    <div style="background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:28px;text-align:center;">
+      <p style="margin:0 0 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#555;">Verification Code</p>
+      <code style="font-family:'Courier New',monospace;font-size:36px;font-weight:700;letter-spacing:0.3em;color:#22c55e;">{code}</code>
+    </div>
+  </td></tr>
+
+  <tr><td style="padding-bottom:24px;">
+    <p style="margin:0;font-size:12px;color:#555;line-height:1.7;">
+      This code expires in <strong style="color:#888;">15 minutes</strong>.<br>
+      If you didn't request this, you can safely ignore this email.
+    </p>
+  </td></tr>
+
+  <!-- footer -->
+  <tr><td style="padding-top:16px;border-top:1px solid #1a1a1a;">
+    <p style="margin:0;font-size:11px;color:#444;line-height:1.8;">
+      MacroPulse &middot; Probabilistic macro regime intelligence<br>
+      <a href="mailto:support@macropulse.live" style="color:#555;text-decoration:none;">support@macropulse.live</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    _post({
+        "sender":      SENDER,
+        "to":          [{"email": to}],
+        "subject":     f"MacroPulse verification code: {code}",
+        "htmlContent": html_content,
+        "textContent": text_content,
+    })
+
+
 def send_welcome_email(to: str, api_key: str, tier: str = "free") -> None:
     """
     Send post-registration welcome email with the user's API key.

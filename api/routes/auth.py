@@ -15,6 +15,9 @@ import re
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+import random
+import string
+
 from api.auth import generate_api_key, hash_key, require_api_key
 from api.middleware.rate_limit import TIER_LIMITS, _reset_ts, get_usage_today
 from api.schemas.responses import (
@@ -23,9 +26,10 @@ from api.schemas.responses import (
     RegisterResponse,
     RotateKeyResponse,
     UsageResponse,
+    VerifyRequest,
 )
 from database import queries
-from services.email import send_welcome_email
+from services.email import send_verification_email, send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -38,18 +42,22 @@ def _tier_limit(tier: str) -> int:
     return TIER_LIMITS.get(tier, 50)
 
 
+def _generate_code() -> str:
+    return "".join(random.choices(string.digits, k=6))
+
+
 @router.post(
     "/register",
-    response_model=RegisterResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Register and receive your API key",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Start registration — sends a verification code to your email",
 )
-def register(body: RegisterRequest) -> RegisterResponse:
+def register(body: RegisterRequest) -> dict:
     """
-    Create a MacroPulse account and receive a free-tier API key.
+    Step 1 of 2: validate email format, send a 6-digit verification code.
 
-    The plaintext `api_key` in the response is shown **once only**.
-    Store it securely — it cannot be retrieved again (only rotated).
+    On success returns `{"status": "verification_sent", "email": "..."}`.
+    Call `POST /v1/auth/verify` with the code to complete registration and
+    receive your API key.
     """
     email = body.email.strip().lower()
     if not _EMAIL_RE.match(email):
@@ -66,9 +74,56 @@ def register(body: RegisterRequest) -> RegisterResponse:
             detail="An account with that email already exists.",
         )
 
-    # Create user
+    code = _generate_code()
     try:
-        user = queries.create_user(email=email, name=body.name)
+        queries.create_email_verification(email=email, code=code)
+    except Exception as exc:
+        logger.error("Failed to create email verification: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not initiate verification. Please try again.",
+        )
+
+    try:
+        send_verification_email(to=email, code=code)
+    except Exception:
+        logger.warning("Verification email dispatch error for %s (non-fatal)", email, exc_info=True)
+
+    logger.info("Verification code sent: email=%s", email)
+    return {"status": "verification_sent", "email": email}
+
+
+@router.post(
+    "/verify",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Verify email code and receive your API key",
+)
+def verify(body: VerifyRequest) -> RegisterResponse:
+    """
+    Step 2 of 2: submit the 6-digit code received by email.
+
+    On success creates your account and returns your API key **once only**.
+    """
+    email = body.email.strip().lower()
+    code  = body.code.strip()
+
+    if not queries.verify_email_code(email=email, code=code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification code.",
+        )
+
+    # Guard against replay if user submits twice before record is cleaned up
+    existing = queries.get_user_by_email(email)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with that email already exists.",
+        )
+
+    try:
+        user = queries.create_user(email=email)
     except Exception as exc:
         logger.error("Failed to create user: %s", exc)
         raise HTTPException(
@@ -76,9 +131,8 @@ def register(body: RegisterRequest) -> RegisterResponse:
             detail="Could not create account. Please try again.",
         )
 
-    # Generate and store key
     plaintext_key = generate_api_key()
-    key_prefix = plaintext_key[:12]
+    key_prefix    = plaintext_key[:12]
     try:
         queries.create_api_key(
             user_id=user["id"],
@@ -93,9 +147,8 @@ def register(body: RegisterRequest) -> RegisterResponse:
             detail="Could not issue API key. Please try again.",
         )
 
-    logger.info("New user registered: email=%s tier=free", email)
+    logger.info("New user verified and registered: email=%s tier=free", email)
 
-    # Fire-and-forget welcome email — never blocks the response
     try:
         send_welcome_email(to=email, api_key=plaintext_key, tier="free")
     except Exception:

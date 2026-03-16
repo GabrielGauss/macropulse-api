@@ -245,6 +245,24 @@
     }
     .reg-btn:hover { opacity: 0.88; }
     .reg-note { font-size: 0.78rem; color: var(--dim); margin-top: 0.6rem; }
+    /* verification step */
+    .reg-step2 { display: none; }
+    .reg-step2.active { display: block; }
+    .reg-step1 { display: block; }
+    .reg-step1.hidden { display: none; }
+    .reg-verify-form { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .reg-verify-info { font-size: 0.78rem; color: var(--dim); margin-bottom: 0.9rem; }
+    .reg-verify-info strong { color: var(--muted); }
+    .reg-code-input {
+      width: 130px; padding: 0.6rem 0.9rem;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 1.1rem;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em;
+      text-align: center; outline: none;
+    }
+    .reg-code-input:focus { border-color: var(--muted); }
+    .reg-back { font-size: 0.75rem; color: var(--dim); cursor: pointer; background: none; border: none; padding: 0; }
+    .reg-back:hover { color: var(--muted); }
     .reg-result {
       margin-top: 1rem; padding: 1rem 1.25rem; border-radius: 7px;
       background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
@@ -487,6 +505,7 @@
     <a href="#regimes">Regimes</a>
     <a href="#pricing">Pricing</a>
     <a href="/api-docs.html">API Docs</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--muted);">Dashboard</a>
     <button class="nav-key" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free Key</button>
   </div>
 </nav>
@@ -590,13 +609,26 @@
           <p>No credit card required. Get your API key and make your first call instantly. 50 requests/day on the free tier — enough to prototype and explore.</p>
         </div>
         <div class="register-right">
-          <div class="reg-form">
-            <input type="email" class="reg-input" id="reg-email" placeholder="you@example.com" />
-            <button class="reg-btn" onclick="register()">Get Key</button>
+          <!-- Step 1: email -->
+          <div class="reg-step1" id="reg-step1">
+            <div class="reg-form">
+              <input type="email" class="reg-input" id="reg-email" placeholder="you@example.com" />
+              <button class="reg-btn" id="reg-btn" onclick="register()">Get Key</button>
+            </div>
+            <p class="reg-note">We'll email a verification code. No password needed.</p>
           </div>
-          <p class="reg-note">We'll email your key. No password needed.</p>
+          <!-- Step 2: verify code -->
+          <div class="reg-step2" id="reg-step2">
+            <p class="reg-verify-info">Code sent to <strong id="reg-sent-to"></strong></p>
+            <div class="reg-verify-form">
+              <input type="text" class="reg-code-input" id="reg-code" placeholder="000000" maxlength="6" inputmode="numeric" />
+              <button class="reg-btn" id="reg-verify-btn" onclick="verifyCode()">Verify</button>
+            </div>
+            <button class="reg-back" onclick="resetRegister()">← Use a different email</button>
+          </div>
+          <!-- Result / error -->
           <div class="reg-result" id="reg-result">
-            <div class="reg-result-label">Your API key — save this, shown once:</div>
+            <div class="reg-result-label" id="reg-result-label">Your API key — save this, shown once:</div>
             <code class="reg-key" id="reg-key"></code>
           </div>
         </div>
@@ -771,7 +803,9 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>50 API requests / day</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Latest signal endpoint</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>30-day history window</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Dashboard access</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Discord alerts</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Daily email brief</span></div>
             <div class="plan-feature"><span class="pf-no">✗</span> <span>Performance attribution</span></div>
             <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
           </div>
@@ -789,9 +823,11 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>500 API requests / day</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Discord alerts</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Daily email brief</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
           </div>
           <button class="plan-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
         </div>
@@ -806,6 +842,9 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited requests</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Discord alerts</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Daily email brief</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
@@ -877,22 +916,34 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     Paddle.Checkout.open(opts);
   }
 
-  // ── Free key registration ─────────────────────────────────────
+  // ── Free key registration — 2-step ──────────────────────────
+  let _pendingEmail = '';
+
+  function resetRegister() {
+    document.getElementById('reg-step1').classList.remove('hidden');
+    document.getElementById('reg-step2').classList.remove('active');
+    document.getElementById('reg-result').style.display = 'none';
+    document.getElementById('reg-code').value = '';
+    _pendingEmail = '';
+  }
+
   async function register() {
     const email  = document.getElementById('reg-email').value.trim();
     const result = document.getElementById('reg-result');
     const keyEl  = document.getElementById('reg-key');
-    const btn    = document.querySelector('.reg-btn');
+    const btn    = document.getElementById('reg-btn');
 
-    if (!email || !email.includes('@')) {
+    if (!email || !email.includes('@') || !email.includes('.')) {
       result.className = 'reg-result error';
       result.style.display = 'block';
+      document.getElementById('reg-result-label').textContent = '';
       keyEl.textContent = 'Please enter a valid email address.';
       return;
     }
 
-    btn.textContent = 'Getting key…';
+    btn.textContent = 'Sending…';
     btn.disabled = true;
+    result.style.display = 'none';
 
     try {
       const resp = await fetch(`${API}/v1/auth/register`, {
@@ -905,15 +956,20 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       if (!resp.ok) {
         result.className = 'reg-result error';
         result.style.display = 'block';
+        document.getElementById('reg-result-label').textContent = '';
         keyEl.textContent = data.detail || 'Registration failed.';
       } else {
-        result.className = 'reg-result';
-        result.style.display = 'block';
-        keyEl.textContent = data.api_key;
+        // Move to step 2
+        _pendingEmail = email;
+        document.getElementById('reg-sent-to').textContent = email;
+        document.getElementById('reg-step1').classList.add('hidden');
+        document.getElementById('reg-step2').classList.add('active');
+        setTimeout(() => document.getElementById('reg-code').focus(), 80);
       }
     } catch (e) {
       result.className = 'reg-result error';
       result.style.display = 'block';
+      document.getElementById('reg-result-label').textContent = '';
       keyEl.textContent = 'Network error — please try again.';
     } finally {
       btn.textContent = 'Get Key';
@@ -921,8 +977,61 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     }
   }
 
+  async function verifyCode() {
+    const code   = document.getElementById('reg-code').value.trim();
+    const result = document.getElementById('reg-result');
+    const keyEl  = document.getElementById('reg-key');
+    const btn    = document.getElementById('reg-verify-btn');
+
+    if (!code || code.length !== 6) {
+      result.className = 'reg-result error';
+      result.style.display = 'block';
+      document.getElementById('reg-result-label').textContent = '';
+      keyEl.textContent = 'Enter the 6-digit code from your email.';
+      return;
+    }
+
+    btn.textContent = 'Verifying…';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    try {
+      const resp = await fetch(`${API}/v1/auth/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: _pendingEmail, code }),
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        result.className = 'reg-result error';
+        result.style.display = 'block';
+        document.getElementById('reg-result-label').textContent = '';
+        keyEl.textContent = data.detail || 'Verification failed.';
+      } else {
+        // Success — show key
+        document.getElementById('reg-step2').classList.remove('active');
+        result.className = 'reg-result';
+        result.style.display = 'block';
+        document.getElementById('reg-result-label').textContent = 'Your API key — save this, shown once:';
+        keyEl.textContent = data.api_key;
+      }
+    } catch (e) {
+      result.className = 'reg-result error';
+      result.style.display = 'block';
+      document.getElementById('reg-result-label').textContent = '';
+      keyEl.textContent = 'Network error — please try again.';
+    } finally {
+      btn.textContent = 'Verify';
+      btn.disabled = false;
+    }
+  }
+
   document.getElementById('reg-email').addEventListener('keydown', e => {
     if (e.key === 'Enter') register();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('reg-step2').classList.contains('active')) verifyCode();
   });
 
   function copyCode() {
