@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 # Fallback hardcoded webhook (used when DISCORD_WEBHOOK_URL env var is not set)
 _FALLBACK_WEBHOOK = (
-    "https://discord.com/api/webhooks/1483171456652410960"
-    "/_Q2YwDOvu0iJ_SZwFINsthAsxQ0nHtMAb5MVjSTA931TqWCUI1TpX5jsck7vxdG6avSj"
+    "https://discord.com/api/webhooks/1483172357303435380"
+    "/MoQlfxlxy8-oeZRBJe5NA-7QEK92Ng1OKJHqpQAsTKVz6EhFvYvDQ4YTIy5TCHeXkgR3"
 )
 
 # Regime display config
