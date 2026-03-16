@@ -17,6 +17,7 @@ export const api = {
   getLiquidity: (limit = 60) => apiFetch(`/v1/liquidity?limit=${limit}`),
   getFactors: (limit = 60) => apiFetch(`/v1/factors?limit=${limit}`),
   getDrift: (limit = 30) => apiFetch(`/v1/drift?limit=${limit}`),
+  getScorecard: () => apiFetch('/v1/scorecard'),
   runBacktest: (params) =>
     apiFetch('/v1/backtest', {
       method: 'POST',

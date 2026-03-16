@@ -21,6 +21,7 @@ from api.schemas.responses import (
     RegimeResponse,
 )
 from database import queries
+from services.scorecard import build_scorecard
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +106,13 @@ def get_drift(
     return DriftResponse(
         data=[DriftRow(**r) for r in rows]
     )
+
+
+@router.get("/scorecard", tags=["MacroPulse"])
+def get_scorecard() -> dict:
+    """
+    Return the MacroPulse Scorecard — 5 normalized macro signals on [-1, 1].
+
+    No authentication required (public endpoint for the dashboard).
+    """
+    return build_scorecard()
