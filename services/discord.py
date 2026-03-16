@@ -115,7 +115,10 @@ def post_daily_signal(
     req = Request(
         webhook_url,
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "MacroPulse/1.0 (https://macropulse.live)",
+        },
         method="POST",
     )
     try:
