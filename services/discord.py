@@ -17,6 +17,12 @@ from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+# Fallback hardcoded webhook (used when DISCORD_WEBHOOK_URL env var is not set)
+_FALLBACK_WEBHOOK = (
+    "https://discord.com/api/webhooks/1483164077374046239"
+    "/MKFAuFBhzfSowHyIscMo7JUQ1kWXnVlFgbGTph-rY0AiITQWLJJi9rXfCR3MDLtAjje5"
+)
+
 # Regime display config
 _REGIME_EMOJI = {
     "expansion":  "🟢",
@@ -63,8 +69,9 @@ def post_daily_signal(
     narrative  : optional LLM-generated macro interpretation string.
     """
     settings = get_settings()
-    if not settings.discord_webhook_url:
-        logger.debug("DISCORD_WEBHOOK_URL not set; skipping Discord post.")
+    webhook_url = settings.discord_webhook_url or _FALLBACK_WEBHOOK
+    if not webhook_url:
+        logger.debug("No Discord webhook URL configured; skipping.")
         return
 
     regime = str(regime_row.get("regime", "unknown")).lower()
@@ -106,7 +113,7 @@ def post_daily_signal(
     payload = {"embeds": [embed]}
     data = json.dumps(payload).encode()
     req = Request(
-        settings.discord_webhook_url,
+        webhook_url,
         data=data,
         headers={"Content-Type": "application/json"},
         method="POST",
