@@ -1,12 +1,17 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/dashboard", "destination": "https://api.macropulse.live/dashboard", "permanent": false },
+    { "source": "/docs",      "destination": "/api-docs",                             "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/pricing", "destination": "/pricing.html" },
-    { "source": "/terms",   "destination": "/terms.html" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/refund",  "destination": "/refund.html" },
-    { "source": "/welcome", "destination": "/welcome.html" }
+    { "source": "/pricing",  "destination": "/pricing.html" },
+    { "source": "/api-docs", "destination": "/api-docs.html" },
+    { "source": "/terms",    "destination": "/terms.html" },
+    { "source": "/privacy",  "destination": "/privacy.html" },
+    { "source": "/refund",   "destination": "/refund.html" },
+    { "source": "/welcome",  "destination": "/welcome.html" }
   ],
   "headers": [
     {

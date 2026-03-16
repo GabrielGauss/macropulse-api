@@ -486,7 +486,7 @@
     <a href="#pipeline">How it works</a>
     <a href="#regimes">Regimes</a>
     <a href="#pricing">Pricing</a>
-    <a href="https://api.macropulse.live/docs" target="_blank">API Docs</a>
+    <a href="/api-docs.html">API Docs</a>
     <button class="nav-key" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free Key</button>
   </div>
 </nav>
@@ -827,7 +827,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       <a href="/terms.html">Terms</a>
       <a href="/privacy.html">Privacy</a>
       <a href="/refund.html">Refund Policy</a>
-      <a href="https://api.macropulse.live/docs" target="_blank">API Docs</a>
+      <a href="/api-docs.html">API Docs</a>
     </div>
   </div>
 </footer>
@@ -835,17 +835,39 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 <!-- Paddle.js -->
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
-  const PADDLE_ENV           = 'sandbox';
-  const PADDLE_CLIENT_TOKEN  = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
-  const PRICE_IDS = {
-    starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER',
-    pro:     'PADDLE_PRO_PRICE_ID_PLACEHOLDER',
+  const API = 'https://api.macropulse.live';
+
+  const REGIME_COLORS = {
+    expansion: '#22c55e', recovery: '#3b82f6',
+    tightening: '#f59e0b', risk_off: '#ef4444',
+  };
+  const REGIME_LABELS = {
+    expansion: 'Expansion', recovery: 'Recovery',
+    tightening: 'Tightening', risk_off: 'Risk-Off',
   };
 
-  if (PADDLE_ENV === 'sandbox') Paddle.Environment.set('sandbox');
-  Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+  // ── Paddle — loaded dynamically from /v1/config ───────────────
+  let PRICE_IDS = { starter: '', pro: '' };
+  let paddleReady = false;
+
+  async function initPaddle() {
+    try {
+      const cfg = await fetch(`${API}/v1/config`).then(r => r.json());
+      if (cfg.paddle_environment === 'sandbox') Paddle.Environment.set('sandbox');
+      Paddle.Initialize({ token: cfg.paddle_client_token });
+      PRICE_IDS.starter = cfg.paddle_starter_price_id;
+      PRICE_IDS.pro     = cfg.paddle_pro_price_id;
+      paddleReady = true;
+    } catch (e) {
+      // Paddle unavailable — checkout buttons show alert
+    }
+  }
 
   function openCheckout(tier) {
+    if (!paddleReady || !PRICE_IDS[tier]) {
+      alert('Checkout unavailable — please email support@macropulse.live to subscribe.');
+      return;
+    }
     const email = document.getElementById('reg-email').value.trim();
     const opts = {
       items: [{ priceId: PRICE_IDS[tier], quantity: 1 }],
@@ -860,6 +882,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     const email  = document.getElementById('reg-email').value.trim();
     const result = document.getElementById('reg-result');
     const keyEl  = document.getElementById('reg-key');
+    const btn    = document.querySelector('.reg-btn');
 
     if (!email || !email.includes('@')) {
       result.className = 'reg-result error';
@@ -868,8 +891,11 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       return;
     }
 
+    btn.textContent = 'Getting key…';
+    btn.disabled = true;
+
     try {
-      const resp = await fetch('https://api.macropulse.live/v1/auth/register', {
+      const resp = await fetch(`${API}/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -880,15 +906,18 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         result.className = 'reg-result error';
         result.style.display = 'block';
         keyEl.textContent = data.detail || 'Registration failed.';
-        return;
+      } else {
+        result.className = 'reg-result';
+        result.style.display = 'block';
+        keyEl.textContent = data.api_key;
       }
-      result.className = 'reg-result';
-      result.style.display = 'block';
-      keyEl.textContent = data.api_key;
     } catch (e) {
       result.className = 'reg-result error';
       result.style.display = 'block';
       keyEl.textContent = 'Network error — please try again.';
+    } finally {
+      btn.textContent = 'Get Key';
+      btn.disabled = false;
     }
   }
 
@@ -897,7 +926,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
   });
 
   function copyCode() {
-    const code = `import requests\n\nresp = requests.get(\n    "https://api.macropulse.live/v1/signals/latest",\n    headers={"X-MacroPulse-Key": "mp_..."}\n)\nsignal = resp.json()\n\nregime  = signal["regime"]["most_likely"]\nEXPOSURE = {"expansion":1.00,"recovery":0.75,"tightening":0.25,"risk_off":0.00}\nwt = EXPOSURE[regime]`;
+    const code = `import requests\n\nresp = requests.get(\n    "https://api.macropulse.live/v1/signals/latest",\n    headers={"X-MacroPulse-Key": "mp_..."}\n)\nsignal = resp.json()\n\nregime  = signal["regime"]["most_likely"]\nEXPOSURE = {"expansion":1.00,"recovery":0.75,"tightening":0.25,"risk_off":0.00}\nwt = EXPOSURE[regime]  # 0.75`;
     navigator.clipboard.writeText(code).then(() => {
       const btn = document.querySelector('.code-copy');
       btn.textContent = 'copied!';
@@ -905,72 +934,91 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     });
   }
 
-  // ── Live terminal: fetch latest signal ───────────────────────
-  const REGIME_COLORS = {
-    expansion: '#22c55e', recovery: '#3b82f6',
-    tightening: '#f59e0b', risk_off: '#ef4444',
-  };
-
+  // ── Live terminal: public endpoints (no auth needed) ─────────
   async function loadSignal() {
     try {
-      const resp = await fetch('https://api.macropulse.live/v1/signals/latest');
-      if (!resp.ok) return;
-      const d = resp.json ? await Promise.resolve(resp).then(r => r.json()) : null;
-      const sig = await fetch('https://api.macropulse.live/v1/signals/latest').then(r => r.json());
+      const [regimeResp, scorecardResp, liqResp] = await Promise.all([
+        fetch(`${API}/v1/regime/current`),
+        fetch(`${API}/v1/scorecard`),
+        fetch(`${API}/v1/liquidity?limit=30`),
+      ]);
+      if (!regimeResp.ok) return;
 
-      document.getElementById('t-date').textContent = JSON.stringify(sig.date);
-      const r = sig.regime;
+      const regime    = await regimeResp.json();
+      const scorecard = scorecardResp.ok ? await scorecardResp.json() : null;
+      const liqData   = liqResp.ok      ? await liqResp.json()        : null;
+
+      const ts      = regime.timestamp?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+      const name    = regime.macro_regime;
+      const score   = regime.risk_score || 0;
+      const probs   = regime.probabilities || {};
+      const maxProb = Math.max(...Object.values(probs));
+      const conf    = maxProb >= 0.70 ? 'HIGH' : maxProb >= 0.50 ? 'MODERATE' : 'LOW';
+
+      document.getElementById('t-date').textContent = JSON.stringify(ts);
+
       const el = document.getElementById('t-regime');
-      el.textContent = JSON.stringify(r.most_likely);
-      el.style.color = REGIME_COLORS[r.most_likely] || '#3b82f6';
-      document.getElementById('t-conf').textContent = JSON.stringify(r.confidence);
-      document.getElementById('t-persist').textContent = r.persistence_days;
-      document.getElementById('t-liq').textContent = sig.net_liquidity.level_bn.toFixed(1);
-      document.getElementById('t-zscore').textContent = sig.net_liquidity.zscore.toFixed(2);
-      document.getElementById('t-trend').textContent = JSON.stringify(sig.net_liquidity.trend.toLowerCase());
-    } catch (e) { /* silent */ }
+      el.textContent  = JSON.stringify(name);
+      el.style.color  = REGIME_COLORS[name] || '#3b82f6';
+
+      document.getElementById('t-conf').textContent    = JSON.stringify(conf);
+      document.getElementById('t-persist').textContent = scorecard
+        ? Math.round(Math.abs(scorecard.liquidity || 0) * 100)
+        : Math.abs(Math.round(score));
+
+      // Liquidity from the /v1/liquidity endpoint
+      if (liqData && liqData.data && liqData.data.length) {
+        const latest = liqData.data[0];
+        document.getElementById('t-liq').textContent    = (latest.net_liquidity / 1e3).toFixed(1);
+        document.getElementById('t-zscore').textContent = scorecard
+          ? (scorecard.liquidity * 2).toFixed(2)
+          : '—';
+        const trend = liqData.data.slice(0, 20)
+          .reduce((s, r) => s + (r.d_liquidity || 0), 0);
+        document.getElementById('t-trend').textContent = JSON.stringify(
+          trend > 0 ? 'expanding' : trend < 0 ? 'contracting' : 'stable'
+        );
+      }
+    } catch (e) { /* silent — terminal shows placeholder */ }
   }
 
   // ── Regime history bar ────────────────────────────────────────
   async function loadRegimeBar() {
     try {
-      const end   = new Date().toISOString().slice(0,10);
-      const start = new Date(Date.now() - 730 * 86400000).toISOString().slice(0,10);
-      const resp  = await fetch(`https://api.macropulse.live/v1/regime/history?limit=500`);
+      const resp = await fetch(`${API}/v1/regime/history?limit=500`);
       if (!resp.ok) return;
       const data = await resp.json();
-      const rows = [...data].reverse(); // oldest first
-
+      const rows = [...data].reverse(); // oldest → newest
       if (!rows.length) return;
 
       const bar = document.getElementById('regime-bar');
       bar.innerHTML = '';
-      const total = rows.length;
 
       rows.forEach(row => {
         const seg = document.createElement('div');
         seg.className = 'rb-seg';
         seg.style.flex = '1';
         seg.style.background = REGIME_COLORS[row.macro_regime] || '#555';
-        seg.title = `${row.timestamp?.slice(0,10) || ''}: ${row.macro_regime}`;
+        const date = row.timestamp?.slice(0, 10) || '';
+        seg.title  = `${date}: ${REGIME_LABELS[row.macro_regime] || row.macro_regime}`;
         bar.appendChild(seg);
       });
 
-      // Update labels
-      const first = rows[0];
-      const last  = rows[rows.length - 1];
       const fmt = ts => {
         if (!ts) return '';
-        const d = new Date(ts);
-        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        return new Date(ts).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       };
-      document.getElementById('rb-start').textContent = fmt(first?.timestamp);
+      document.getElementById('rb-start').textContent = fmt(rows[0]?.timestamp);
       document.getElementById('rb-end').textContent   = 'Today';
     } catch (e) { /* silent */ }
   }
 
+  // ── Init ─────────────────────────────────────────────────────
+  initPaddle();
   loadSignal();
   loadRegimeBar();
+  // Refresh terminal every 5 minutes
+  setInterval(loadSignal, 5 * 60 * 1000);
 </script>
 </body>
 </html>

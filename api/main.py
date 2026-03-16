@@ -32,6 +32,7 @@ from api.routes.dashboard import router as dashboard_router
 from api.routes.forecast import router as forecast_router
 from api.routes.performance import router as performance_router
 from api.routes.regime import router as regime_router
+from api.routes.public_config import router as public_config_router
 from api.routes.signals import router as signals_router
 from api.routes.websocket import router as ws_router
 from api.schemas.responses import HealthResponse
@@ -89,6 +90,7 @@ app.include_router(ws_router)
 app.include_router(forecast_router)
 app.include_router(analysis_router)
 app.include_router(performance_router)
+app.include_router(public_config_router)
 app.include_router(signals_router)
 
 # ── Static frontend (served in production) ───────────────────────

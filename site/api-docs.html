@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%2322c55e'/%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%2322c55e' stroke-width='2' opacity='0.35'/%3E%3C/svg%3E" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference — MacroPulse</title>
+  <meta name="description" content="MacroPulse REST API documentation — macro regime, liquidity signals, PCA factors, and backtest endpoints." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --s1:       #111111;
+      --s2:       #191919;
+      --border:   #1f1f1f;
+      --border2:  #2a2a2a;
+      --text:     #f0f0f0;
+      --muted:    #888;
+      --dim:      #555;
+      --green:    #22c55e;
+      --green-dim: #16a34a;
+      --blue:     #3b82f6;
+      --blue-dim: #1d4ed8;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      font-size: 0.9rem;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Scrollbar ────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+    /* ── Nav ─────────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(20px);
+    }
+    .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+    .logo {
+      font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 0.5rem;
+      color: var(--text);
+    }
+    .logo-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+    .nav-divider {
+      width: 1px; height: 18px; background: var(--border2);
+    }
+    .nav-label {
+      font-size: 0.8rem; color: var(--muted); font-weight: 400;
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-btn {
+      font-size: 0.82rem; font-weight: 500;
+      padding: 0.42rem 1rem; border-radius: 6px;
+      border: 1px solid var(--green);
+      color: var(--green);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-btn:hover { background: var(--green); color: #000; }
+
+    /* ── Layout shell ─────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      padding-top: 56px;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────────── */
+    .sidebar {
+      width: 250px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      background: var(--bg);
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    .sidebar-section { margin-bottom: 0.25rem; }
+    .sidebar-group-label {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim);
+      padding: 0.75rem 1.25rem 0.35rem;
+    }
+    .sidebar-link {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 0.35rem 1.25rem;
+      transition: color 0.15s, background 0.15s;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      margin-left: -1px;
+    }
+    .sidebar-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .sidebar-link.active {
+      color: var(--green);
+      border-left-color: var(--green);
+      background: rgba(34,197,94,0.06);
+    }
+    .sidebar-link.primary-endpoint {
+      color: var(--green);
+      opacity: 0.85;
+    }
+    .sidebar-link.primary-endpoint.active { opacity: 1; }
+    .sidebar-method {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+    .method-get  { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .method-post { background: rgba(59,130,246,0.12); color: var(--blue); }
+
+    /* ── Main content ─────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 2.5rem 3rem 6rem;
+      max-width: 900px;
+    }
+
+    /* ── Live Signal banner ───────────────────────────────────────── */
+    .live-signal-bar {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 3rem;
+    }
+    .live-dot-wrap {
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
+      50% { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    }
+    .live-label {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--green);
+    }
+    .live-separator { width: 1px; height: 20px; background: var(--border2); }
+    .live-data { display: flex; align-items: center; gap: 1.5rem; flex: 1; }
+    .live-field { display: flex; flex-direction: column; gap: 0.1rem; }
+    .live-field-label { font-size: 0.68rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+    .live-field-value { font-size: 0.92rem; font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+    .live-field-value.regime-expansion  { color: #22c55e; }
+    .live-field-value.regime-recovery   { color: #86efac; }
+    .live-field-value.regime-tightening { color: #f59e0b; }
+    .live-field-value.regime-risk_off   { color: #ef4444; }
+    .live-refresh {
+      margin-left: auto;
+      font-size: 0.72rem; color: var(--dim);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .live-spinner {
+      width: 12px; height: 12px;
+      border: 1.5px solid var(--dim);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .live-spinner.active { opacity: 1; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Section headings ─────────────────────────────────────────── */
+    .section { margin-bottom: 4rem; scroll-margin-top: 80px; }
+    .section-title {
+      font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--text); margin-bottom: 0.6rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-subtitle {
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); margin: 2rem 0 0.6rem;
+    }
+    .section-desc {
+      color: var(--muted); margin-bottom: 1.5rem; line-height: 1.7;
+      max-width: 680px;
+    }
+
+    /* ── Endpoint header ──────────────────────────────────────────── */
+    .endpoint-header {
+      display: flex; align-items: flex-start; gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.8rem;
+    }
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem; font-weight: 500;
+      color: var(--text);
+    }
+    .badge-group { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.2rem; }
+    .badge {
+      font-size: 0.68rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 0.2rem 0.55rem; border-radius: 4px;
+    }
+    .badge-get    { background: rgba(34,197,94,0.12);  color: var(--green);  border: 1px solid rgba(34,197,94,0.2); }
+    .badge-post   { background: rgba(59,130,246,0.12); color: var(--blue);   border: 1px solid rgba(59,130,246,0.2); }
+    .badge-auth   { background: rgba(245,158,11,0.10); color: var(--amber);  border: 1px solid rgba(245,158,11,0.2); }
+    .badge-public { background: rgba(136,136,136,0.10); color: var(--muted); border: 1px solid rgba(136,136,136,0.2); }
+    .badge-primary{ background: rgba(34,197,94,0.08);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+
+    /* ── Code blocks ──────────────────────────────────────────────── */
+    .code-wrap {
+      position: relative;
+      margin: 1rem 0;
+    }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--border); /* slightly lighter than code bg */
+      background: #161616;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 0.45rem 1rem;
+    }
+    .code-lang {
+      font-size: 0.7rem; font-weight: 500;
+      color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .copy-btn {
+      font-size: 0.7rem; font-weight: 500;
+      color: var(--dim);
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--dim); background: rgba(255,255,255,0.04); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(34,197,94,0.4); }
+    .copy-btn svg { width: 11px; height: 11px; }
+    pre {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 0 0 8px 8px;
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #d4d4d4;
+    }
+    pre.no-header {
+      border-radius: 8px;
+    }
+    /* Syntax highlight tokens */
+    .t-string  { color: #86efac; }
+    .t-number  { color: #93c5fd; }
+    .t-key     { color: #c4b5fd; }
+    .t-comment { color: var(--dim); font-style: italic; }
+    .t-keyword { color: #f9a8d4; }
+    .t-fn      { color: #fde68a; }
+    .t-url     { color: #67e8f9; }
+    .t-param   { color: #fbbf24; }
+    .t-bool    { color: #fb923c; }
+
+    /* ── Tables ───────────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+    thead th {
+      background: var(--s1);
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.65rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.015); }
+    tbody td {
+      padding: 0.65rem 1rem;
+      color: var(--muted);
+      vertical-align: top;
+      line-height: 1.6;
+    }
+    tbody td:first-child { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+    .td-required {
+      font-size: 0.72rem; font-weight: 600;
+      padding: 0.1rem 0.4rem; border-radius: 3px;
+    }
+    .td-yes  { background: rgba(34,197,94,0.1);  color: var(--green); }
+    .td-no   { background: rgba(136,136,136,0.1); color: var(--dim); }
+
+    /* ── Info callout ─────────────────────────────────────────────── */
+    .callout {
+      display: flex; gap: 0.75rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: 7px;
+      margin: 1rem 0;
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+    .callout-warn {
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.2);
+      color: #fde68a;
+    }
+    .callout-info {
+      background: rgba(59,130,246,0.07);
+      border: 1px solid rgba(59,130,246,0.2);
+      color: #93c5fd;
+    }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* ── Overview URL box ─────────────────────────────────────────── */
+    .base-url-box {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      margin: 1rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--green);
+    }
+    .base-url-label {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim);
+      font-family: 'Inter', sans-serif;
+    }
+    .base-url-sep { color: var(--border2); }
+
+    /* ── Section divider ──────────────────────────────────────────── */
+    .section-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3.5rem 0;
+    }
+
+    /* ── Plan chips ───────────────────────────────────────────────── */
+    .plan-chip {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.15rem 0.45rem; border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+    .chip-free    { background: rgba(136,136,136,0.12); color: var(--muted); }
+    .chip-starter { background: rgba(59,130,246,0.1);   color: var(--blue); }
+    .chip-pro     { background: rgba(34,197,94,0.1);    color: var(--green); }
+
+    /* ── HTTP status chip ─────────────────────────────────────────── */
+    .status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; font-weight: 600;
+      padding: 0.15rem 0.4rem; border-radius: 3px;
+    }
+    .s4xx { background: rgba(239,68,68,0.1); color: #fca5a5; }
+    .s5xx { background: rgba(245,158,11,0.1); color: #fde68a; }
+
+    /* ── Authentication section ───────────────────────────────────── */
+    .auth-subsection { margin-top: 2.5rem; }
+    .auth-subsection-title {
+      font-size: 0.95rem; font-weight: 600;
+      color: var(--text); margin-bottom: 0.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+
+    /* ── Field type chips ─────────────────────────────────────────── */
+    .type-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      background: rgba(196,181,253,0.1);
+      color: #c4b5fd;
+      padding: 0.1rem 0.35rem; border-radius: 3px;
+      border: 1px solid rgba(196,181,253,0.15);
+    }
+
+    /* ── Inline code ──────────────────────────────────────────────── */
+    p code, li code, td code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8em;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border2);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+      color: #e2e8f0;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { padding: 2rem 1.5rem 5rem; }
+    }
+    @media (max-width: 640px) {
+      .main { padding: 1.5rem 1rem 5rem; }
+      .live-data { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-left">
+    <a href="/" class="logo">
+      <span class="logo-dot"></span>
+      MacroPulse
+    </a>
+    <div class="nav-divider"></div>
+    <span class="nav-label">API Reference</span>
+  </div>
+  <div class="nav-right">
+    <a href="/#register">
+      <button class="nav-btn">Get Free Key →</button>
+    </a>
+  </div>
+</nav>
+
+<!-- ── Layout ───────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-group-label">Overview</div>
+      <a class="sidebar-link" data-target="overview-auth" onclick="scrollTo('overview-auth')">Authentication</a>
+      <a class="sidebar-link" data-target="overview-baseurl" onclick="scrollTo('overview-baseurl')">Base URL</a>
+      <a class="sidebar-link" data-target="overview-ratelimits" onclick="scrollTo('overview-ratelimits')">Rate Limits</a>
+      <a class="sidebar-link" data-target="overview-errors" onclick="scrollTo('overview-errors')">Error Codes</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-group-label">Endpoints</div>
+      <a class="sidebar-link primary-endpoint" data-target="ep-signals-latest" onclick="scrollTo('ep-signals-latest')">
+        <span class="sidebar-method method-get">GET</span>/v1/signals/latest
+      </a>
+      <a class="sidebar-link" data-target="ep-signals-date" onclick="scrollTo('ep-signals-date')">
+        <span class="sidebar-method method-get">GET</span>/v1/signals/{date}
+      </a>
+      <a class="sidebar-link" data-target="ep-signals-range" onclick="scrollTo('ep-signals-range')">
+        <span class="sidebar-method method-get">GET</span>/v1/signals/range
+      </a>
+      <a class="sidebar-link" data-target="ep-regime-current" onclick="scrollTo('ep-regime-current')">
+        <span class="sidebar-method method-get">GET</span>/v1/regime/current
+      </a>
+      <a class="sidebar-link" data-target="ep-regime-history" onclick="scrollTo('ep-regime-history')">
+        <span class="sidebar-method method-get">GET</span>/v1/regime/history
+      </a>
+      <a class="sidebar-link" data-target="ep-liquidity" onclick="scrollTo('ep-liquidity')">
+        <span class="sidebar-method method-get">GET</span>/v1/liquidity
+      </a>
+      <a class="sidebar-link" data-target="ep-scorecard" onclick="scrollTo('ep-scorecard')">
+        <span class="sidebar-method method-get">GET</span>/v1/scorecard
+      </a>
+      <a class="sidebar-link" data-target="ep-backtest" onclick="scrollTo('ep-backtest')">
+        <span class="sidebar-method method-post">POST</span>/v1/backtest
+      </a>
+      <a class="sidebar-link" data-target="ep-performance" onclick="scrollTo('ep-performance')">
+        <span class="sidebar-method method-get">GET</span>/v1/performance
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-group-label">Authentication</div>
+      <a class="sidebar-link" data-target="ep-auth-register" onclick="scrollTo('ep-auth-register')">
+        <span class="sidebar-method method-post">POST</span>/v1/auth/register
+      </a>
+      <a class="sidebar-link" data-target="ep-auth-rotate" onclick="scrollTo('ep-auth-rotate')">
+        <span class="sidebar-method method-post">POST</span>/v1/auth/rotate
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────────── -->
+  <main class="main" id="main-content">
+
+    <!-- Live Signal Bar -->
+    <div class="live-signal-bar" id="live-bar">
+      <div class="live-dot-wrap">
+        <div class="live-dot"></div>
+        <span class="live-label">Live</span>
+      </div>
+      <div class="live-separator"></div>
+      <div class="live-data">
+        <div class="live-field">
+          <span class="live-field-label">Regime</span>
+          <span class="live-field-value" id="live-regime">—</span>
+        </div>
+        <div class="live-field">
+          <span class="live-field-label">Risk Score</span>
+          <span class="live-field-value" id="live-risk">—</span>
+        </div>
+        <div class="live-field">
+          <span class="live-field-label">Volatility</span>
+          <span class="live-field-value" id="live-vol">—</span>
+        </div>
+        <div class="live-field">
+          <span class="live-field-label">Model</span>
+          <span class="live-field-value" id="live-model">—</span>
+        </div>
+      </div>
+      <div class="live-refresh">
+        <div class="live-spinner" id="live-spinner"></div>
+        <span id="live-ts">fetching…</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- OVERVIEW                                                    -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="overview-baseurl">
+      <h1 class="section-title">Overview</h1>
+      <p class="section-desc">MacroPulse exposes a REST API that returns daily macro regime classifications, net Fed liquidity, PCA factor scores, and backtesting utilities. All responses are JSON.</p>
+
+      <h3 class="section-subtitle">Base URL</h3>
+      <div class="base-url-box">
+        <span class="base-url-label">HTTPS</span>
+        <span class="base-url-sep">·</span>
+        <span>https://api.macropulse.live</span>
+      </div>
+    </section>
+
+    <section class="section" id="overview-auth">
+      <h2 class="section-subtitle" style="margin-top:0;">Authentication</h2>
+      <p class="section-desc">Authenticated endpoints require an <code>X-MacroPulse-Key</code> header. Obtain a key by registering below or at <a href="/#register" style="color:var(--green);">macropulse.live/#register</a>.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>curl -H <span class="t-string">"X-MacroPulse-Key: mp_..."</span> https://api.macropulse.live/v1/signals/latest</pre>
+      </div>
+    </section>
+
+    <section class="section" id="overview-ratelimits">
+      <h2 class="section-subtitle" style="margin-top:0;">Rate Limits</h2>
+      <p class="section-desc">Limits are enforced per API key, per rolling 24-hour window.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Requests / day</th>
+              <th>Historical data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="plan-chip chip-free">Free</span></td>
+              <td>50</td>
+              <td>30 days</td>
+            </tr>
+            <tr>
+              <td><span class="plan-chip chip-starter">Starter</span></td>
+              <td>500</td>
+              <td>Full (2yr+)</td>
+            </tr>
+            <tr>
+              <td><span class="plan-chip chip-pro">Pro</span></td>
+              <td>Unlimited</td>
+              <td>Full</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ</span>
+        <span>When you exceed your limit the API returns <code>429 Too Many Requests</code>. The <code>X-RateLimit-Reset</code> header contains the UTC epoch when the window resets.</span>
+      </div>
+    </section>
+
+    <section class="section" id="overview-errors">
+      <h2 class="section-subtitle" style="margin-top:0;">Error Codes</h2>
+      <p class="section-desc">All errors return a JSON body with <code>detail</code> and <code>code</code> fields. HTTP status codes follow standard semantics.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Status</th><th>Meaning</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status s4xx">401</span></td>
+              <td>Missing or invalid API key</td>
+            </tr>
+            <tr>
+              <td><span class="status s4xx">403</span></td>
+              <td>Key revoked</td>
+            </tr>
+            <tr>
+              <td><span class="status s4xx">404</span></td>
+              <td>No data for requested date</td>
+            </tr>
+            <tr>
+              <td><span class="status s4xx">422</span></td>
+              <td>Invalid parameters (see response body for field errors)</td>
+            </tr>
+            <tr>
+              <td><span class="status s4xx">429</span></td>
+              <td>Rate limit exceeded</td>
+            </tr>
+            <tr>
+              <td><span class="status s5xx">503</span></td>
+              <td>Data pipeline lag — daily ETL job in progress</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/signals/latest                                      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-signals-latest">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/signals/latest</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-auth">Authenticated</span>
+            <span class="badge badge-primary">Primary</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns the complete signal package for the most recent trading day. This is the primary endpoint — use this to get the current macro regime, liquidity signals, and PCA factors. All downstream strategies should start here.</p>
+
+      <h3 class="section-subtitle">Request Headers</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Header</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>X-MacroPulse-Key</td>
+              <td><span class="td-required td-yes">Yes</span></td>
+              <td>Your API key (<code>mp_...</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="section-subtitle">Python Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre><span class="t-keyword">import</span> requests
+
+resp = requests.<span class="t-fn">get</span>(
+    <span class="t-string">"https://api.macropulse.live/v1/signals/latest"</span>,
+    headers={<span class="t-string">"X-MacroPulse-Key"</span>: <span class="t-string">"mp_..."</span>}
+)
+signal = resp.<span class="t-fn">json</span>()
+
+<span class="t-comment"># Regime-aware equity exposure</span>
+EXPOSURE = {
+    <span class="t-string">"expansion"</span>:  <span class="t-number">1.00</span>,
+    <span class="t-string">"recovery"</span>:   <span class="t-number">0.75</span>,
+    <span class="t-string">"tightening"</span>: <span class="t-number">0.25</span>,
+    <span class="t-string">"risk_off"</span>:   <span class="t-number">0.00</span>,
+}
+weight = EXPOSURE[signal[<span class="t-string">"regime"</span>][<span class="t-string">"most_likely"</span>]]</pre>
+      </div>
+
+      <h3 class="section-subtitle">Response Schema</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">json</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>{
+  <span class="t-key">"date"</span>: <span class="t-string">"2026-03-15"</span>,
+  <span class="t-key">"regime"</span>: {
+    <span class="t-key">"most_likely"</span>: <span class="t-string">"recovery"</span>,
+    <span class="t-key">"probabilities"</span>: {
+      <span class="t-key">"expansion"</span>:  <span class="t-number">0.08</span>,
+      <span class="t-key">"recovery"</span>:   <span class="t-number">0.72</span>,
+      <span class="t-key">"tightening"</span>: <span class="t-number">0.15</span>,
+      <span class="t-key">"risk_off"</span>:   <span class="t-number">0.05</span>
+    },
+    <span class="t-key">"confidence"</span>: <span class="t-string">"HIGH"</span>,
+    <span class="t-key">"persistence_days"</span>: <span class="t-number">14</span>,
+    <span class="t-key">"expected_duration_remaining_days"</span>: <span class="t-number">8</span>
+  },
+  <span class="t-key">"net_liquidity"</span>: {
+    <span class="t-key">"level_bn"</span>: <span class="t-number">5842.3</span>,
+    <span class="t-key">"change_4w_bn"</span>: <span class="t-number">-124.5</span>,
+    <span class="t-key">"zscore"</span>: <span class="t-number">-1.1</span>,
+    <span class="t-key">"trend"</span>: <span class="t-string">"CONTRACTING"</span>
+  },
+  <span class="t-key">"pca_factors"</span>: {
+    <span class="t-key">"pc1"</span>: <span class="t-number">0.82</span>,
+    <span class="t-key">"pc2"</span>: <span class="t-number">-0.34</span>,
+    <span class="t-key">"pc3"</span>: <span class="t-number">0.11</span>,
+    <span class="t-key">"pc4"</span>: <span class="t-number">-0.05</span>,
+    <span class="t-key">"variance_explained_pct"</span>: [<span class="t-number">0.42</span>, <span class="t-number">0.22</span>, <span class="t-number">0.14</span>, <span class="t-number">0.09</span>]
+  },
+  <span class="t-key">"model_metadata"</span>: {
+    <span class="t-key">"pca_fit_date"</span>: <span class="t-string">"2026-01-15"</span>,
+    <span class="t-key">"hmm_fit_date"</span>: <span class="t-string">"2026-01-15"</span>,
+    <span class="t-key">"data_vintage"</span>: <span class="t-string">"2026-03-15T18:31:22Z"</span>
+  }
+}</pre>
+      </div>
+
+      <h3 class="section-subtitle">Regime Field Descriptions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>most_likely</td>
+              <td><span class="type-chip">string</span></td>
+              <td>Dominant regime: <code>expansion</code>, <code>recovery</code>, <code>tightening</code>, <code>risk_off</code></td>
+            </tr>
+            <tr>
+              <td>probabilities</td>
+              <td><span class="type-chip">object</span></td>
+              <td>Posterior probability for each state. Values sum to <code>1.0</code></td>
+            </tr>
+            <tr>
+              <td>confidence</td>
+              <td><span class="type-chip">string</span></td>
+              <td><code>HIGH</code> (≥70%), <code>MODERATE</code> (≥50%), <code>LOW</code> (&lt;50%)</td>
+            </tr>
+            <tr>
+              <td>persistence_days</td>
+              <td><span class="type-chip">int</span></td>
+              <td>Consecutive days the model has held the current regime</td>
+            </tr>
+            <tr>
+              <td>expected_duration_remaining_days</td>
+              <td><span class="type-chip">int</span></td>
+              <td>HMM-derived forward estimate of days remaining in this regime</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/signals/{date}                                      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-signals-date">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/signals/{date}</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-auth">Authenticated</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Retrieve the complete signal package for a specific historical date. Returns <code>404</code> if no data exists for the requested date (weekends, holidays, or dates before the data start).</p>
+
+      <h3 class="section-subtitle">Path Parameters</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>date</td>
+              <td><span class="type-chip">string</span></td>
+              <td>ISO 8601 date in <code>YYYY-MM-DD</code> format</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="section-subtitle">Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>curl -H <span class="t-string">"X-MacroPulse-Key: mp_..."</span> \
+  https://api.macropulse.live/v1/signals/<span class="t-param">2025-10-01</span></pre>
+      </div>
+
+      <p class="section-desc" style="margin-top:0.5rem;">Response schema is identical to <code>GET /v1/signals/latest</code>.</p>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/signals/range                                       -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-signals-range">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/signals/range</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-auth">Authenticated</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns a time-series array of signal packages for a date range. Useful for backtesting and portfolio research. Maximum window: 365 calendar days.</p>
+
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>start</td>
+              <td><span class="td-required td-yes">Yes</span></td>
+              <td>Start date, ISO format <code>YYYY-MM-DD</code></td>
+            </tr>
+            <tr>
+              <td>end</td>
+              <td><span class="td-required td-yes">Yes</span></td>
+              <td>End date, ISO format <code>YYYY-MM-DD</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="section-subtitle">Python Example — Backtest Workflow</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre><span class="t-keyword">import</span> requests, pandas <span class="t-keyword">as</span> pd
+
+resp = requests.<span class="t-fn">get</span>(
+    <span class="t-string">"https://api.macropulse.live/v1/signals/range"</span>,
+    params={<span class="t-string">"start"</span>: <span class="t-string">"2025-01-01"</span>, <span class="t-string">"end"</span>: <span class="t-string">"2025-12-31"</span>},
+    headers={<span class="t-string">"X-MacroPulse-Key"</span>: <span class="t-string">"mp_..."</span>}
+)
+signals = pd.<span class="t-fn">DataFrame</span>(resp.<span class="t-fn">json</span>())
+signals[<span class="t-string">"regime"</span>] = signals[<span class="t-string">"regime"</span>].<span class="t-fn">apply</span>(<span class="t-keyword">lambda</span> x: x[<span class="t-string">"most_likely"</span>])</pre>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/regime/current                                      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-regime-current">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/regime/current</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns the most recent regime classification. No API key required — suitable for public dashboards, widgets, and open integrations.</p>
+
+      <h3 class="section-subtitle">Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>curl https://api.macropulse.live/v1/regime/current</pre>
+      </div>
+
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">json</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>{
+  <span class="t-key">"timestamp"</span>: <span class="t-string">"2026-03-15T00:00:00"</span>,
+  <span class="t-key">"macro_regime"</span>: <span class="t-string">"recovery"</span>,
+  <span class="t-key">"risk_score"</span>: <span class="t-number">22.5</span>,
+  <span class="t-key">"probabilities"</span>: {
+    <span class="t-key">"expansion"</span>:  <span class="t-number">0.08</span>,
+    <span class="t-key">"recovery"</span>:   <span class="t-number">0.72</span>,
+    <span class="t-key">"tightening"</span>: <span class="t-number">0.15</span>,
+    <span class="t-key">"risk_off"</span>:   <span class="t-number">0.05</span>
+  },
+  <span class="t-key">"volatility_state"</span>: <span class="t-string">"normal"</span>,
+  <span class="t-key">"model_version"</span>: <span class="t-string">"v2"</span>
+}</pre>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/regime/history                                      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-regime-history">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/regime/history</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns a paginated list of historical regime rows in reverse-chronological order. Useful for charting regime timelines without authentication.</p>
+
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>limit</td>
+              <td>90</td>
+              <td>Number of rows to return. Maximum <code>1000</code></td>
+            </tr>
+            <tr>
+              <td>start</td>
+              <td>—</td>
+              <td>ISO date filter — restrict results on or after this date</td>
+            </tr>
+            <tr>
+              <td>end</td>
+              <td>—</td>
+              <td>ISO date filter — restrict results on or before this date</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="section-subtitle">Python Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre><span class="t-keyword">import</span> requests, pandas <span class="t-keyword">as</span> pd
+
+history = requests.<span class="t-fn">get</span>(
+    <span class="t-string">"https://api.macropulse.live/v1/regime/history"</span>,
+    params={<span class="t-string">"limit"</span>: <span class="t-number">365</span>}
+).<span class="t-fn">json</span>()
+df = pd.<span class="t-fn">DataFrame</span>(history)</pre>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/liquidity                                           -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-liquidity">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/liquidity</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns net Fed liquidity time-series. Net liquidity is computed as <code>Fed Assets − RRPO − TGA</code> in billions of USD, with daily changes and z-scores.</p>
+
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Default</th><th>Max</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>limit</td>
+              <td>30</td>
+              <td>500</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="section-subtitle">Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>curl <span class="t-string">"https://api.macropulse.live/v1/liquidity?limit=90"</span></pre>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/scorecard                                           -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-scorecard">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/scorecard</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns 5 normalized macro signal gauges in the range <code>[-1.0, +1.0]</code>. Each gauge is the 20-day momentum of a key macro indicator, standardized by historical volatility.</p>
+
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">json</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>{
+  <span class="t-key">"growth_momentum"</span>:    <span class="t-number">0.42</span>,
+  <span class="t-key">"inflation_momentum"</span>: <span class="t-number">-0.18</span>,
+  <span class="t-key">"liquidity"</span>:          <span class="t-number">-0.65</span>,
+  <span class="t-key">"financial_stress"</span>:   <span class="t-number">0.31</span>,
+  <span class="t-key">"dollar_strength"</span>:    <span class="t-number">0.12</span>,
+  <span class="t-key">"computed_at"</span>:        <span class="t-string">"2026-03-15T18:31:22.401Z"</span>
+}</pre>
+      </div>
+
+      <h3 class="section-subtitle">Signal Definitions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Signal</th><th>Positive (+1)</th><th>Negative (−1)</th><th>Source indicator</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>growth_momentum</td>
+              <td>Yield curve steepening</td>
+              <td>Flattening / inversion</td>
+              <td><code>d_yield_curve</code> 20d momentum</td>
+            </tr>
+            <tr>
+              <td>inflation_momentum</td>
+              <td>Rising 10Y yields</td>
+              <td>Falling 10Y yields</td>
+              <td><code>d_10y</code> 20d momentum</td>
+            </tr>
+            <tr>
+              <td>liquidity</td>
+              <td>High net Fed liquidity</td>
+              <td>Liquidity drain</td>
+              <td>net_liquidity z-score</td>
+            </tr>
+            <tr>
+              <td>financial_stress</td>
+              <td>Calm markets</td>
+              <td>Stress / widening spreads</td>
+              <td><code>-(d_hy + d_vix)</code> momentum</td>
+            </tr>
+            <tr>
+              <td>dollar_strength</td>
+              <td>Strong USD</td>
+              <td>Weak USD</td>
+              <td><code>d_dxy</code> 20d momentum</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- POST /v1/backtest                                           -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-backtest">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">POST /v1/backtest</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-post">POST</span>
+            <span class="badge badge-auth">Authenticated</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Run a historical regime replay over a specified date range. Returns aggregate statistics about regime distribution, persistence, and risk score trajectory. Useful for strategy validation before live deployment.</p>
+
+      <h3 class="section-subtitle">Request Body</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">json</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>{
+  <span class="t-key">"start"</span>: <span class="t-string">"2024-01-01"</span>,
+  <span class="t-key">"end"</span>:   <span class="t-string">"2025-01-01"</span>
+}</pre>
+      </div>
+
+      <h3 class="section-subtitle">Python Example</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre>resp = requests.<span class="t-fn">post</span>(
+    <span class="t-string">"https://api.macropulse.live/v1/backtest"</span>,
+    json={<span class="t-string">"start"</span>: <span class="t-string">"2024-01-01"</span>, <span class="t-string">"end"</span>: <span class="t-string">"2025-01-01"</span>},
+    headers={<span class="t-string">"X-MacroPulse-Key"</span>: <span class="t-string">"mp_..."</span>}
+)
+bt = resp.<span class="t-fn">json</span>()
+<span class="t-fn">print</span>(bt[<span class="t-string">"summary"</span>][<span class="t-string">"avg_persistence_days"</span>])  <span class="t-comment"># e.g. 18.4</span></pre>
+      </div>
+
+      <h3 class="section-subtitle">Response Summary Fields</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>total_days</td>
+              <td>Trading days included in the backtest range</td>
+            </tr>
+            <tr>
+              <td>transitions</td>
+              <td>Number of regime-change events detected</td>
+            </tr>
+            <tr>
+              <td>avg_persistence_days</td>
+              <td>Mean number of consecutive days per regime episode</td>
+            </tr>
+            <tr>
+              <td>mean_risk_score</td>
+              <td>Average signed risk score over the full period</td>
+            </tr>
+            <tr>
+              <td>regime_distribution</td>
+              <td>Percentage of trading days in each regime state</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GET /v1/performance                                         -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-performance">
+      <div class="endpoint-header">
+        <div>
+          <div class="endpoint-path">GET /v1/performance</div>
+          <div class="badge-group" style="margin-top:0.5rem;">
+            <span class="badge badge-get">GET</span>
+            <span class="badge badge-auth">Authenticated</span>
+          </div>
+        </div>
+      </div>
+      <p class="section-desc">Returns performance attribution comparing a regime-filtered strategy against a buy-and-hold benchmark. All metrics are computed using daily SPY returns as the base instrument.</p>
+
+      <h3 class="section-subtitle">Response Includes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>sharpe</td><td>Annualized Sharpe ratio for the regime-filtered strategy</td></tr>
+            <tr><td>max_drawdown</td><td>Maximum peak-to-trough drawdown (negative float)</td></tr>
+            <tr><td>total_return</td><td>Cumulative return over the full period</td></tr>
+            <tr><td>alpha</td><td>Annualized alpha versus buy-and-hold benchmark</td></tr>
+            <tr><td>by_regime</td><td>Per-regime breakdown of returns and hit rate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- AUTH ENDPOINTS                                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section class="section" id="ep-auth-register">
+      <h2 class="section-title">Authentication Endpoints</h2>
+
+      <div class="auth-subsection">
+        <div class="auth-subsection-title">
+          <span class="endpoint-path" style="font-size:0.95rem;">POST /v1/auth/register</span>
+          <div class="badge-group">
+            <span class="badge badge-post">POST</span>
+            <span class="badge badge-public">Public</span>
+          </div>
+        </div>
+        <p class="section-desc">Register a new account and receive your free API key. No credit card required.</p>
+
+        <h3 class="section-subtitle">Request Body</h3>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-lang">json</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre>{ <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span> }</pre>
+        </div>
+
+        <h3 class="section-subtitle">Response</h3>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-lang">json</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre>{
+  <span class="t-key">"api_key"</span>: <span class="t-string">"mp_..."</span>,
+  <span class="t-key">"email"</span>: <span class="t-string">"you@example.com"</span>,
+  <span class="t-key">"tier"</span>: <span class="t-string">"free"</span>,
+  <span class="t-key">"requests_per_day"</span>: <span class="t-number">50</span>
+}</pre>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <span>The <code>api_key</code> value is shown <strong>once</strong>. Copy and store it securely — it cannot be retrieved again. Use <code>POST /v1/auth/rotate</code> if you lose access.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ep-auth-rotate">
+      <div class="auth-subsection">
+        <div class="auth-subsection-title">
+          <span class="endpoint-path" style="font-size:0.95rem;">POST /v1/auth/rotate</span>
+          <div class="badge-group">
+            <span class="badge badge-post">POST</span>
+            <span class="badge badge-auth">Authenticated</span>
+          </div>
+        </div>
+        <p class="section-desc">Rotate your API key. The current key is <strong>immediately revoked</strong> and a new one is returned. Update any applications before calling this endpoint.</p>
+
+        <h3 class="section-subtitle">Request Headers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Header</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>X-MacroPulse-Key</td>
+                <td><span class="td-required td-yes">Yes</span></td>
+                <td>Your current API key. It will be invalidated upon success.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="section-subtitle">Example</h3>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre>curl -X POST \
+  -H <span class="t-string">"X-MacroPulse-Key: mp_old_key"</span> \
+  https://api.macropulse.live/v1/auth/rotate</pre>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <span>The old key stops working immediately. Ensure all production integrations are updated before rotating.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // ── Copy button ────────────────────────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      const span = btn.querySelector('span') || btn;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1.5 8.5 5.5 12.5 14.5 3.5"/></svg> Copied`;
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('copied');
+      }, 2000);
+    }).catch(() => {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    });
+  }
+
+  // ── Sidebar active link (IntersectionObserver) ─────────────────
+  const sections = document.querySelectorAll('section[id]');
+  const sidebarLinks = document.querySelectorAll('.sidebar-link[data-target]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        sidebarLinks.forEach(link => {
+          link.classList.toggle('active', link.dataset.target === id);
+        });
+      }
+    });
+  }, {
+    rootMargin: '-20% 0px -70% 0px',
+    threshold: 0
+  });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Custom scrollTo that uses native smooth scroll
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Live signal fetch ──────────────────────────────────────────
+  const regimeEl   = document.getElementById('live-regime');
+  const riskEl     = document.getElementById('live-risk');
+  const volEl      = document.getElementById('live-vol');
+  const modelEl    = document.getElementById('live-model');
+  const tsEl       = document.getElementById('live-ts');
+  const spinner    = document.getElementById('live-spinner');
+
+  function regimeClass(regime) {
+    const map = {
+      expansion: 'regime-expansion',
+      recovery: 'regime-recovery',
+      tightening: 'regime-tightening',
+      risk_off: 'regime-risk_off',
+    };
+    return map[regime] || '';
+  }
+
+  function fetchLive() {
+    spinner.classList.add('active');
+    fetch('https://api.macropulse.live/v1/regime/current')
+      .then(r => r.json())
+      .then(data => {
+        const regime = data.macro_regime || data.regime || '—';
+        const risk   = data.risk_score != null ? data.risk_score.toFixed(1) : '—';
+        const vol    = data.volatility_state || '—';
+        const model  = data.model_version || '—';
+
+        // Clear old classes
+        regimeEl.className = 'live-field-value ' + regimeClass(regime);
+        regimeEl.textContent = regime.replace('_', ' ');
+        riskEl.textContent = risk;
+        volEl.textContent = vol;
+        modelEl.textContent = model;
+
+        const now = new Date();
+        tsEl.textContent = 'updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      })
+      .catch(() => {
+        regimeEl.textContent = 'unavailable';
+        tsEl.textContent = 'error fetching';
+      })
+      .finally(() => {
+        spinner.classList.remove('active');
+      });
+  }
+
+  // Initial fetch + interval
+  fetchLive();
+  setInterval(fetchLive, 30000);
+</script>
+</body>
+</html>
