@@ -93,14 +93,15 @@ app.include_router(performance_router)
 app.include_router(public_config_router)
 app.include_router(signals_router)
 
-# ── Static frontend (served in production) ───────────────────────
-_frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
-if _frontend_dist.is_dir():
-    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
-    logger.info("Serving frontend from %s", _frontend_dist)
-
-
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check() -> HealthResponse:
     """Liveness probe."""
     return HealthResponse(status="ok", version=settings.app_version)
+
+
+# ── Static frontend (served in production) ───────────────────────
+# NOTE: must be mounted AFTER all API routes — StaticFiles catches everything
+_frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if _frontend_dist.is_dir():
+    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
+    logger.info("Serving frontend from %s", _frontend_dist)
