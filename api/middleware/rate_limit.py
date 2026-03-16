@@ -38,6 +38,9 @@ _EXEMPT_PATHS = {
     "/v1/auth/register",
 }
 
+# Path prefixes that bypass rate limiting (unauthenticated public routes)
+_EXEMPT_PREFIXES = ("/v1/public/",)
+
 # Tier → daily request cap  (0 = unlimited)
 TIER_LIMITS: dict[str, int] = {
     "free":    50,
@@ -106,7 +109,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         # Path-based exemptions
-        if request.url.path in _EXEMPT_PATHS:
+        path = request.url.path
+        if path in _EXEMPT_PATHS or any(path.startswith(p) for p in _EXEMPT_PREFIXES):
             return await call_next(request)
 
         raw_key = (

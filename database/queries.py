@@ -167,6 +167,30 @@ def fetch_regime_history(
         return cur.fetchall()  # type: ignore[return-value]
 
 
+def fetch_public_chart_data(limit: int = 730) -> list[dict[str, Any]]:
+    """Return regime history for the public marketing-site chart (no auth required)."""
+    sql = """
+        SELECT time, regime, risk_score
+        FROM macro_regimes
+        ORDER BY time DESC
+        LIMIT %(limit)s;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"limit": limit})
+        return cur.fetchall()  # type: ignore[return-value]
+
+
+def create_newsletter_subscriber(email: str) -> None:
+    """Insert a newsletter subscriber, silently ignoring duplicates."""
+    sql = """
+        INSERT INTO newsletter_subscribers (email)
+        VALUES (%(email)s)
+        ON CONFLICT (email) DO NOTHING;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"email": email})
+
+
 def fetch_latest_liquidity(limit: int = 30) -> list[dict[str, Any]]:
     """Return recent net liquidity values."""
     sql = """

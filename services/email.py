@@ -48,6 +48,80 @@ def _post(payload: dict) -> None:
         logger.error("Brevo email unexpected error", exc_info=True)
 
 
+def send_newsletter_confirmation(to: str) -> None:
+    """
+    Send newsletter subscription confirmation email.
+    Fire-and-forget — never blocks or raises.
+    """
+    text_content = """Welcome to the MacroPulse Weekly Brief.
+
+Every Monday you'll receive the current macro regime classification,
+liquidity state, and key signals — no API key needed.
+
+macropulse.live
+"""
+
+    html_content = """<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Inter',Arial,sans-serif;color:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:48px 16px;">
+<tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+
+  <tr><td style="padding-bottom:32px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle;"></td>
+      <td style="padding-left:8px;font-size:15px;font-weight:600;letter-spacing:-0.02em;vertical-align:middle;">MacroPulse</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding-bottom:20px;">
+    <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.03em;">You're in.</h1>
+    <p style="margin:10px 0 0;font-size:13px;color:#888;line-height:1.7;">
+      Every Monday you'll receive the current macro regime classification,
+      liquidity state, and key signals — no API key needed.
+    </p>
+  </td></tr>
+
+  <tr><td style="padding-bottom:24px;">
+    <div style="background:#111;border:1px solid #1f1f1f;border-radius:10px;padding:20px 24px;">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#555;">What you'll get</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#aaa;">&#x2713; &nbsp;Regime classification (Expansion / Tightening / Recovery / Risk-Off)</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#aaa;">&#x2713; &nbsp;Net liquidity state + trend</p>
+      <p style="margin:0;font-size:13px;color:#aaa;">&#x2713; &nbsp;Key macro signals to watch</p>
+    </div>
+  </td></tr>
+
+  <tr><td style="padding-bottom:24px;">
+    <a href="https://macropulse.live"
+       style="display:inline-block;background:#f0f0f0;color:#0a0a0a;font-size:13px;font-weight:600;padding:10px 22px;border-radius:7px;text-decoration:none;">
+      View Live Dashboard &rarr;
+    </a>
+  </td></tr>
+
+  <tr><td style="padding-top:16px;border-top:1px solid #1a1a1a;">
+    <p style="margin:0;font-size:11px;color:#444;line-height:1.8;">
+      MacroPulse &middot; Probabilistic macro regime intelligence<br>
+      <a href="mailto:support@macropulse.live" style="color:#555;text-decoration:none;">support@macropulse.live</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    _post({
+        "sender":      SENDER,
+        "to":          [{"email": to}],
+        "subject":     "You're in — MacroPulse Weekly Brief",
+        "htmlContent": html_content,
+        "textContent": text_content,
+    })
+
+
 def send_verification_email(to: str, code: str) -> None:
     """
     Send a 6-digit email verification code to the registrant.
