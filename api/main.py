@@ -20,6 +20,7 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.middleware.rate_limit import RateLimitMiddleware
@@ -69,6 +70,9 @@ app = FastAPI(
         "ARIMA forecasts, and rule-based multi-domain analysis."
     ),
     lifespan=lifespan,
+    docs_url=None,    # Disabled — use branded docs at macropulse.live/api-docs
+    redoc_url=None,
+    openapi_url="/openapi.json",  # schema still available for tooling
 )
 
 app.add_middleware(
@@ -92,6 +96,18 @@ app.include_router(analysis_router)
 app.include_router(performance_router)
 app.include_router(public_config_router)
 app.include_router(signals_router)
+
+@app.get("/docs", include_in_schema=False)
+def redirect_docs():
+    """Redirect to branded API documentation page."""
+    return RedirectResponse("https://macropulse.live/api-docs", status_code=301)
+
+
+@app.get("/dashboard", include_in_schema=False)
+def redirect_dashboard():
+    """Redirect /dashboard to root — the React SPA handles all views."""
+    return RedirectResponse("/", status_code=301)
+
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check() -> HealthResponse:

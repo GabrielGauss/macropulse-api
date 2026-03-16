@@ -52,10 +52,18 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
         style={{ height: 48, minHeight: 48 }}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="h-2 w-2 rounded-full flex-shrink-0"
-            style={{ background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }}
-          />
+          <svg
+            width="16" height="16" viewBox="0 0 16 16" fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="flex-shrink-0"
+            style={{ filter: 'drop-shadow(0 0 4px rgba(34,197,94,0.5))' }}
+          >
+            <circle cx="8" cy="8" r="6" stroke="#22c55e" strokeWidth="1.2" />
+            <ellipse cx="8" cy="8" rx="2.5" ry="6" stroke="#22c55e" strokeWidth="1" />
+            <line x1="2" y1="8" x2="14" y2="8" stroke="#22c55e" strokeWidth="1" />
+            <path d="M2.8 5.5Q8 6.8 13.2 5.5" stroke="#22c55e" strokeWidth="0.8" opacity="0.6" />
+            <path d="M2.8 10.5Q8 9.2 13.2 10.5" stroke="#22c55e" strokeWidth="0.8" opacity="0.6" />
+          </svg>
           {!collapsed && (
             <span className="text-[13px] font-semibold tracking-tight truncate">MacroPulse</span>
           )}
@@ -152,6 +160,57 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           </div>
         </div>
       )}
+
+      {/* External links */}
+      <div className="border-t border-[#1a1a1a] px-2 py-2 space-y-0.5">
+        <a
+          href="https://macropulse.live"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center rounded-md transition-colors duration-100"
+          style={{
+            gap: 10,
+            padding: collapsed ? '6px 12px' : '6px 10px',
+            color: 'rgba(255,255,255,0.2)',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+          title="macropulse.live"
+        >
+          <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="8" cy="8" r="6" />
+            <path d="M8 2c0 0-2.5 2.5-2.5 6S8 14 8 14M8 2c0 0 2.5 2.5 2.5 6S8 14 8 14M2 8h12" />
+          </svg>
+          {!collapsed && (
+            <span className="text-[11px] font-medium">macropulse.live</span>
+          )}
+        </a>
+        <a
+          href="https://macropulse.live/api-docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center rounded-md transition-colors duration-100"
+          style={{
+            gap: 10,
+            padding: collapsed ? '6px 12px' : '6px 10px',
+            color: 'rgba(255,255,255,0.2)',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+          title="API Docs"
+        >
+          <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 2h6l3 3v9H4V2zM10 2v3h3M6 7h5M6 9.5h5M6 12h3" />
+          </svg>
+          {!collapsed && (
+            <span className="text-[11px] font-medium">API Docs</span>
+          )}
+        </a>
+      </div>
 
       {/* Collapse toggle */}
       <button
