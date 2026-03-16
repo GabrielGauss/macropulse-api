@@ -8,12 +8,12 @@ import FactorsChart from './components/FactorsChart';
 import DriftPanel from './components/DriftPanel';
 import SignalGauges from './components/SignalGauges';
 import MacroHeatmap from './components/MacroHeatmap';
+import LiquidityView from './views/LiquidityView';
+import SignalsView from './views/SignalsView';
+import BacktestView from './views/BacktestView';
 import { useFetch } from './hooks/useFetch';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
 import { api } from './lib/api';
-
-// Days per time filter label
-const HISTORY_LIMITS = { '1M': 30, '3M': 90, '6M': 180, '1Y': 365 };
 
 export default function App() {
   const { connected, lastMessage } = useRegimeSocket();
@@ -45,19 +45,16 @@ export default function App() {
     }
   }, [lastMessage]);
 
-  // Re-fetch history when time window changes
   useEffect(() => { history.refetch(); }, [historyDays]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-0">
-      {/* Sidebar */}
       <Sidebar
         regime={regime.data}
         activeSection={activeSection}
         onNavigate={setActiveSection}
       />
 
-      {/* Main column */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header connected={connected} regime={regime.data} />
 
@@ -68,30 +65,39 @@ export default function App() {
             </div>
           )}
 
-          <div className="mx-auto max-w-screen-xl space-y-4">
-            {/* Hero row: regime + signal gauges + heatmap */}
-            <div className="grid gap-4 lg:grid-cols-3">
-              <RegimeCard regime={regime.data} />
-              <SignalGauges data={scorecard.data} />
-              <MacroHeatmap regime={regime.data} />
-            </div>
+          <div className="mx-auto max-w-screen-xl">
 
-            {/* Timeline with time filter */}
-            <RegimeTimeline
-              history={history.data}
-              historyDays={historyDays}
-              onHistoryDaysChange={setHistoryDays}
-              historyLimits={HISTORY_LIMITS}
-            />
+            {/* ── Dashboard ── */}
+            {activeSection === 'dashboard' && (
+              <div className="space-y-4">
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <RegimeCard regime={regime.data} />
+                  <SignalGauges data={scorecard.data} />
+                  <MacroHeatmap regime={regime.data} />
+                </div>
+                <RegimeTimeline
+                  history={history.data}
+                  historyDays={historyDays}
+                  onHistoryDaysChange={setHistoryDays}
+                />
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <LiquidityChart data={liquidity.data} />
+                  <FactorsChart data={factors.data} />
+                  <DriftPanel data={drift.data} />
+                </div>
+              </div>
+            )}
 
-            {/* Charts + model health */}
-            <div className="grid gap-4 lg:grid-cols-3">
-              <LiquidityChart data={liquidity.data} />
-              <FactorsChart data={factors.data} />
-              <DriftPanel data={drift.data} />
-            </div>
+            {/* ── Liquidity ── */}
+            {activeSection === 'liquidity' && <LiquidityView />}
 
-            <footer className="pt-3 text-center text-[10px] text-white/15 font-mono border-t border-[#1f1f1f]">
+            {/* ── Signals ── */}
+            {activeSection === 'signals' && <SignalsView />}
+
+            {/* ── Backtests ── */}
+            {activeSection === 'backtest' && <BacktestView />}
+
+            <footer className="pt-4 mt-4 text-center text-[10px] text-white/10 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence
             </footer>
           </div>

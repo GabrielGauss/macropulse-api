@@ -25,6 +25,7 @@ from api.schemas.responses import (
     UsageResponse,
 )
 from database import queries
+from services.email import send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,12 @@ def register(body: RegisterRequest) -> RegisterResponse:
         )
 
     logger.info("New user registered: email=%s tier=free", email)
+
+    # Fire-and-forget welcome email — never blocks the response
+    try:
+        send_welcome_email(to=email, api_key=plaintext_key, tier="free")
+    except Exception:
+        logger.warning("Welcome email dispatch error for %s (non-fatal)", email, exc_info=True)
 
     return RegisterResponse(
         user_id=user["id"],
