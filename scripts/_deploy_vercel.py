@@ -62,7 +62,7 @@ def add_domain(project_id):
             timeout=30,
         )
         data = resp.json()
-        status = "✓" if resp.status_code in (200, 201) else f"✗ ({data.get('error', {}).get('message', resp.status_code)})"
+        status = "OK" if resp.status_code in (200, 201) else f"FAIL ({data.get('error', {}).get('message', resp.status_code)})"
         print(f"  Domain {domain}: {status}")
 
 
