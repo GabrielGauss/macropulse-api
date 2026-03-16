@@ -282,6 +282,7 @@ def run_daily_pipeline(
         from services.narrative import generate_narrative
         from services.discord import post_daily_signal
         from services.digest import send_daily_digest
+        from services.twitter import post_daily_tweet
 
         current_regime = queries.fetch_current_regime() or regime_row
         scorecard = build_scorecard()
@@ -289,6 +290,7 @@ def run_daily_pipeline(
 
         post_daily_signal(current_regime, scorecard, narrative)
         send_daily_digest(current_regime, scorecard, narrative)
+        post_daily_tweet(current_regime, scorecard)
     except Exception:
         logger.error("Daily brief dispatch failed (non-fatal)", exc_info=True)
 

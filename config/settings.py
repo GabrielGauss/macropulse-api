@@ -104,6 +104,12 @@ class Settings(BaseSettings):
     webhook_url: str = ""  # Slack / Discord / generic webhook (operator alerts)
     discord_webhook_url: str = ""  # Discord channel webhook for daily signal posts
 
+    # ── X (Twitter) ─────────────────────────────────────────────────
+    x_api_key: str = ""
+    x_api_secret: str = ""
+    x_access_token: str = ""
+    x_access_token_secret: str = ""
+
     # ── Scheduler ───────────────────────────────────────────────────
     pipeline_cron_hour: int = 18  # 18:00 UTC (after US market close)
     pipeline_cron_minute: int = 30
