@@ -1,78 +1,143 @@
 import React from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine,
+  ComposedChart, Area, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, ReferenceLine, ReferenceArea,
 } from 'recharts';
-import { REGIME_CONFIG, formatDate } from '../lib/utils';
+import { REGIME_CONFIG, formatDateShort } from '../lib/utils';
 
-function CustomTooltip({ active, payload }) {
+const TICK = { fill: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: 'JetBrains Mono' };
+
+function Tooltip_({ active, payload }) {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   const cfg = REGIME_CONFIG[d.regime] || {};
   return (
-    <div className="rounded-xl border border-white/10 bg-surface-2 px-4 py-3 shadow-xl text-sm">
-      <p className="font-mono text-xs text-white/40">{formatDate(d.timestamp)}</p>
-      <p className="mt-1 font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
-      <p className="text-xs text-white/50">Risk: {d.risk_score}</p>
+    <div
+      style={{
+        background: '#141414',
+        border: '1px solid #2a2a2a',
+        borderRadius: 6,
+        padding: '8px 12px',
+        fontSize: 11,
+        fontFamily: 'JetBrains Mono, monospace',
+      }}
+    >
+      <div style={{ color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>
+        {formatDateShort(d.timestamp)}
+      </div>
+      <div style={{ color: cfg.color || '#fff', fontWeight: 600 }}>
+        {cfg.label || d.regime}
+      </div>
+      <div style={{ color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+        Risk score: {d.risk_score > 0 ? '+' : ''}{d.risk_score?.toFixed(1)}
+      </div>
     </div>
   );
+}
+
+// Build contiguous regime bands for ReferenceArea
+function buildBands(data) {
+  if (!data.length) return [];
+  const bands = [];
+  let start = data[0];
+  let current = data[0].regime;
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i].regime !== current) {
+      bands.push({ regime: current, x1: start.timestamp, x2: data[i - 1].timestamp });
+      start = data[i];
+      current = data[i].regime;
+    }
+  }
+  bands.push({ regime: current, x1: start.timestamp, x2: data[data.length - 1].timestamp });
+  return bands;
 }
 
 export default function RegimeTimeline({ history }) {
   if (!history || history.length === 0) {
     return (
-      <div className="glass-card flex h-72 items-center justify-center">
-        <p className="text-sm text-white/30">No history data</p>
+      <div className="card flex h-72 items-center justify-center">
+        <p className="text-[11px] text-white/25 font-mono">No history data</p>
       </div>
     );
   }
 
-  const data = [...history]
-    .reverse()
-    .map((r) => ({
-      timestamp: r.timestamp,
-      risk_score: r.risk_score,
-      regime: r.macro_regime,
-    }));
+  const data = [...history].reverse().map((r) => ({
+    timestamp: r.timestamp,
+    risk_score: r.risk_score,
+    regime: r.macro_regime,
+  }));
+
+  const bands = buildBands(data);
 
   return (
-    <div className="glass-card p-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-      <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-white/40">
-        Risk Score Timeline
-      </h3>
-      <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-          <defs>
-            <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+    <div className="card p-5 animate-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="label">Risk Score · 90-Day History</div>
+        <div className="flex items-center gap-3">
+          {Object.entries(REGIME_CONFIG).map(([key, cfg]) => (
+            <div key={key} className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm flex-shrink-0" style={{ background: cfg.color }} />
+              <span className="text-[9px] text-white/25 font-mono uppercase">{cfg.short}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={240}>
+        <ComposedChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: -18 }}>
+          <CartesianGrid
+            strokeDasharray="0"
+            stroke="rgba(255,255,255,0.03)"
+            horizontal={true}
+            vertical={false}
+          />
+
+          {/* Colored regime background bands */}
+          {bands.map((b, i) => {
+            const cfg = REGIME_CONFIG[b.regime];
+            return (
+              <ReferenceArea
+                key={i}
+                x1={b.x1}
+                x2={b.x2}
+                fill={cfg?.color || '#fff'}
+                fillOpacity={0.05}
+                stroke="none"
+              />
+            );
+          })}
+
           <XAxis
             dataKey="timestamp"
-            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }}
+            tick={TICK}
             tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             axisLine={false}
             tickLine={false}
+            interval="preserveStartEnd"
           />
           <YAxis
             domain={[-100, 100]}
-            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }}
+            tick={TICK}
             axisLine={false}
             tickLine={false}
+            ticks={[-100, -50, 0, 50, 100]}
           />
-          <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" />
-          <Tooltip content={<CustomTooltip />} />
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" strokeDasharray="0" />
+
+          <Tooltip content={<Tooltip_ />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+
           <Area
             type="monotone"
             dataKey="risk_score"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            fill="url(#riskGrad)"
+            stroke="rgba(255,255,255,0.6)"
+            strokeWidth={1.5}
+            fill="rgba(255,255,255,0.03)"
             dot={false}
-            activeDot={{ r: 4, fill: '#3b82f6' }}
+            activeDot={{ r: 3, fill: '#fff', strokeWidth: 0 }}
           />
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

@@ -4,193 +4,472 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPulse — Macro Regime Intelligence API</title>
-  <meta name="description" content="Quantitative macro regime signals derived from PCA, Hidden Markov Models, and Fed liquidity data. Built for systematic traders and quant developers." />
+  <meta name="description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #070b14;
-      --bg2:       #0d1424;
-      --bg3:       #111827;
-      --border:    #1e2d45;
-      --green:     #00d97e;
-      --green-dim: #00d97e22;
-      --blue:      #3b82f6;
-      --yellow:    #f59e0b;
-      --red:       #ef4444;
-      --text:      #e2e8f0;
-      --muted:     #64748b;
-      --card:      #0f1929;
+      --bg:       #0a0a0a;
+      --s1:       #111111;
+      --s2:       #191919;
+      --border:   #1f1f1f;
+      --border2:  #2a2a2a;
+      --text:     #f0f0f0;
+      --muted:    #888;
+      --dim:      #555;
+      --green:    #22c55e;
+      --blue:     #3b82f6;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
     }
 
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
 
-    a { color: var(--green); text-decoration: none; }
-    a:hover { opacity: 0.85; }
-
-    code, .mono { font-family: 'JetBrains Mono', monospace; }
-
-    /* ── Nav ── */
+    /* ── Nav ─────────────────────────────────────────────────────── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 56px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2rem;
-      background: rgba(7, 11, 20, 0.9);
-      backdrop-filter: blur(12px);
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(16px);
+    }
+    .logo {
+      font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .logo-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { font-size: 0.85rem; color: var(--muted); transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-key {
+      font-size: 0.82rem; font-weight: 500;
+      padding: 0.4rem 1rem; border-radius: 6px;
+      border: 1px solid var(--border2); color: var(--text);
+      transition: border-color 0.15s;
+      cursor: pointer; background: transparent;
+    }
+    .nav-key:hover { border-color: var(--muted); }
+
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ── Hero ────────────────────────────────────────────────────── */
+    .hero {
+      padding: 120px 0 80px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    }
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; padding: 100px 0 60px; }
+      .hero-terminal { display: none; }
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.78rem; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
+    }
+    .hero-eyebrow::before {
+      content: ''; width: 20px; height: 1px; background: var(--border2);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+    }
+    .hero h1 em { color: var(--green); font-style: normal; }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 420px;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-metrics {
+      display: flex; gap: 2.5rem; margin-bottom: 2.5rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 0;
+    }
+    .metric-item {}
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem; font-weight: 500;
+    }
+    .metric-val.pos { color: var(--green); }
+    .metric-val.neg { color: var(--red); }
+    .metric-lbl { font-size: 0.72rem; color: var(--dim); margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn-fill {
+      padding: 0.7rem 1.5rem; border-radius: 7px;
+      background: var(--text); color: #000;
+      font-size: 0.875rem; font-weight: 600;
+      border: none; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-fill:hover { opacity: 0.88; }
+    .btn-ghost {
+      padding: 0.7rem 1.5rem; border-radius: 7px;
+      background: transparent; color: var(--muted);
+      font-size: 0.875rem; font-weight: 500;
+      border: 1px solid var(--border2); cursor: pointer; transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Terminal */
+    .hero-terminal {
+      position: relative;
+    }
+    .terminal-window {
+      background: #0e0e0e;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .terminal-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--s1);
       border-bottom: 1px solid var(--border);
     }
-    .nav-logo { font-weight: 700; font-size: 1.1rem; color: var(--text); }
-    .nav-logo span { color: var(--green); }
-    .nav-links { display: flex; gap: 2rem; align-items: center; }
-    .nav-links a { color: var(--muted); font-size: 0.9rem; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--text); }
-    .nav-cta { background: var(--green); color: #000; padding: 0.5rem 1.2rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
-    .nav-cta:hover { opacity: 0.9; }
-
-    /* ── Sections ── */
-    section { max-width: 1100px; margin: 0 auto; padding: 5rem 2rem; }
-
-    /* ── Hero ── */
-    .hero { padding-top: 8rem; padding-bottom: 4rem; text-align: center; }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: var(--green-dim); border: 1px solid var(--green);
-      color: var(--green); padding: 0.35rem 0.9rem; border-radius: 999px;
-      font-size: 0.8rem; font-weight: 500; margin-bottom: 1.5rem;
+    .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .t-dot.r { background: #ff5f57; }
+    .t-dot.y { background: #febc2e; }
+    .t-dot.g { background: #28c840; }
+    .terminal-url {
+      margin-left: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; color: var(--dim);
     }
-    .hero-badge::before { content: '●'; font-size: 0.6rem; }
-    .hero h1 { font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 700; line-height: 1.15; margin-bottom: 1.25rem; }
-    .hero h1 em { color: var(--green); font-style: normal; }
-    .hero p { font-size: 1.15rem; color: var(--muted); max-width: 600px; margin: 0 auto 2.5rem; }
-    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn-primary { background: var(--green); color: #000; padding: 0.85rem 2rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; border: none; cursor: pointer; transition: opacity 0.2s; }
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-secondary { background: transparent; color: var(--text); padding: 0.85rem 2rem; border-radius: 8px; font-weight: 500; font-size: 0.95rem; border: 1px solid var(--border); cursor: pointer; transition: border-color 0.2s; }
-    .btn-secondary:hover { border-color: var(--muted); }
+    .terminal-body {
+      padding: 1.25rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; line-height: 1.8;
+    }
+    .t-prompt { color: var(--dim); }
+    .t-cmd { color: #a8c6fa; }
+    .t-url { color: #c3e88d; }
+    .t-key { color: #a8c6fa; }
+    .t-str { color: #c3e88d; }
+    .t-num { color: #f78c6c; }
+    .t-kw { color: #c792ea; }
+    .t-comment { color: var(--dim); }
+    .t-regime { color: var(--blue); font-weight: 500; }
+    .t-high { color: var(--green); font-weight: 500; }
+    .t-live {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.68rem; color: var(--green); margin-left: auto;
+    }
+    .t-live::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* ── Stats bar ── */
-    .stats-bar {
-      display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
-      margin: 3rem auto 0; max-width: 800px;
-      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
-      background: var(--card);
+    /* ── Regime history bar ─────────────────────────────────────── */
+    .history-section {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 0;
+      background: var(--s1);
     }
-    .stat { flex: 1; min-width: 160px; padding: 1.25rem 1.5rem; border-right: 1px solid var(--border); text-align: center; }
-    .stat:last-child { border-right: none; }
-    .stat-value { font-size: 1.6rem; font-weight: 700; font-family: 'JetBrains Mono'; }
-    .stat-value.green { color: var(--green); }
-    .stat-value.red { color: var(--red); }
-    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    .history-label {
+      font-size: 0.72rem; font-weight: 500; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+    .regime-bar-wrap { position: relative; }
+    .regime-bar {
+      display: flex; height: 28px; border-radius: 4px; overflow: hidden;
+      width: 100%;
+    }
+    .rb-seg { height: 100%; transition: opacity 0.15s; cursor: default; }
+    .rb-seg:hover { opacity: 0.8; }
+    .rb-labels {
+      display: flex; justify-content: space-between;
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--dim);
+    }
+    .regime-legend {
+      display: flex; gap: 1.5rem; margin-top: 1rem;
+    }
+    .rl-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--muted); }
+    .rl-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-    /* ── Register form ── */
-    .register-box {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 2rem; max-width: 480px; margin: 3rem auto 0;
+    /* ── Register ────────────────────────────────────────────────── */
+    .register-section { padding: 5rem 0 4rem; }
+    .register-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;
     }
-    .register-box h3 { font-size: 1rem; margin-bottom: 1rem; color: var(--text); }
-    .form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    .form-row input {
-      flex: 1; min-width: 200px;
-      background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-      padding: 0.7rem 1rem; border-radius: 6px; font-size: 0.9rem; font-family: inherit;
-      outline: none; transition: border-color 0.2s;
+    @media (max-width: 760px) { .register-inner { grid-template-columns: 1fr; gap: 2rem; } }
+    .register-left h2 {
+      font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
     }
-    .form-row input:focus { border-color: var(--green); }
-    .form-row input::placeholder { color: var(--muted); }
-    .register-result {
-      margin-top: 1rem; padding: 1rem; border-radius: 6px;
-      background: var(--green-dim); border: 1px solid var(--green);
+    .register-left p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
+    .register-right {}
+    .reg-form { display: flex; gap: 0.5rem; }
+    .reg-input {
+      flex: 1; min-width: 0;
+      background: var(--s1); border: 1px solid var(--border2); color: var(--text);
+      padding: 0.65rem 1rem; border-radius: 7px; font-size: 0.875rem; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .reg-input:focus { border-color: var(--muted); }
+    .reg-input::placeholder { color: var(--dim); }
+    .reg-btn {
+      padding: 0.65rem 1.25rem; border-radius: 7px;
+      background: var(--text); color: #000;
+      font-size: 0.875rem; font-weight: 600;
+      border: none; cursor: pointer; white-space: nowrap;
+      transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .reg-btn:hover { opacity: 0.88; }
+    .reg-note { font-size: 0.78rem; color: var(--dim); margin-top: 0.6rem; }
+    .reg-result {
+      margin-top: 1rem; padding: 1rem 1.25rem; border-radius: 7px;
+      background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
       display: none;
     }
-    .register-result.error { background: #ef444422; border-color: var(--red); }
-    .register-result code { display: block; margin-top: 0.5rem; word-break: break-all; font-size: 0.85rem; color: var(--green); }
-    .register-result.error code { color: var(--red); }
+    .reg-result.error { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.2); }
+    .reg-result-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .reg-key {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem; color: var(--green);
+      word-break: break-all; display: block;
+    }
+    .reg-result.error .reg-key { color: var(--red); }
 
-    /* ── How it works ── */
-    .section-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; margin-bottom: 1rem; }
-    .section-title { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
-    .section-sub { color: var(--muted); max-width: 560px; margin-bottom: 3rem; }
+    /* ── How it works ────────────────────────────────────────────── */
+    .section-wrap { padding: 5rem 0; }
+    .section-eyebrow {
+      font-size: 0.72rem; font-weight: 500; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: 1.875rem; font-weight: 700; letter-spacing: -0.03em;
+      margin-bottom: 1rem; line-height: 1.2;
+    }
+    .section-sub { font-size: 0.9rem; color: var(--muted); max-width: 520px; margin-bottom: 3rem; }
 
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
-    .step { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
-    .step-num { width: 32px; height: 32px; background: var(--green-dim); border: 1px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: var(--green); margin-bottom: 1rem; }
-    .step h4 { font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .step p { font-size: 0.85rem; color: var(--muted); }
+    .pipeline {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    @media (max-width: 820px) { .pipeline { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .pipeline { grid-template-columns: 1fr; } }
+    .pipe-step {
+      padding: 1.75rem 1.5rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .pipe-step:nth-child(4n) { border-right: none; }
+    @media (max-width: 820px) {
+      .pipe-step:nth-child(2n) { border-right: none; }
+      .pipe-step:nth-child(3), .pipe-step:nth-child(4) { border-bottom: none; }
+    }
+    @media (max-width: 480px) {
+      .pipe-step { border-right: none; }
+      .pipe-step:last-child { border-bottom: none; }
+    }
 
-    /* ── Code sample ── */
-    .code-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .code-section section { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
-    @media (max-width: 768px) { .code-section section { grid-template-columns: 1fr; } }
+    .pipe-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: var(--dim); margin-bottom: 1rem;
+    }
+    .pipe-step h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .pipe-step p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Code section ────────────────────────────────────────────── */
+    .code-section {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--s1);
+      padding: 5rem 0;
+    }
+    .code-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+    }
+    @media (max-width: 820px) { .code-inner { grid-template-columns: 1fr; gap: 3rem; } }
+    .code-features { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1.75rem; }
+    .code-feature {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      font-size: 0.875rem; color: var(--muted);
+    }
+    .code-feature::before {
+      content: '→'; color: var(--green); flex-shrink: 0; margin-top: 0.05em;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    }
     .code-block {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
-      padding: 1.5rem; overflow-x: auto;
+      background: #0e0e0e;
+      border: 1px solid var(--border2);
+      border-radius: 10px; overflow: hidden;
     }
-    .code-block pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; }
-    .code-block .kw { color: #c792ea; }
-    .code-block .str { color: #c3e88d; }
-    .code-block .cm { color: var(--muted); }
-    .code-block .num { color: #f78c6c; }
-    .code-block .fn { color: #82aaff; }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang { font-size: 0.72rem; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+    .code-copy {
+      font-size: 0.7rem; color: var(--dim); cursor: pointer; background: none; border: none;
+      font-family: inherit; transition: color 0.15s;
+    }
+    .code-copy:hover { color: var(--muted); }
+    .code-body {
+      padding: 1.25rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;
+      overflow-x: auto;
+    }
+    .c-kw { color: #c792ea; }
+    .c-str { color: #c3e88d; }
+    .c-cm { color: var(--dim); }
+    .c-num { color: #f78c6c; }
+    .c-fn { color: #82aaff; }
+    .c-key { color: #a8c6fa; }
 
-    /* ── Regimes ── */
-    .regime-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 2rem; }
-    .regime-card { background: var(--card); border-radius: 10px; padding: 1.5rem; border-left: 3px solid; }
-    .regime-card.expansion { border-color: var(--green); }
-    .regime-card.recovery { border-color: var(--blue); }
-    .regime-card.tightening { border-color: var(--yellow); }
-    .regime-card.risk-off { border-color: var(--red); }
-    .regime-card h4 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-    .regime-card.expansion h4 { color: var(--green); }
-    .regime-card.recovery h4 { color: var(--blue); }
-    .regime-card.tightening h4 { color: var(--yellow); }
-    .regime-card.risk-off h4 { color: var(--red); }
-    .regime-card .exposure { font-size: 1.4rem; font-weight: 700; font-family: 'JetBrains Mono'; margin-bottom: 0.4rem; }
-    .regime-card p { font-size: 0.82rem; color: var(--muted); }
+    /* ── Regimes ─────────────────────────────────────────────────── */
+    .regimes-section { padding: 5rem 0; }
+    .regime-table {
+      width: 100%; border-collapse: collapse; margin-top: 2.5rem;
+      font-size: 0.875rem;
+    }
+    .regime-table thead th {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.72rem; font-weight: 500; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+    }
+    .regime-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .regime-table tbody tr:last-child { border-bottom: none; }
+    .regime-table tbody tr:hover { background: var(--s1); }
+    .regime-table td { padding: 1.1rem 1rem; vertical-align: top; }
+    .regime-name {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 600;
+    }
+    .regime-pip { width: 3px; height: 18px; border-radius: 2px; flex-shrink: 0; }
+    .regime-exposure {
+      font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.9rem;
+    }
+    .regime-table td.muted { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
 
-    /* ── Pricing ── */
-    #pricing { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    #pricing section { text-align: center; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; text-align: left; max-width: 900px; margin-left: auto; margin-right: auto; }
-    .pricing-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; position: relative; }
-    .pricing-card.featured { border-color: var(--green); }
-    .featured-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: #000; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.75rem; border-radius: 999px; }
-    .pricing-card h3 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-    .price { font-size: 2.8rem; font-weight: 700; font-family: 'JetBrains Mono'; }
-    .price span { font-size: 1rem; font-weight: 400; color: var(--muted); }
-    .pricing-card ul { list-style: none; margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.65rem; }
-    .pricing-card li { font-size: 0.88rem; color: var(--muted); display: flex; align-items: center; gap: 0.6rem; }
-    .pricing-card li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
-    .pricing-card li.no::before { content: '✗'; color: var(--muted); }
-    .pricing-card li.no { color: #334155; }
-    .pricing-btn { width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; transition: opacity 0.2s; margin-top: 0.5rem; }
-    .pricing-btn.outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .pricing-btn.outline:hover { border-color: var(--muted); }
-    .pricing-btn.solid { background: var(--green); color: #000; }
-    .pricing-btn.solid:hover { opacity: 0.88; }
-    .pricing-btn.blue { background: var(--blue); color: #fff; }
-    .pricing-btn.blue:hover { opacity: 0.88; }
+    /* ── Pricing ─────────────────────────────────────────────────── */
+    .pricing-section {
+      padding: 5rem 0;
+      border-top: 1px solid var(--border);
+      background: var(--s1);
+    }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; margin-top: 3rem;
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    }
+    @media (max-width: 820px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .pricing-card {
+      padding: 2rem 1.75rem;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .pricing-card:last-child { border-right: none; }
+    @media (max-width: 820px) {
+      .pricing-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .pricing-card:last-child { border-bottom: none; }
+    }
+    .pricing-card.featured { background: var(--s2); }
+    .plan-badge {
+      display: inline-block;
+      font-size: 0.68rem; font-weight: 600; color: var(--green);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 4px; margin-bottom: 0.75rem;
+    }
+    .plan-name {
+      font-size: 0.78rem; font-weight: 500; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;
+    }
+    .plan-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.25rem; font-weight: 500; letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .plan-price sup { font-size: 1rem; vertical-align: top; margin-top: 0.3rem; }
+    .plan-period { font-size: 0.82rem; color: var(--dim); margin-top: 0.25rem; margin-bottom: 1.5rem; }
+    .plan-divider { height: 1px; background: var(--border); margin-bottom: 1.5rem; }
+    .plan-features { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2rem; }
+    .plan-feature {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      font-size: 0.83rem; color: var(--muted);
+    }
+    .pf-check { color: var(--green); flex-shrink: 0; margin-top: 0.1em; }
+    .pf-no { color: var(--border2); flex-shrink: 0; margin-top: 0.1em; }
+    .pf-no + span { color: var(--dim); }
+    .plan-btn {
+      width: 100%; padding: 0.7rem;
+      border-radius: 7px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; border: none; transition: opacity 0.15s;
+    }
+    .plan-btn.outline {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border2);
+    }
+    .plan-btn.outline:hover { color: var(--text); border-color: var(--muted); }
+    .plan-btn.solid {
+      background: var(--text); color: #000;
+    }
+    .plan-btn.solid:hover { opacity: 0.88; }
+    .plan-btn.blue {
+      background: var(--blue); color: #fff;
+    }
+    .plan-btn.blue:hover { opacity: 0.88; }
+    .pricing-note {
+      margin-top: 1.5rem; text-align: center;
+      font-size: 0.78rem; color: var(--dim);
+    }
 
-    /* ── Footer ── */
+    /* ── Footer ──────────────────────────────────────────────────── */
     footer {
-      border-top: 1px solid var(--border); padding: 2.5rem 2rem;
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 1rem; max-width: 1100px; margin: 0 auto;
+      border-top: 1px solid var(--border);
+      padding: 2rem 2rem;
     }
-    footer p { font-size: 0.82rem; color: var(--muted); }
+    .footer-inner {
+      max-width: 1140px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand { font-size: 0.82rem; color: var(--dim); }
     .footer-links { display: flex; gap: 1.5rem; }
-    .footer-links a { font-size: 0.82rem; color: var(--muted); }
-    .footer-links a:hover { color: var(--text); }
+    .footer-links a { font-size: 0.82rem; color: var(--dim); transition: color 0.15s; }
+    .footer-links a:hover { color: var(--muted); }
 
-    /* ── Responsive ── */
+    /* ── Utilities ───────────────────────────────────────────────── */
     @media (max-width: 600px) {
-      nav { padding: 1rem; }
+      nav { padding: 0 1rem; }
       .nav-links { display: none; }
-      .stats-bar { flex-direction: column; }
-      .stat { border-right: none; border-bottom: 1px solid var(--border); }
-      .stat:last-child { border-bottom: none; }
+      .container { padding: 0 1rem; }
     }
   </style>
 </head>
@@ -198,244 +477,365 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Macro<span>Pulse</span></div>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    MacroPulse
+  </div>
   <div class="nav-links">
-    <a href="#how-it-works">How it works</a>
+    <a href="#pipeline">How it works</a>
     <a href="#regimes">Regimes</a>
     <a href="#pricing">Pricing</a>
-    <a href="https://macropulse.live/dashboard" target="_blank">Live Dashboard</a>
-    <a href="#get-key" class="nav-cta">Get Free Key</a>
+    <a href="https://api.macropulse.live/docs" target="_blank">API Docs</a>
+    <button class="nav-key" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free Key</button>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="hero" id="home">
-  <div class="hero-badge">Live macro regime signals · Updated daily</div>
-  <h1>The macro regime API<br/>for <em>systematic traders</em></h1>
-  <p>PCA + Hidden Markov Model pipeline classifies the macro environment into 4 regimes — updated every trading day from Fed liquidity, rates, credit spreads, and volatility.</p>
-  <div class="hero-actions">
-    <a href="#get-key"><button class="btn-primary">Get Free API Key</button></a>
-    <a href="https://macropulse.live/dashboard" target="_blank"><button class="btn-secondary">View Live Dashboard →</button></a>
-  </div>
+<div class="container">
+  <div class="hero">
+    <!-- Left: copy -->
+    <div>
+      <div class="hero-eyebrow">Macro Regime API · Updated daily</div>
+      <h1>Know the regime<br/>before the<br/><em>market moves</em></h1>
+      <p class="hero-sub">
+        PCA + Hidden Markov Model pipeline classifies the macro environment
+        into 4 regimes daily — from Fed liquidity, Treasury yields, credit
+        spreads, and volatility.
+      </p>
+      <div class="hero-metrics">
+        <div class="metric-item">
+          <div class="metric-val pos">1.69</div>
+          <div class="metric-lbl">Sharpe ratio (2yr)</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val neg">−5.9%</div>
+          <div class="metric-lbl">Max drawdown</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">845+</div>
+          <div class="metric-lbl">Days of history</div>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-fill" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free API Key</button>
+        <a href="https://api.macropulse.live/dashboard" target="_blank"><button class="btn-ghost">Live Dashboard →</button></a>
+      </div>
+    </div>
 
-  <!-- Stats bar -->
-  <div class="stats-bar">
-    <div class="stat">
-      <div class="stat-value green">1.69</div>
-      <div class="stat-label">Strategy Sharpe (2yr)</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value red">−5.9%</div>
-      <div class="stat-label">Max Drawdown</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">1.28</div>
-      <div class="stat-label">Buy &amp; Hold Sharpe</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">845+</div>
-      <div class="stat-label">Trading Days History</div>
+    <!-- Right: terminal -->
+    <div class="hero-terminal">
+      <div class="terminal-window">
+        <div class="terminal-bar">
+          <div class="t-dot r"></div>
+          <div class="t-dot y"></div>
+          <div class="t-dot g"></div>
+          <span class="terminal-url">api.macropulse.live/v1/signals/latest</span>
+          <span class="t-live">Live</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <span class="t-prompt">$ </span><span class="t-cmd">curl </span><span class="t-url">https://api.macropulse.live<br/>     /v1/signals/latest</span><span class="t-cmd"> \</span><br/>
+          <span class="t-cmd">  -H </span><span class="t-str">"X-MacroPulse-Key: mp_..."</span><br/><br/>
+          <span id="terminal-json">
+<span class="t-kw">{</span><br/>
+&nbsp;&nbsp;<span class="t-key">"date"</span>: <span class="t-str" id="t-date">"loading…"</span>,<br/>
+&nbsp;&nbsp;<span class="t-key">"regime"</span>: <span class="t-kw">{</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"most_likely"</span>: <span class="t-regime" id="t-regime">"…"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"confidence"</span>: &nbsp;<span class="t-high" id="t-conf">"…"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"persistence_days"</span>: <span class="t-num" id="t-persist">0</span><br/>
+&nbsp;&nbsp;<span class="t-kw">}</span>,<br/>
+&nbsp;&nbsp;<span class="t-key">"net_liquidity"</span>: <span class="t-kw">{</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"level_bn"</span>: <span class="t-num" id="t-liq">0</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"zscore"</span>: &nbsp;&nbsp;<span class="t-num" id="t-zscore">0</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-key">"trend"</span>: &nbsp;&nbsp;&nbsp;<span class="t-str" id="t-trend">"…"</span><br/>
+&nbsp;&nbsp;<span class="t-kw">}</span><br/>
+<span class="t-kw">}</span>
+          </span>
+        </div>
+      </div>
     </div>
   </div>
-</section>
+</div>
+
+<!-- REGIME HISTORY BAR -->
+<div class="history-section">
+  <div class="container">
+    <div class="history-label">Macro regime — last 2 years</div>
+    <div class="regime-bar-wrap">
+      <div class="regime-bar" id="regime-bar">
+        <!-- filled by JS -->
+        <div style="flex:1;background:#1f1f1f;"></div>
+      </div>
+      <div class="rb-labels">
+        <span id="rb-start">Jan 2024</span>
+        <span id="rb-end">Today</span>
+      </div>
+    </div>
+    <div class="regime-legend">
+      <div class="rl-item"><div class="rl-dot" style="background:#22c55e"></div> Expansion</div>
+      <div class="rl-item"><div class="rl-dot" style="background:#3b82f6"></div> Recovery</div>
+      <div class="rl-item"><div class="rl-dot" style="background:#f59e0b"></div> Tightening</div>
+      <div class="rl-item"><div class="rl-dot" style="background:#ef4444"></div> Risk-Off</div>
+    </div>
+  </div>
+</div>
 
 <!-- REGISTER -->
-<section id="get-key" style="padding-top: 0;">
-  <div class="register-box">
-    <h3>Get your free API key — instant, no credit card</h3>
-    <div class="form-row">
-      <input type="email" id="reg-email" placeholder="your@email.com" />
-      <button class="btn-primary" onclick="register()" style="flex-shrink:0;">Get Key →</button>
-    </div>
-    <div class="register-result" id="reg-result">
-      <strong>Your API key (save this — shown once):</strong>
-      <code id="reg-key"></code>
+<div id="register">
+  <div class="container">
+    <div class="register-section">
+      <div class="register-inner">
+        <div class="register-left">
+          <h2>Start free in<br/>60 seconds</h2>
+          <p>No credit card required. Get your API key and make your first call instantly. 50 requests/day on the free tier — enough to prototype and explore.</p>
+        </div>
+        <div class="register-right">
+          <div class="reg-form">
+            <input type="email" class="reg-input" id="reg-email" placeholder="you@example.com" />
+            <button class="reg-btn" onclick="register()">Get Key</button>
+          </div>
+          <p class="reg-note">We'll email your key. No password needed.</p>
+          <div class="reg-result" id="reg-result">
+            <div class="reg-result-label">Your API key — save this, shown once:</div>
+            <code class="reg-key" id="reg-key"></code>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- HOW IT WORKS -->
-<section id="how-it-works">
-  <div class="section-label">How it works</div>
-  <h2 class="section-title">From raw macro data to tradeable signals</h2>
-  <p class="section-sub">Every trading day after market close, the pipeline ingests 10 macro indicators and runs the full PCA → HMM inference chain.</p>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h4>Data ingestion</h4>
-      <p>Pulls Fed balance sheet, Treasury yields, HY spreads, VIX, DXY, and S&P 500 from FRED and Yahoo Finance.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h4>PCA compression</h4>
-      <p>10 features → 4 orthogonal latent factors explaining &gt;80% of variance. Eliminates noise and collinearity.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h4>HMM regime detection</h4>
-      <p>Gaussian HMM finds the 4 most probable macro states from the factor sequence. Outputs per-regime probabilities.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <h4>Signal delivery</h4>
-      <p>REST API, WebSocket stream, and daily dashboard. Includes persistence days, confidence, and expected regime duration.</p>
+<!-- PIPELINE -->
+<div id="pipeline" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-wrap">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">From raw macro data<br/>to tradeable signals</h2>
+      <p class="section-sub">Every trading day after US market close, the pipeline ingests 10 macro indicators and runs the full inference chain.</p>
+      <div class="pipeline" style="border-top:1px solid var(--border);border-left:1px solid var(--border);">
+        <div class="pipe-step">
+          <div class="pipe-num">01 / 04</div>
+          <h4>Data ingestion</h4>
+          <p>Fed balance sheet, RRPO, TGA, Treasury yields (2y/10y), HY spreads, VIX, DXY, SPX pulled from FRED and Yahoo Finance.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">02 / 04</div>
+          <h4>PCA compression</h4>
+          <p>10 correlated features → 4 orthogonal latent factors capturing >85% of variance. Removes noise and collinearity.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">03 / 04</div>
+          <h4>HMM regime detection</h4>
+          <p>Gaussian Hidden Markov Model trained on the factor sequence identifies 4 macro states with per-regime probabilities.</p>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">04 / 04</div>
+          <h4>Signal delivery</h4>
+          <p>REST API and live dashboard. Includes regime label, confidence, persistence days, expected duration, and net liquidity signals.</p>
+        </div>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
 <!-- CODE SAMPLE -->
 <div class="code-section">
-  <section>
-    <div>
-      <div class="section-label">Integration</div>
-      <h2 class="section-title">One call. Full macro context.</h2>
-      <p style="color: var(--muted); margin-bottom: 1.5rem;">The <code>/v1/signals/latest</code> endpoint returns everything your strategy needs in a single JSON response.</p>
-      <ul style="list-style:none; display:flex; flex-direction:column; gap:0.6rem;">
-        <li style="display:flex; gap:0.6rem; align-items:center; font-size:0.88rem;"><span style="color:var(--green)">✓</span> Regime label + probabilities</li>
-        <li style="display:flex; gap:0.6rem; align-items:center; font-size:0.88rem;"><span style="color:var(--green)">✓</span> Persistence days + expected duration</li>
-        <li style="display:flex; gap:0.6rem; align-items:center; font-size:0.88rem;"><span style="color:var(--green)">✓</span> Net liquidity level, trend, z-score</li>
-        <li style="display:flex; gap:0.6rem; align-items:center; font-size:0.88rem;"><span style="color:var(--green)">✓</span> PCA factor scores + variance explained</li>
-        <li style="display:flex; gap:0.6rem; align-items:center; font-size:0.88rem;"><span style="color:var(--green)">✓</span> Model version + data vintage</li>
-      </ul>
-    </div>
-    <div class="code-block">
-      <pre><span class="kw">import</span> requests
+  <div class="container">
+    <div class="code-inner">
+      <div>
+        <div class="section-eyebrow">Integration</div>
+        <h2 class="section-title">One endpoint.<br/>Full macro context.</h2>
+        <div class="code-features">
+          <div class="code-feature">Regime label + per-state probability vector</div>
+          <div class="code-feature">Persistence days + expected duration remaining</div>
+          <div class="code-feature">Net liquidity level, 4-week change, z-score, trend</div>
+          <div class="code-feature">PCA factor scores + variance explained per component</div>
+          <div class="code-feature">Historical range endpoint for backtest workflows</div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">python</span>
+          <button class="code-copy" onclick="copyCode()">copy</button>
+        </div>
+        <div class="code-body"><pre><span class="c-kw">import</span> requests
 
-<span class="cm"># Get the latest macro regime signal</span>
-resp = requests.<span class="fn">get</span>(
-    <span class="str">"https://api.macropulse.live/v1/signals/latest"</span>,
-    headers={<span class="str">"X-MacroPulse-Key"</span>: <span class="str">"mp_..."</span>}
+<span class="c-cm"># Get the latest macro regime signal</span>
+resp = requests.<span class="c-fn">get</span>(
+    <span class="c-str">"https://api.macropulse.live/v1/signals/latest"</span>,
+    headers={<span class="c-str">"X-MacroPulse-Key"</span>: <span class="c-str">"mp_..."</span>}
 )
-signal = resp.<span class="fn">json</span>()
+signal = resp.<span class="c-fn">json</span>()
 
-regime   = signal[<span class="str">"regime"</span>][<span class="str">"most_likely"</span>]   <span class="cm"># "expansion"</span>
-conf     = signal[<span class="str">"regime"</span>][<span class="str">"confidence"</span>]    <span class="cm"># "HIGH"</span>
-persist  = signal[<span class="str">"regime"</span>][<span class="str">"persistence_days"</span>]  <span class="cm"># 14</span>
-liq_zscore = signal[<span class="str">"net_liquidity"</span>][<span class="str">"zscore"</span>]  <span class="cm"># 1.2</span>
+regime  = signal[<span class="c-str">"regime"</span>][<span class="c-str">"most_likely"</span>]  <span class="c-cm"># "recovery"</span>
+conf    = signal[<span class="c-str">"regime"</span>][<span class="c-str">"confidence"</span>]   <span class="c-cm"># "HIGH"</span>
+persist = signal[<span class="c-str">"regime"</span>][<span class="c-str">"persistence_days"</span>]  <span class="c-cm"># 14</span>
+zscore  = signal[<span class="c-str">"net_liquidity"</span>][<span class="c-str">"zscore"</span>]  <span class="c-cm"># -1.1</span>
 
-<span class="cm"># Adjust equity exposure by regime</span>
+<span class="c-cm"># Regime-aware equity exposure</span>
 EXPOSURE = {
-    <span class="str">"expansion"</span>:  <span class="num">1.00</span>,
-    <span class="str">"recovery"</span>:   <span class="num">0.75</span>,
-    <span class="str">"tightening"</span>: <span class="num">0.25</span>,
-    <span class="str">"risk_off"</span>:   <span class="num">0.00</span>,
+    <span class="c-str">"expansion"</span>:  <span class="c-num">1.00</span>,
+    <span class="c-str">"recovery"</span>:   <span class="c-num">0.75</span>,
+    <span class="c-str">"tightening"</span>: <span class="c-num">0.25</span>,
+    <span class="c-str">"risk_off"</span>:   <span class="c-num">0.00</span>,
 }
-exposure = EXPOSURE[regime]  <span class="cm"># → 1.00</span></pre>
+wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
+      </div>
     </div>
-  </section>
+  </div>
 </div>
 
 <!-- REGIMES -->
-<section id="regimes">
-  <div class="section-label">The four regimes</div>
-  <h2 class="section-title">Know exactly where the macro cycle is</h2>
-  <p class="section-sub">The HMM identifies four distinct macro states. Each maps to a different risk posture.</p>
-  <div class="regime-grid">
-    <div class="regime-card expansion">
-      <h4>Expansion</h4>
-      <div class="exposure">100% exposure</div>
-      <p>Fed liquidity ample, credit spreads tight, volatility low. Full risk-on. Historically the strongest return environment.</p>
-    </div>
-    <div class="regime-card recovery">
-      <h4>Recovery</h4>
-      <div class="exposure">75% exposure</div>
-      <p>Liquidity re-injecting after stress. Risk appetite healing. Reduced but positive equity allocation.</p>
-    </div>
-    <div class="regime-card tightening">
-      <h4>Tightening</h4>
-      <div class="exposure">25% exposure</div>
-      <p>Fed hiking, liquidity contracting, credit spreads widening. Defensive positioning. Avoid duration risk.</p>
-    </div>
-    <div class="regime-card risk-off">
-      <h4>Risk-Off</h4>
-      <div class="exposure">0% exposure</div>
-      <p>Crisis mode. Emergency liquidity injections, spiking spreads and vol. Flat / short. Capital preservation first.</p>
+<div id="regimes" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="regimes-section">
+      <div class="section-eyebrow">The four regimes</div>
+      <h2 class="section-title">A label for every macro state</h2>
+      <p class="section-sub">The HMM identifies four persistent macro states from the latent factor sequence. Each maps to a distinct risk posture.</p>
+      <table class="regime-table">
+        <thead>
+          <tr>
+            <th>Regime</th>
+            <th>Equity Exposure</th>
+            <th>Conditions</th>
+            <th>Key Signals</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="regime-name">
+                <div class="regime-pip" style="background:#22c55e"></div>
+                <span>Expansion</span>
+              </div>
+            </td>
+            <td><span class="regime-exposure" style="color:#22c55e">100%</span></td>
+            <td class="muted">Fed liquidity ample, credit spreads tight, volatility low. Historically the strongest return environment.</td>
+            <td class="muted">High net liq z-score, low VIX, tight HY spreads</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="regime-name">
+                <div class="regime-pip" style="background:#3b82f6"></div>
+                <span>Recovery</span>
+              </div>
+            </td>
+            <td><span class="regime-exposure" style="color:#3b82f6">75%</span></td>
+            <td class="muted">Liquidity re-injecting after stress. Risk appetite healing but not fully restored. Positive but cautious.</td>
+            <td class="muted">Rising net liq, normalizing spreads, VIX declining</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="regime-name">
+                <div class="regime-pip" style="background:#f59e0b"></div>
+                <span>Tightening</span>
+              </div>
+            </td>
+            <td><span class="regime-exposure" style="color:#f59e0b">25%</span></td>
+            <td class="muted">Fed hiking or draining liquidity. Credit spreads widening. Defensive positioning, avoid duration risk.</td>
+            <td class="muted">Declining net liq, rising 2y yield, widening HY</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="regime-name">
+                <div class="regime-pip" style="background:#ef4444"></div>
+                <span>Risk-Off</span>
+              </div>
+            </td>
+            <td><span class="regime-exposure" style="color:#ef4444">0%</span></td>
+            <td class="muted">Crisis or acute stress. Emergency liquidity injections, spiking spreads and vol. Capital preservation first.</td>
+            <td class="muted">VIX spike, credit stress, RRPO drain or surge</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-</section>
+</div>
 
 <!-- PRICING -->
 <div id="pricing">
-  <section>
-    <div class="section-label">Pricing</div>
-    <h2 class="section-title">Start free. Scale when you need to.</h2>
-    <p style="color: var(--muted); max-width: 500px; margin: 0 auto 0.5rem;">No credit card required to start. Upgrade when you're ready to go live.</p>
-    <div class="pricing-grid">
+  <div class="pricing-section">
+    <div class="container">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">Simple, transparent pricing</h2>
+      <p class="section-sub">Start free. Upgrade when you go live.</p>
+      <div class="pricing-grid">
 
-      <!-- Free -->
-      <div class="pricing-card">
-        <h3>Free</h3>
-        <div class="price">$0<span> / mo</span></div>
-        <ul>
-          <li>50 API requests / day</li>
-          <li>Latest signal endpoint</li>
-          <li>Historical range (30 days)</li>
-          <li>Dashboard access</li>
-          <li class="no">Performance attribution</li>
-          <li class="no">5-day regime forecast</li>
-          <li class="no">WebSocket stream</li>
-        </ul>
-        <button class="pricing-btn outline" onclick="document.getElementById('reg-email').focus(); document.querySelector('#get-key').scrollIntoView({behavior:'smooth'})">Get Free Key</button>
+        <!-- Free -->
+        <div class="pricing-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-price"><sup>$</sup>0</div>
+          <div class="plan-period">forever</div>
+          <div class="plan-divider"></div>
+          <div class="plan-features">
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>50 API requests / day</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Latest signal endpoint</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>30-day history window</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Dashboard access</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Performance attribution</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
+          </div>
+          <button class="plan-btn outline" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get started free</button>
+        </div>
+
+        <!-- Starter -->
+        <div class="pricing-card featured" id="pricing-starter">
+          <div class="plan-badge">Most popular</div>
+          <div class="plan-name">Starter</div>
+          <div class="plan-price"><sup>$</sup>49</div>
+          <div class="plan-period">per month</div>
+          <div class="plan-divider"></div>
+          <div class="plan-features">
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>500 API requests / day</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
+          </div>
+          <button class="plan-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card" id="pricing-pro">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price"><sup>$</sup>199</div>
+          <div class="plan-period">per month</div>
+          <div class="plan-divider"></div>
+          <div class="plan-features">
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited requests</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
+          </div>
+          <button class="plan-btn blue" onclick="openCheckout('pro')">Subscribe →</button>
+        </div>
+
       </div>
-
-      <!-- Starter -->
-      <div class="pricing-card featured" id="pricing-starter">
-        <div class="featured-badge">Most Popular</div>
-        <h3>Starter</h3>
-        <div class="price">$49<span> / mo</span></div>
-        <ul>
-          <li>500 API requests / day</li>
-          <li>Full signal package</li>
-          <li>Full history (2+ years)</li>
-          <li>Performance attribution</li>
-          <li>5-day regime forecast</li>
-          <li>Dashboard access</li>
-          <li class="no">WebSocket stream</li>
-        </ul>
-        <button class="pricing-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
-      </div>
-
-      <!-- Pro -->
-      <div class="pricing-card" id="pricing-pro">
-        <h3>Pro</h3>
-        <div class="price">$199<span> / mo</span></div>
-        <ul>
-          <li>Unlimited requests</li>
-          <li>Full signal package</li>
-          <li>Full history (2+ years)</li>
-          <li>Performance attribution</li>
-          <li>5-day regime forecast</li>
-          <li>WebSocket stream</li>
-          <li>Priority support</li>
-        </ul>
-        <button class="pricing-btn blue" onclick="openCheckout('pro')">Subscribe →</button>
-      </div>
-
+      <p class="pricing-note">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</p>
     </div>
-    <p style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--muted);">14-day money-back guarantee · Cancel anytime · Billed monthly</p>
-  </section>
+  </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <p>© 2025 MacroPulse. Quantitative macro intelligence for systematic traders.</p>
-  <div class="footer-links">
-    <a href="/terms.html">Terms</a>
-    <a href="/privacy.html">Privacy</a>
-    <a href="/refund.html">Refund Policy</a>
-    <a href="https://macropulse.live/docs" target="_blank">API Docs</a>
+  <div class="footer-inner">
+    <span class="footer-brand">© 2026 MacroPulse</span>
+    <div class="footer-links">
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/refund.html">Refund Policy</a>
+      <a href="https://api.macropulse.live/docs" target="_blank">API Docs</a>
+    </div>
   </div>
 </footer>
 
 <!-- Paddle.js -->
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
-  // ── Paddle init ──────────────────────────────────────────────────
-  // Replace PADDLE_CLIENT_TOKEN with your token from:
-  // Paddle Dashboard → Developer Tools → Authentication
-  const PADDLE_ENV = 'sandbox'; // change to 'production' when live
-  const PADDLE_CLIENT_TOKEN = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
-
+  const PADDLE_ENV           = 'sandbox';
+  const PADDLE_CLIENT_TOKEN  = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
   const PRICE_IDS = {
     starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER',
     pro:     'PADDLE_PRO_PRICE_ID_PLACEHOLDER',
@@ -454,14 +854,14 @@ exposure = EXPOSURE[regime]  <span class="cm"># → 1.00</span></pre>
     Paddle.Checkout.open(opts);
   }
 
-  // ── Free key registration ────────────────────────────────────────
+  // ── Free key registration ─────────────────────────────────────
   async function register() {
-    const email = document.getElementById('reg-email').value.trim();
+    const email  = document.getElementById('reg-email').value.trim();
     const result = document.getElementById('reg-result');
     const keyEl  = document.getElementById('reg-key');
 
     if (!email || !email.includes('@')) {
-      result.className = 'register-result error';
+      result.className = 'reg-result error';
       result.style.display = 'block';
       keyEl.textContent = 'Please enter a valid email address.';
       return;
@@ -476,17 +876,16 @@ exposure = EXPOSURE[regime]  <span class="cm"># → 1.00</span></pre>
       const data = await resp.json();
 
       if (!resp.ok) {
-        result.className = 'register-result error';
+        result.className = 'reg-result error';
         result.style.display = 'block';
         keyEl.textContent = data.detail || 'Registration failed.';
         return;
       }
-
-      result.className = 'register-result';
+      result.className = 'reg-result';
       result.style.display = 'block';
       keyEl.textContent = data.api_key;
     } catch (e) {
-      result.className = 'register-result error';
+      result.className = 'reg-result error';
       result.style.display = 'block';
       keyEl.textContent = 'Network error — please try again.';
     }
@@ -495,7 +894,82 @@ exposure = EXPOSURE[regime]  <span class="cm"># → 1.00</span></pre>
   document.getElementById('reg-email').addEventListener('keydown', e => {
     if (e.key === 'Enter') register();
   });
-</script>
 
+  function copyCode() {
+    const code = `import requests\n\nresp = requests.get(\n    "https://api.macropulse.live/v1/signals/latest",\n    headers={"X-MacroPulse-Key": "mp_..."}\n)\nsignal = resp.json()\n\nregime  = signal["regime"]["most_likely"]\nEXPOSURE = {"expansion":1.00,"recovery":0.75,"tightening":0.25,"risk_off":0.00}\nwt = EXPOSURE[regime]`;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.code-copy');
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 1500);
+    });
+  }
+
+  // ── Live terminal: fetch latest signal ───────────────────────
+  const REGIME_COLORS = {
+    expansion: '#22c55e', recovery: '#3b82f6',
+    tightening: '#f59e0b', risk_off: '#ef4444',
+  };
+
+  async function loadSignal() {
+    try {
+      const resp = await fetch('https://api.macropulse.live/v1/signals/latest');
+      if (!resp.ok) return;
+      const d = resp.json ? await Promise.resolve(resp).then(r => r.json()) : null;
+      const sig = await fetch('https://api.macropulse.live/v1/signals/latest').then(r => r.json());
+
+      document.getElementById('t-date').textContent = JSON.stringify(sig.date);
+      const r = sig.regime;
+      const el = document.getElementById('t-regime');
+      el.textContent = JSON.stringify(r.most_likely);
+      el.style.color = REGIME_COLORS[r.most_likely] || '#3b82f6';
+      document.getElementById('t-conf').textContent = JSON.stringify(r.confidence);
+      document.getElementById('t-persist').textContent = r.persistence_days;
+      document.getElementById('t-liq').textContent = sig.net_liquidity.level_bn.toFixed(1);
+      document.getElementById('t-zscore').textContent = sig.net_liquidity.zscore.toFixed(2);
+      document.getElementById('t-trend').textContent = JSON.stringify(sig.net_liquidity.trend.toLowerCase());
+    } catch (e) { /* silent */ }
+  }
+
+  // ── Regime history bar ────────────────────────────────────────
+  async function loadRegimeBar() {
+    try {
+      const end   = new Date().toISOString().slice(0,10);
+      const start = new Date(Date.now() - 730 * 86400000).toISOString().slice(0,10);
+      const resp  = await fetch(`https://api.macropulse.live/v1/regime/history?limit=500`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const rows = [...data].reverse(); // oldest first
+
+      if (!rows.length) return;
+
+      const bar = document.getElementById('regime-bar');
+      bar.innerHTML = '';
+      const total = rows.length;
+
+      rows.forEach(row => {
+        const seg = document.createElement('div');
+        seg.className = 'rb-seg';
+        seg.style.flex = '1';
+        seg.style.background = REGIME_COLORS[row.macro_regime] || '#555';
+        seg.title = `${row.timestamp?.slice(0,10) || ''}: ${row.macro_regime}`;
+        bar.appendChild(seg);
+      });
+
+      // Update labels
+      const first = rows[0];
+      const last  = rows[rows.length - 1];
+      const fmt = ts => {
+        if (!ts) return '';
+        const d = new Date(ts);
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      };
+      document.getElementById('rb-start').textContent = fmt(first?.timestamp);
+      document.getElementById('rb-end').textContent   = 'Today';
+    } catch (e) { /* silent */ }
+  }
+
+  loadSignal();
+  loadRegimeBar();
+</script>
 </body>
 </html>

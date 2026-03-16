@@ -1,17 +1,40 @@
 import React from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, ReferenceLine,
 } from 'recharts';
-import { formatDate, formatNumber } from '../lib/utils';
+import { formatDateShort, formatNumber } from '../lib/utils';
+
+const TICK = { fill: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: 'JetBrains Mono' };
+const LIQ_COLOR = '#3b82f6';
 
 function LiqTooltip({ active, payload }) {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
+  const delta = d.d_liquidity;
+  const isPos = delta >= 0;
   return (
-    <div className="rounded-xl border border-white/10 bg-surface-2 px-4 py-3 shadow-xl text-sm">
-      <p className="font-mono text-xs text-white/40">{formatDate(d.time)}</p>
-      <p className="mt-1 text-white/80">Net Liq: <span className="font-mono font-semibold text-accent-purple">{formatNumber(d.net_liquidity)}</span></p>
-      <p className="text-xs text-white/40">Δ: {d.d_liquidity != null ? formatNumber(d.d_liquidity) : '—'}</p>
+    <div style={{
+      background: '#141414', border: '1px solid #2a2a2a',
+      borderRadius: 6, padding: '8px 12px',
+      fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
+    }}>
+      <div style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>
+        {formatDateShort(d.time)}
+      </div>
+      <div style={{ color: '#f0f0f0' }}>
+        {formatNumber(d.net_liquidity)}
+      </div>
+      {delta != null && (
+        <div style={{ color: isPos ? '#22c55e' : '#ef4444', marginTop: 2 }}>
+          {isPos ? '+' : ''}{formatNumber(delta)} 4w
+        </div>
+      )}
+      {d.zscore != null && (
+        <div style={{ color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+          z: {d.zscore.toFixed(2)}
+        </div>
+      )}
     </div>
   );
 }
@@ -19,49 +42,72 @@ function LiqTooltip({ active, payload }) {
 export default function LiquidityChart({ data }) {
   if (!data?.data?.length) {
     return (
-      <div className="glass-card flex h-64 items-center justify-center">
-        <p className="text-sm text-white/30">No liquidity data</p>
+      <div className="card flex h-64 items-center justify-center">
+        <p className="text-[11px] text-white/25 font-mono">No liquidity data</p>
       </div>
     );
   }
 
   const rows = [...data.data].reverse();
+  const latest = rows[rows.length - 1];
+  const zscore = latest?.zscore;
 
   return (
-    <div className="glass-card p-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-      <h3 className="mb-4 text-xs font-medium uppercase tracking-widest text-white/40">
-        Net Liquidity Proxy
-      </h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={rows} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+    <div className="card p-5 animate-in">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="label mb-1">Net Liquidity Proxy</div>
+          {latest && (
+            <div className="font-mono text-lg font-semibold text-white/80">
+              {formatNumber(latest.net_liquidity)}
+            </div>
+          )}
+        </div>
+        {zscore != null && (
+          <div className="text-right">
+            <div className="label mb-1">Z-Score</div>
+            <div
+              className="font-mono text-base font-semibold"
+              style={{ color: zscore > 1 ? '#22c55e' : zscore < -1 ? '#ef4444' : '#f59e0b' }}
+            >
+              {zscore > 0 ? '+' : ''}{zscore.toFixed(2)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <ResponsiveContainer width="100%" height={200}>
+        <AreaChart data={rows} margin={{ top: 2, right: 2, bottom: 0, left: -18 }}>
           <defs>
             <linearGradient id="liqGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+              <stop offset="0%" stopColor={LIQ_COLOR} stopOpacity={0.15} />
+              <stop offset="100%" stopColor={LIQ_COLOR} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+          <CartesianGrid stroke="rgba(255,255,255,0.03)" horizontal vertical={false} />
           <XAxis
             dataKey="time"
-            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }}
+            tick={TICK}
             tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             axisLine={false}
             tickLine={false}
+            interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }}
+            tick={TICK}
             tickFormatter={(v) => formatNumber(v, 0)}
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<LiqTooltip />} />
+          <Tooltip content={<LiqTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }} />
           <Area
             type="monotone"
             dataKey="net_liquidity"
-            stroke="#a78bfa"
-            strokeWidth={2}
+            stroke={LIQ_COLOR}
+            strokeWidth={1.5}
             fill="url(#liqGrad)"
             dot={false}
+            activeDot={{ r: 3, fill: LIQ_COLOR, strokeWidth: 0 }}
           />
         </AreaChart>
       </ResponsiveContainer>

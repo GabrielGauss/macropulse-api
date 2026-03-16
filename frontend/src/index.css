@@ -1,50 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
+
   body {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: #0a0b0f;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0a0a0a;
+    color: #f0f0f0;
+    -webkit-font-smoothing: antialiased;
   }
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #111318;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #2c3039;
-    border-radius: 3px;
-  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 }
 
 @layer components {
-  .glass-card {
-    @apply rounded-2xl border border-white/[0.06] bg-surface-1/80 backdrop-blur-xl;
+  /* Base card: flat, sharp, minimal */
+  .card {
+    @apply bg-surface-1 border border-[#1f1f1f] rounded-lg;
   }
-  .regime-badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider;
+
+  /* Compact label style */
+  .label {
+    @apply text-[10px] font-medium uppercase tracking-[0.1em] text-white/30;
   }
-  .pulse-dot {
-    @apply h-2 w-2 rounded-full;
-    animation: pulse-glow 2s ease-in-out infinite;
+
+  /* Status pill */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium;
+  }
+
+  /* Live indicator dot */
+  .live-dot {
+    @apply h-1.5 w-1.5 rounded-full;
+    animation: pulse-dot 2.5s ease-in-out infinite;
   }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
-  50% { opacity: 0.7; box-shadow: 0 0 8px 2px currentColor; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.5s ease-out forwards;
+.animate-in {
+  animation: fade-in 0.35s ease-out forwards;
 }
