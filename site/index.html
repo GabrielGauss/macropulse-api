@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%2322c55e'/%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%2322c55e' stroke-width='2' opacity='0.35'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2322c55e' stroke-width='1.5'/%3E%3Cellipse cx='16' cy='16' rx='4.5' ry='9' fill='none' stroke='%2322c55e' stroke-width='1.2'/%3E%3Cline x1='7' y1='16' x2='25' y2='16' stroke='%2322c55e' stroke-width='1.2'/%3E%3Cpath d='M8.5 11.5Q16 13 23.5 11.5' fill='none' stroke='%2322c55e' stroke-width='1' opacity='0.6'/%3E%3Cpath d='M8.5 20.5Q16 19 23.5 20.5' fill='none' stroke='%2322c55e' stroke-width='1' opacity='0.6'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPulse — Macro Regime Intelligence API</title>
   <meta name="description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
@@ -613,7 +613,13 @@
 <!-- NAV -->
 <nav>
   <div class="logo">
-    <div class="logo-dot"></div>
+    <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;filter:drop-shadow(0 0 4px rgba(34,197,94,0.5))">
+      <circle cx="16" cy="16" r="9" stroke="#22c55e" stroke-width="1.5"/>
+      <ellipse cx="16" cy="16" rx="4.5" ry="9" stroke="#22c55e" stroke-width="1.2"/>
+      <line x1="7" y1="16" x2="25" y2="16" stroke="#22c55e" stroke-width="1.2"/>
+      <path d="M8.5 11.5Q16 13 23.5 11.5" stroke="#22c55e" stroke-width="1" opacity="0.6"/>
+      <path d="M8.5 20.5Q16 19 23.5 20.5" stroke="#22c55e" stroke-width="1" opacity="0.6"/>
+    </svg>
     MacroPulse
   </div>
   <div class="nav-links">
@@ -788,7 +794,17 @@
           <!-- Result / error -->
           <div class="reg-result" id="reg-result">
             <div class="reg-result-label" id="reg-result-label">Your API key — save this, shown once:</div>
-            <code class="reg-key" id="reg-key"></code>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;">
+              <code class="reg-key" id="reg-key" style="flex:1;"></code>
+              <button id="reg-copy-btn" onclick="copyApiKey()" style="display:none;flex-shrink:0;font-size:0.7rem;font-family:'JetBrains Mono',monospace;padding:0.3rem 0.6rem;border-radius:4px;border:1px solid rgba(34,197,94,0.3);background:transparent;color:var(--green);cursor:pointer;">copy</button>
+            </div>
+            <div id="reg-next-steps" style="display:none;margin-top:1rem;padding-top:0.875rem;border-top:1px solid rgba(34,197,94,0.15);">
+              <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">Next steps</div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <a href="https://api.macropulse.live" target="_blank" style="font-size:0.8rem;font-weight:600;padding:0.45rem 0.875rem;background:#f0f0f0;color:#0a0a0a;border-radius:6px;text-decoration:none;">Open Dashboard →</a>
+                <a href="/api-docs.html" style="font-size:0.8rem;font-weight:500;padding:0.45rem 0.875rem;border:1px solid var(--border2);color:var(--muted);border-radius:6px;text-decoration:none;">API Docs</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1191,8 +1207,10 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         document.getElementById('reg-step2').classList.remove('active');
         result.className = 'reg-result';
         result.style.display = 'block';
-        document.getElementById('reg-result-label').textContent = 'Your API key — save this, shown once:';
+        document.getElementById('reg-result-label').textContent = 'Your API key — save this, it is shown once:';
         keyEl.textContent = data.api_key;
+        document.getElementById('reg-copy-btn').style.display = 'inline-block';
+        document.getElementById('reg-next-steps').style.display = 'block';
       }
     } catch (e) {
       result.className = 'reg-result error';
@@ -1211,6 +1229,16 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.getElementById('reg-step2').classList.contains('active')) verifyCode();
   });
+
+  function copyApiKey() {
+    const key = document.getElementById('reg-key').textContent;
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.getElementById('reg-copy-btn');
+      btn.textContent = 'copied!';
+      btn.style.color = 'var(--green)';
+      setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+    });
+  }
 
   function copyCode() {
     const code = `import requests\n\nresp = requests.get(\n    "https://api.macropulse.live/v1/signals/latest",\n    headers={"X-MacroPulse-Key": "mp_..."}\n)\nsignal = resp.json()\n\nregime  = signal["regime"]["most_likely"]\nEXPOSURE = {"expansion":1.00,"recovery":0.75,"tightening":0.25,"risk_off":0.00}\nwt = EXPOSURE[regime]  # 0.75`;
