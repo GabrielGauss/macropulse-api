@@ -93,7 +93,8 @@ class Settings(BaseSettings):
     rate_limit_per_day: int = 0  # default off for local dev
 
     # ── Transactional email (Brevo) ──────────────────────────────────
-    brevo_api_key: str = ""   # xkeysib-... from Brevo dashboard
+    brevo_api_key: str = ""          # xkeysib-... from Brevo dashboard
+    brevo_sender_email: str = ""     # override sender (default: noreply@macropulse.live)
 
     # ── Alerting (operator notifications) ───────────────────────────
     smtp_host: str = ""

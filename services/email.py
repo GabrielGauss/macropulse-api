@@ -18,7 +18,13 @@ from config.settings import get_settings
 logger = logging.getLogger(__name__)
 
 BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
-SENDER = {"name": "MacroPulse", "email": "noreply@macropulse.live"}
+
+
+def _get_sender() -> dict:
+    """Return sender dict, using BREVO_SENDER_EMAIL env override if set."""
+    settings = get_settings()
+    email = getattr(settings, "brevo_sender_email", "") or "noreply@macropulse.live"
+    return {"name": "MacroPulse", "email": email}
 
 
 def _post(payload: dict) -> None:
@@ -114,7 +120,7 @@ macropulse.live
 </html>"""
 
     _post({
-        "sender":      SENDER,
+        "sender":      _get_sender(),
         "to":          [{"email": to}],
         "subject":     "You're in — MacroPulse Weekly Brief",
         "htmlContent": html_content,
@@ -188,7 +194,7 @@ If you didn't request this, ignore this email.
 </html>"""
 
     _post({
-        "sender":      SENDER,
+        "sender":      _get_sender(),
         "to":          [{"email": to}],
         "subject":     f"MacroPulse verification code: {code}",
         "htmlContent": html_content,
@@ -320,7 +326,7 @@ Questions? support@macropulse.live
 </html>"""
 
     _post({
-        "sender":      SENDER,
+        "sender":      _get_sender(),
         "to":          [{"email": to}],
         "subject":     "Your MacroPulse API key",
         "htmlContent": html_content,
