@@ -325,6 +325,21 @@ def touch_api_key(key_hash: str) -> None:
         cur.execute(sql, {"hash": key_hash})
 
 
+def fetch_subscriber_emails() -> list[str]:
+    """Return emails of all users who have at least one active API key."""
+    sql = """
+        SELECT DISTINCT u.email
+        FROM users u
+        JOIN api_keys k ON k.user_id = u.id
+        WHERE k.is_active = TRUE
+        ORDER BY u.email;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return [r["email"] for r in rows]
+
+
 def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
     """Return recent macro feature rows (used by performance attribution)."""
     sql = """

@@ -101,7 +101,8 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     alert_recipients: list[str] = []
-    webhook_url: str = ""  # Slack / Discord / generic webhook
+    webhook_url: str = ""  # Slack / Discord / generic webhook (operator alerts)
+    discord_webhook_url: str = ""  # Discord channel webhook for daily signal posts
 
     # ── Scheduler ───────────────────────────────────────────────────
     pipeline_cron_hour: int = 18  # 18:00 UTC (after US market close)
