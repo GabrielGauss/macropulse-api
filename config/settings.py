@@ -92,7 +92,10 @@ class Settings(BaseSettings):
     # Free: 50  |  Starter: 500  |  Pro: 0
     rate_limit_per_day: int = 0  # default off for local dev
 
-    # ── Alerting ────────────────────────────────────────────────────
+    # ── Transactional email (Brevo) ──────────────────────────────────
+    brevo_api_key: str = ""   # xkeysib-... from Brevo dashboard
+
+    # ── Alerting (operator notifications) ───────────────────────────
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""
