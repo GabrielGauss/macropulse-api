@@ -20,7 +20,7 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.middleware.rate_limit import RateLimitMiddleware
@@ -121,5 +121,12 @@ def health_check() -> HealthResponse:
 # NOTE: must be mounted AFTER all API routes — StaticFiles catches everything
 _frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
 if _frontend_dist.is_dir():
+    _index_html = _frontend_dist / "index.html"
+
+    @app.get("/", include_in_schema=False)
+    def serve_root():
+        """Serve index.html with no-cache so stale JS hashes never break the app."""
+        return FileResponse(str(_index_html), headers={"Cache-Control": "no-store"})
+
     app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
     logger.info("Serving frontend from %s", _frontend_dist)
