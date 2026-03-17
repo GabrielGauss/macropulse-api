@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class RegimeProbabilities(BaseModel):
@@ -191,7 +191,7 @@ class SignalPackageResponse(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    email: str
+    email: EmailStr
     name: str | None = None
 
 

@@ -44,3 +44,12 @@ export function confidenceBadge(conf) {
   if (conf === 'MODERATE') return { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
   return { color: '#ef4444', bg: 'rgba(239,68,68,0.1)' };
 }
+
+// Regime → equity allocation used by strategy calculations everywhere.
+// Single source of truth — import this instead of defining it inline.
+export const EQUITY_EXPOSURE = {
+  expansion:  1.00,
+  recovery:   0.75,
+  tightening: 0.25,
+  risk_off:   0.00,
+};

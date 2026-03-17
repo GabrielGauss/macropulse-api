@@ -4,6 +4,7 @@ import {
   CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { formatDateShort, formatNumber } from '../lib/utils';
+import { useGuideMode } from '../lib/guideMode';
 
 const TICK = { fill: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: 'JetBrains Mono' };
 const LIQ_COLOR = '#3b82f6';
@@ -51,6 +52,13 @@ export default function LiquidityChart({ data }) {
   const rows = [...data.data].reverse();
   const latest = rows[rows.length - 1];
   const zscore = latest?.zscore;
+  const guideMode = useGuideMode();
+
+  // Trend: compare last 5 points
+  const trendDelta = rows.length >= 5
+    ? rows[rows.length - 1].net_liquidity - rows[rows.length - 5].net_liquidity
+    : null;
+  const trendUp = trendDelta != null && trendDelta > 0;
 
   return (
     <div className="card p-5 animate-in">
@@ -58,8 +66,20 @@ export default function LiquidityChart({ data }) {
         <div>
           <div className="label mb-1">Net Liquidity Proxy</div>
           {latest && (
-            <div className="font-mono text-lg font-semibold text-white/80">
-              {formatNumber(latest.net_liquidity)}
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-lg font-semibold text-white/80">
+                {formatNumber(latest.net_liquidity)}
+              </span>
+              {trendDelta != null && (
+                <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono', color: trendUp ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+                  {trendUp ? '▲' : '▼'} {formatNumber(Math.abs(trendDelta))}
+                </span>
+              )}
+            </div>
+          )}
+          {guideMode && (
+            <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginTop: 3, lineHeight: 1.5 }}>
+              Fed reserves + RRP drawdown − TGA build. Positive = system flush with liquidity.
             </div>
           )}
         </div>
@@ -71,6 +91,9 @@ export default function LiquidityChart({ data }) {
               style={{ color: zscore > 1 ? '#22c55e' : zscore < -1 ? '#ef4444' : '#f59e0b' }}
             >
               {zscore > 0 ? '+' : ''}{zscore.toFixed(2)}
+            </div>
+            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
+              {Math.abs(zscore) > 1 ? (zscore > 0 ? 'elevated' : 'depressed') : 'normal range'}
             </div>
           </div>
         )}

@@ -11,12 +11,9 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-import re
+import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
-import random
-import string
 
 from api.auth import generate_api_key, hash_key, require_api_key
 from api.middleware.rate_limit import TIER_LIMITS, _reset_ts, get_usage_today
@@ -35,15 +32,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/auth", tags=["Auth"])
 
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
 
 def _tier_limit(tier: str) -> int:
     return TIER_LIMITS.get(tier, 50)
 
 
 def _generate_code() -> str:
-    return "".join(random.choices(string.digits, k=6))
+    return str(secrets.randbelow(1_000_000)).zfill(6)
 
 
 @router.post(
@@ -59,12 +54,7 @@ def register(body: RegisterRequest) -> dict:
     Call `POST /v1/auth/verify` with the code to complete registration and
     receive your API key.
     """
-    email = body.email.strip().lower()
-    if not _EMAIL_RE.match(email):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Invalid email address.",
-        )
+    email = str(body.email).strip().lower()  # EmailStr already validated by pydantic
 
     # Prevent duplicate registrations
     existing = queries.get_user_by_email(email)

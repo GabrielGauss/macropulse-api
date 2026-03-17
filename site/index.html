@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPulse — Macro Regime Intelligence API</title>
   <meta name="description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
+  <meta property="og:title" content="MacroPulse — Macro Regime Intelligence API" />
+  <meta property="og:description" content="PCA + Hidden Markov Model pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
+  <meta property="og:image" content="https://macropulse.live/og-image.png" />
+  <meta property="og:url" content="https://macropulse.live" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MacroPulse — Macro Regime Intelligence API" />
+  <meta name="twitter:description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily." />
+  <meta name="twitter:image" content="https://macropulse.live/og-image.png" />
+  <link rel="canonical" href="https://macropulse.live" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -13,18 +23,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0a0a0a;
-      --s1:       #111111;
-      --s2:       #191919;
-      --border:   #1f1f1f;
-      --border2:  #2a2a2a;
-      --text:     #f0f0f0;
-      --muted:    #888;
-      --dim:      #555;
-      --green:    #22c55e;
-      --blue:     #3b82f6;
-      --amber:    #f59e0b;
-      --red:      #ef4444;
+      --bg:      #090909;
+      --s1:      #0f0f0f;
+      --s2:      #141414;
+      --border:  #1a1a1a;
+      --border2: #252525;
+      --text:    #f0f0f0;
+      --muted:   #888;
+      --dim:     #444;
+      --green:   #22c55e;
+      --blue:    #3b82f6;
+      --amber:   #f59e0b;
+      --red:     #ef4444;
+      --indigo:  #6366f1;
     }
 
     html { scroll-behavior: smooth; }
@@ -39,7 +50,7 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 2rem;
       border-bottom: 1px solid var(--border);
-      background: rgba(10,10,10,0.92);
+      background: rgba(9,9,9,0.92);
       backdrop-filter: blur(16px);
     }
     .logo {
@@ -50,17 +61,35 @@
       width: 8px; height: 8px; border-radius: 50%; background: var(--green);
       box-shadow: 0 0 8px var(--green);
     }
-    .nav-links { display: flex; align-items: center; gap: 2rem; }
-    .nav-links a { font-size: 0.85rem; color: var(--muted); transition: color 0.15s; }
+    .nav-links { display: flex; align-items: center; gap: 1.75rem; }
+    .nav-links a {
+      font-size: 0.85rem; color: var(--muted);
+      text-decoration: none; position: relative;
+      transition: color 0.2s;
+      padding-bottom: 2px;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute; left: 0; bottom: -2px; right: 0; height: 1px;
+      background: var(--green);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+      opacity: 0.7;
+    }
     .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover::after { transform: scaleX(1); }
     .nav-key {
       font-size: 0.82rem; font-weight: 500;
       padding: 0.4rem 1rem; border-radius: 6px;
       border: 1px solid var(--border2); color: var(--text);
-      transition: border-color 0.15s;
+      transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
       cursor: pointer; background: transparent;
     }
-    .nav-key:hover { border-color: var(--muted); }
+    .nav-key:hover {
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: 0 0 12px rgba(34,197,94,0.15);
+    }
 
     /* ── Layout ──────────────────────────────────────────────────── */
     .container { max-width: 1140px; margin: 0 auto; padding: 0 2rem; }
@@ -69,6 +98,11 @@
     .hero {
       padding: 120px 0 80px;
       display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% -5%, rgba(59,130,246,0.18) 0%, transparent 65%),
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: auto, 48px 48px, 48px 48px;
     }
     @media (max-width: 860px) {
       .hero { grid-template-columns: 1fr; padding: 100px 0 60px; }
@@ -77,7 +111,7 @@
 
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      font-size: 0.78rem; font-weight: 500; color: var(--muted);
+      font-size: 0.78rem; font-weight: 500; color: var(--blue);
       text-transform: uppercase; letter-spacing: 0.08em;
       margin-bottom: 1.5rem;
     }
@@ -86,14 +120,17 @@
     }
 
     .hero h1 {
-      font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+      font-size: clamp(2.5rem, 5vw, 4rem);
       font-weight: 700;
       line-height: 1.1;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.04em;
       margin-bottom: 1.25rem;
       color: var(--text);
     }
-    .hero h1 em { color: var(--green); font-style: normal; }
+    .hero h1 em {
+      color: var(--green); font-style: normal;
+      text-shadow: 0 0 40px rgba(34,197,94,0.35);
+    }
 
     .hero-sub {
       font-size: 1rem;
@@ -139,9 +176,9 @@
       position: relative;
     }
     .terminal-window {
-      background: #0e0e0e;
+      background: var(--s1);
       border: 1px solid var(--border2);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 24px 80px rgba(0,0,0,0.5);
     }
@@ -281,7 +318,7 @@
     /* ── How it works ────────────────────────────────────────────── */
     .section-wrap { padding: 5rem 0; }
     .section-eyebrow {
-      font-size: 0.72rem; font-weight: 500; color: var(--dim);
+      font-size: 0.72rem; font-weight: 500; color: var(--blue);
       text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem;
     }
     .section-title {
@@ -318,6 +355,51 @@
     .pipe-step h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
     .pipe-step p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
 
+    /* ── Methodology (animated steps) ───────────────────────────── */
+    .pipeline-upgraded {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0; margin-top: 2.5rem;
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    @media (max-width: 820px) { .pipeline-upgraded { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .pipeline-upgraded { grid-template-columns: 1fr; } }
+    .pipe-card {
+      padding: 1.75rem 1.5rem;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      position: relative;
+      transition: background 0.15s;
+    }
+    .pipe-card:last-child { border-right: none; }
+    @media (max-width: 820px) {
+      .pipe-card:nth-child(2n) { border-right: none; }
+      .pipe-card:nth-child(1), .pipe-card:nth-child(2) { border-bottom: 1px solid var(--border); }
+    }
+    @media (max-width: 480px) {
+      .pipe-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .pipe-card:last-child { border-bottom: none; }
+    }
+    .pipe-card:hover { background: var(--s1); }
+    .pipe-icon-wrap {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      border: 1px solid;
+    }
+    .pipe-step-label {
+      font-size: 0.62rem; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .pipe-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .pipe-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+    .pipe-card-detail {
+      margin-top: 0.875rem; padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--dim); line-height: 1.7;
+    }
+
     /* ── Code section ────────────────────────────────────────────── */
     .code-section {
       border-top: 1px solid var(--border);
@@ -339,9 +421,9 @@
       font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
     }
     .code-block {
-      background: #0e0e0e;
+      background: var(--s1);
       border: 1px solid var(--border2);
-      border-radius: 10px; overflow: hidden;
+      border-radius: 12px; overflow: hidden;
     }
     .code-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -418,7 +500,7 @@
       .pricing-card { border-right: none; border-bottom: 1px solid var(--border); }
       .pricing-card:last-child { border-bottom: none; }
     }
-    .pricing-card.featured { background: var(--s2); }
+    .pricing-card.featured { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); }
     .plan-badge {
       display: inline-block;
       font-size: 0.68rem; font-weight: 600; color: var(--green);
@@ -485,6 +567,42 @@
     .footer-links a { font-size: 0.82rem; color: var(--dim); transition: color 0.15s; }
     .footer-links a:hover { color: var(--muted); }
 
+    /* ── Strategy explainer (chart context panel) ────────────────── */
+    .strategy-explainer {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      background: rgba(59,130,246,0.04);
+      border: 1px solid rgba(59,130,246,0.12);
+      border-radius: 10px;
+    }
+    @media (max-width: 640px) { .strategy-explainer { grid-template-columns: 1fr; } }
+    .explainer-label {
+      font-size: 0.67rem; font-weight: 600; color: var(--blue);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem;
+    }
+    .explainer-text {
+      font-size: 0.82rem; color: var(--muted); line-height: 1.7; margin: 0;
+    }
+    .exposure-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;
+      padding: 0.3rem 0;
+    }
+    .exposure-row + .exposure-row { border-top: 1px solid rgba(255,255,255,0.04); }
+    .exposure-label { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); }
+    .exposure-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .perf-compare {
+      display: flex; gap: 1rem; margin-top: 1rem;
+      padding: 0.875rem 1.25rem;
+      background: var(--s1); border: 1px solid var(--border2); border-radius: 8px;
+    }
+    .perf-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .perf-val { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; line-height: 1; }
+    .perf-lbl { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); }
+    .perf-divider { width: 1px; background: var(--border); flex-shrink: 0; align-self: stretch; margin: 0 0.25rem; }
+
     /* ── Regime chart (replaces static bar) ─────────────────────── */
     .chart-section {
       border-top: 1px solid var(--border);
@@ -515,8 +633,8 @@
     .chart-filter:hover { color: var(--muted); border-color: var(--muted); }
     .chart-filter.active { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
     .chart-canvas-wrap {
-      position: relative; background: #0c0c0c;
-      border: 1px solid var(--border); border-radius: 10px;
+      position: relative; background: var(--s1);
+      border: 1px solid var(--border); border-radius: 12px;
       padding: 1.25rem 1.25rem 0.75rem;
     }
     .chart-stats-row {
@@ -536,29 +654,76 @@
     }
     .chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── Proof callout ───────────────────────────────────────────── */
-    .proof-callout {
+    /* ── Stats bar (replaces proof callout) ─────────────────────── */
+    .stats-bar {
       border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       background: var(--s1);
-      padding: 1.75rem 0;
+      padding: 0;
     }
-    .proof-callout-inner {
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; gap: 2rem; text-align: center;
+    .stats-bar-inner {
+      display: flex; align-items: stretch; flex-wrap: wrap;
     }
-    .proof-callout p {
-      margin: 0; font-size: 0.82rem; color: var(--dim); line-height: 1.6;
+    .sb-item {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 1.1rem 2rem;
+      border-right: 1px solid var(--border);
+      gap: 0.2rem;
+      flex: 1;
     }
-    .proof-callout strong { color: var(--muted); }
-    .proof-stats {
-      display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;
+    .sb-item:last-child { border-right: none; }
+    .sb-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1;
     }
-    .proof-stat { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
-    .proof-stat-val {
-      font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; font-weight: 600;
-      letter-spacing: -0.02em;
+    .sb-lbl {
+      font-size: 0.65rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.07em;
     }
-    .proof-stat-lbl { font-size: 0.68rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+    .sb-method {
+      font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--dim); letter-spacing: 0.03em;
+    }
+    @media (max-width: 700px) {
+      .stats-bar-inner { flex-wrap: wrap; }
+      .sb-item { padding: 0.875rem 1.25rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .sb-item:last-child { margin-left: 0; border-bottom: none; }
+    }
+
+    /* ── Regime cards (replaces table) ──────────────────────────── */
+    .regime-cards-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border2); border-radius: 12px;
+      overflow: hidden; margin-top: 2.5rem;
+    }
+    @media (max-width: 700px) { .regime-cards-grid { grid-template-columns: 1fr; } }
+    .rc {
+      background: var(--bg);
+      padding: 1.75rem 2rem;
+      transition: background 0.12s;
+    }
+    .rc:hover { background: #0f0f0f; }
+    .rc-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.875rem;
+    }
+    .rc-pip { width: 3px; height: 20px; border-radius: 2px; flex-shrink: 0; }
+    .rc-name { font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em; }
+    .rc-exposure {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 600;
+    }
+    .rc-desc {
+      font-size: 0.83rem; color: var(--muted); line-height: 1.65;
+      margin-bottom: 0.875rem;
+    }
+    .rc-signals {
+      font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--dim); border-top: 1px solid var(--border);
+      padding-top: 0.75rem; line-height: 1.7;
+    }
 
     /* ── Newsletter section ──────────────────────────────────────── */
     .newsletter-section {
@@ -592,26 +757,6 @@
     .newsletter-note { margin-top: 0.9rem; font-size: 0.75rem; color: var(--dim); }
     .newsletter-success { display: none; color: var(--green); font-size: 0.875rem; font-weight: 500; margin-top: 0.75rem; }
 
-    /* ── Social proof quote ──────────────────────────────────────── */
-    .social-proof {
-      padding: 3rem 0;
-      border-top: 1px solid var(--border);
-    }
-    .social-proof-inner {
-      max-width: 720px; margin: 0 auto; text-align: center;
-    }
-    .social-proof-quote {
-      font-size: 1.05rem; line-height: 1.75;
-      color: rgba(240,240,240,0.7);
-      font-style: italic;
-      margin-bottom: 1.25rem;
-    }
-    .social-proof-quote strong { color: var(--text); font-style: normal; }
-    .social-proof-attr {
-      font-size: 0.78rem; color: var(--dim); font-family: 'JetBrains Mono', monospace;
-      text-transform: uppercase; letter-spacing: 0.06em;
-    }
-
     /* ── Live regime status line ─────────────────────────────────── */
     .hero-regime-status {
       display: inline-flex; align-items: center; gap: 0.5rem;
@@ -620,15 +765,350 @@
     }
     .regime-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
+    /* ── Regime calendar (contribution graph style) ─────────────── */
+    .regime-calendar-section {
+      border-top: 1px solid var(--border);
+      padding: 4rem 0;
+    }
+    .cal-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;
+    }
+    .cal-legend {
+      display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+    }
+    .cal-legend-item {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; color: var(--muted);
+    }
+    .cal-legend-dot {
+      width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+    }
+    .cal-wrap {
+      overflow-x: auto; padding-bottom: 0.5rem;
+    }
+    .cal-inner {
+      display: flex; gap: 6px; align-items: flex-start; min-width: max-content;
+    }
+    .cal-day-labels {
+      display: flex; flex-direction: column;
+      gap: 3px; padding-top: 20px; flex-shrink: 0;
+    }
+    .cal-day-label {
+      font-size: 0.62rem; color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      height: 13px; line-height: 13px;
+    }
+    .cal-grid { display: flex; flex-direction: column; gap: 4px; }
+    .cal-months { display: flex; gap: 0; margin-bottom: 4px; }
+    .cal-month-label {
+      font-size: 0.62rem; color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    .cal-weeks { display: flex; gap: 3px; }
+    .cal-week { display: flex; flex-direction: column; gap: 3px; }
+    .cal-cell {
+      width: 13px; height: 13px; border-radius: 2px;
+      background: var(--border); cursor: default;
+      transition: opacity 0.1s; position: relative;
+    }
+    .cal-cell:hover { opacity: 0.75; }
+    .cal-cell.expansion  { background: rgba(34,197,94,0.85); }
+    .cal-cell.recovery   { background: rgba(59,130,246,0.85); }
+    .cal-cell.tightening { background: rgba(245,158,11,0.85); }
+    .cal-cell.risk_off   { background: rgba(239,68,68,0.85); }
+    .cal-cell.future     { background: transparent; }
+    /* Tooltip */
+    .cal-tooltip {
+      display: none; position: fixed; z-index: 200;
+      background: #111; border: 1px solid var(--border2);
+      border-radius: 6px; padding: 7px 10px;
+      font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--text); pointer-events: none; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .cal-tooltip.visible { display: block; }
+
+    /* ── Social icons ─────────────────────────────────────────────── */
+    .social-links { display: flex; align-items: center; gap: 1rem; }
+    .social-link {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 6px;
+      border: 1px solid var(--border2); color: var(--muted);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .social-link:hover { color: var(--text); border-color: var(--muted); }
+
     /* ── Utilities ───────────────────────────────────────────────── */
     @media (max-width: 600px) {
       nav { padding: 0 1rem; }
       .nav-links { display: none; }
       .container { padding: 0 1rem; }
     }
+
+    .nav-hamburger {
+      display: none; background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--muted);
+    }
+    .nav-hamburger svg { display: block; }
+    .nav-mobile-menu {
+      display: none; position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+      background: var(--s1); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; flex-direction: column; gap: 1rem;
+    }
+    .nav-mobile-menu.open { display: flex; }
+    .nav-mobile-menu a, .nav-mobile-menu button {
+      font-size: 0.9rem; color: var(--muted); background: none; border: none;
+      cursor: pointer; text-align: left; padding: 0; font-family: inherit;
+    }
+    @media (max-width: 600px) {
+      .nav-hamburger { display: block; }
+    }
+
+    /* ── Global micro-animations ─────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-10px); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.2); }
+      50%       { box-shadow: 0 0 40px rgba(59,130,246,0.4), 0 0 80px rgba(59,130,246,0.1); }
+    }
+    @keyframes count-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* Terminal float */
+    .hero-terminal .terminal-window {
+      animation: float 7s ease-in-out infinite;
+    }
+
+    /* Card hover lift */
+    .rc, .pipe-card, .pricing-card {
+      transition: background 0.15s, transform 0.22s, box-shadow 0.22s;
+    }
+    .rc:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+    .pipe-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+    .pricing-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+
+    /* Shimmer on primary buttons */
+    .btn-fill, .nav-key {
+      position: relative; overflow: hidden;
+    }
+    .btn-fill::after, .nav-key::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* ── CTA section (register redesign) ─────────────────────────── */
+    .cta-section {
+      padding: 7rem 0 5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 110%, rgba(59,130,246,0.1) 0%, transparent 65%),
+        var(--bg);
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 1px; height: 80px;
+      background: linear-gradient(to bottom, transparent, rgba(59,130,246,0.4), transparent);
+      pointer-events: none;
+    }
+    .cta-steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; margin-bottom: 2.5rem;
+    }
+    .cta-step-item {
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .cta-step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+      flex-shrink: 0; transition: all 0.3s;
+    }
+    .cta-step-num.active {
+      background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4);
+      color: var(--blue);
+    }
+    .cta-step-num.inactive {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--dim);
+    }
+    .cta-step-num.done {
+      background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green);
+    }
+    .cta-step-label { font-size: 0.72rem; color: var(--dim); }
+    .cta-step-sep { width: 28px; height: 1px; background: var(--border); flex-shrink: 0; }
+    .cta-heading {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 700; letter-spacing: -0.04em; line-height: 1.1;
+      margin-bottom: 0.875rem;
+    }
+    .cta-heading em { color: var(--green); font-style: normal; text-shadow: 0 0 40px rgba(34,197,94,0.3); }
+    .cta-sub {
+      font-size: 1rem; color: var(--muted); max-width: 460px;
+      margin: 0 auto 2.5rem; line-height: 1.65;
+    }
+    /* The integrated form pill */
+    .cta-form-wrap {
+      max-width: 480px; margin: 0 auto;
+    }
+    .cta-pill {
+      display: flex; gap: 0;
+      background: var(--s1);
+      border: 1px solid var(--border2);
+      border-radius: 12px; overflow: hidden;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cta-pill:focus-within {
+      border-color: rgba(59,130,246,0.5);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.07), 0 0 30px rgba(59,130,246,0.12);
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+    .cta-pill-input {
+      flex: 1; min-width: 0;
+      background: transparent; border: none; color: var(--text);
+      padding: 1rem 1.25rem; font-size: 0.9rem; font-family: inherit;
+      outline: none;
+    }
+    .cta-pill-input::placeholder { color: var(--dim); }
+    .cta-pill-btn {
+      padding: 1rem 1.5rem;
+      background: var(--text); color: #000;
+      font-size: 0.875rem; font-weight: 700; letter-spacing: -0.01em;
+      border: none; cursor: pointer; white-space: nowrap;
+      position: relative; overflow: hidden; flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .cta-pill-btn:hover { opacity: 0.9; }
+    .cta-pill-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    /* verify code input (reuses pill but different inner) */
+    .cta-code-input {
+      flex: 1; min-width: 0;
+      background: transparent; border: none; color: var(--text);
+      padding: 1rem 1.25rem; font-size: 1.2rem; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2em;
+      text-align: center; outline: none;
+    }
+    .cta-code-input::placeholder { color: var(--dim); letter-spacing: 0.1em; font-size: 0.9rem; font-weight: 400; }
+    .cta-note { font-size: 0.78rem; color: var(--dim); margin-top: 0.875rem; }
+    .cta-trust {
+      display: flex; align-items: center; justify-content: center;
+      gap: 2rem; margin-top: 2.5rem; padding-top: 2rem;
+      border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-size: 0.8rem; color: var(--dim);
+    }
+    .trust-check { color: var(--green); font-size: 0.85rem; }
+
+    /* ── Newsletter — compact inline strip ───────────────────────── */
+    .nl-strip {
+      padding: 2.5rem 0;
+      border-top: 1px solid var(--border);
+      background: var(--s1);
+    }
+    .nl-strip-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 2rem; flex-wrap: wrap;
+    }
+    .nl-strip-left {}
+    .nl-strip-label {
+      font-size: 0.67rem; font-weight: 600; color: var(--blue);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.35rem;
+    }
+    .nl-strip-title {
+      font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.2rem;
+    }
+    .nl-strip-sub { font-size: 0.82rem; color: var(--muted); }
+    .nl-strip-form {
+      display: flex; gap: 0;
+      background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
+      overflow: hidden; flex-shrink: 0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .nl-strip-form:focus-within {
+      border-color: rgba(59,130,246,0.4);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.06);
+    }
+    .nl-strip-input {
+      width: 220px; padding: 0.7rem 1rem;
+      background: transparent; border: none; color: var(--text);
+      font-size: 0.875rem; font-family: inherit; outline: none;
+    }
+    .nl-strip-input::placeholder { color: var(--dim); }
+    .nl-strip-btn {
+      padding: 0.7rem 1.25rem;
+      background: var(--border2); color: var(--muted);
+      font-size: 0.82rem; font-weight: 600; font-family: inherit;
+      border: none; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s, color 0.15s; flex-shrink: 0;
+    }
+    .nl-strip-btn:hover { background: var(--text); color: #000; }
+    @media (max-width: 640px) {
+      .nl-strip-inner { flex-direction: column; }
+      .nl-strip-form { width: 100%; }
+      .nl-strip-input { flex: 1; width: auto; }
+    }
   </style>
 </head>
 <body>
+
+<!-- ============================================================
+  SECTION ORDER:
+  1. NAV
+  2. HERO
+  3. REGIME CHART  (proof — hook them visually)
+  4. PROOF CALLOUT (stats)
+  5. SOCIAL PROOF  (credibility)
+  6. PIPELINE      (educate: how it works)
+  7. REGIMES       (educate: the four states)
+  8. CODE SAMPLE   (show ease of integration)
+  9. PRICING       (now they know the value)
+ 10. REGISTER      (final CTA)
+ 11. NEWSLETTER    (secondary CTA)
+ 12. FOOTER
+============================================================ -->
 
 <!-- NAV -->
 <nav>
@@ -646,7 +1126,7 @@
     <a href="#pipeline">How it works</a>
     <a href="#regimes">Regimes</a>
     <a href="#pricing">Pricing</a>
-    <a href="/api-docs.html">API Docs</a>
+    <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--muted);">Dashboard</a>
     <a href="https://discord.gg/YxTH5hPaeN" target="_blank" rel="noopener" title="Join Discord" style="display:inline-flex;align-items:center;gap:0.35rem;color:var(--muted);">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
@@ -654,7 +1134,18 @@
     </a>
     <button class="nav-key" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free Key</button>
   </div>
+  <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 </nav>
+<div class="nav-mobile-menu" id="mobile-menu">
+  <a href="#pipeline">How it works</a>
+  <a href="#regimes">Regimes</a>
+  <a href="#pricing">Pricing</a>
+  <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
+  <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
+  <a href="https://discord.gg/YxTH5hPaeN" target="_blank">Discord</a>
+</div>
 
 <!-- HERO -->
 <div class="container">
@@ -662,12 +1153,9 @@
     <!-- Left: copy -->
     <div>
       <div class="hero-eyebrow">The Macro Middleware · Updated daily</div>
-      <h1>The macro regime.<br/><em>Quantified.</em></h1>
+      <h1>Macro regime<br/>intelligence.<br/><em>Systematic.</em></h1>
       <p class="hero-sub">
-        Most macro analysis is opinion. MacroPulse is systematic — a PCA +
-        Hidden Markov Model pipeline that converts 10 macro variables into
-        probabilistic regime classification, updated daily.
-        Not a forecast. A probability.
+        A PCA + Hidden Markov Model pipeline that converts 10 macro variables into daily regime classification — Expansion, Recovery, Tightening, or Risk-Off. Not a forecast. A probability distribution.
       </p>
       <div class="hero-metrics">
         <div class="metric-item">
@@ -750,9 +1238,11 @@
         </div>
       </div>
     </div>
+
+    <!-- Chart title + range filters -->
     <div class="chart-header">
       <div class="chart-title-group">
-        <span class="chart-title">Macro regime history</span>
+        <span class="chart-title">Strategy performance vs buy &amp; hold</span>
         <span class="chart-live-badge"><span class="chart-live-dot"></span> Live data</span>
       </div>
       <div class="chart-filters">
@@ -761,112 +1251,103 @@
         <button class="chart-filter active" data-range="730" onclick="setChartRange(730)">2Y</button>
       </div>
     </div>
+
+    <!-- Strategy explainer panel -->
+    <div class="strategy-explainer">
+      <div>
+        <div class="explainer-label">What you're looking at</div>
+        <p class="explainer-text">
+          The <span style="color:#3b82f6;font-weight:600;">blue area</span> is the MacroPulse strategy —
+          it holds 100% equity in <span style="color:#22c55e;">Expansion</span>, scales down through
+          <span style="color:#3b82f6;">Recovery</span> and <span style="color:#f59e0b;">Tightening</span>,
+          and exits to cash in <span style="color:#ef4444;">Risk-Off</span>.
+          The <span style="color:rgba(255,255,255,0.5);">dashed line</span> is buy-and-hold SPX.
+          Background shading shows the active regime. Both lines rebased to 100 at the start of the window.
+        </p>
+        <div class="perf-compare" id="perf-compare" style="display:none;">
+          <div class="perf-item">
+            <span class="perf-val" id="perf-strategy" style="color:#3b82f6;">—</span>
+            <span class="perf-lbl">Strategy return</span>
+          </div>
+          <div class="perf-divider"></div>
+          <div class="perf-item">
+            <span class="perf-val" id="perf-bnh" style="color:rgba(255,255,255,0.4);">—</span>
+            <span class="perf-lbl">Buy &amp; hold</span>
+          </div>
+          <div class="perf-divider"></div>
+          <div class="perf-item">
+            <span class="perf-val" id="perf-alpha" style="color:#22c55e;">—</span>
+            <span class="perf-lbl">Outperformance</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="explainer-label">Equity exposure by regime</div>
+        <div>
+          <div class="exposure-row">
+            <span class="exposure-label"><span class="exposure-dot" style="background:#22c55e;"></span>Expansion</span>
+            <span style="color:#22c55e;font-weight:700;">100%</span>
+          </div>
+          <div class="exposure-row">
+            <span class="exposure-label"><span class="exposure-dot" style="background:#3b82f6;"></span>Recovery</span>
+            <span style="color:#3b82f6;font-weight:700;">75%</span>
+          </div>
+          <div class="exposure-row">
+            <span class="exposure-label"><span class="exposure-dot" style="background:#f59e0b;"></span>Tightening</span>
+            <span style="color:#f59e0b;font-weight:700;">25%</span>
+          </div>
+          <div class="exposure-row">
+            <span class="exposure-label"><span class="exposure-dot" style="background:#ef4444;"></span>Risk-Off</span>
+            <span style="color:#ef4444;font-weight:700;">0%</span>
+          </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:0.875rem;line-height:1.6;">
+          Strategy max drawdown: <span id="explainer-dd" style="color:var(--red);">−5.9%</span> ·
+          Sharpe: <span id="explainer-sharpe" style="color:var(--green);">1.69</span>
+        </p>
+      </div>
+    </div>
+
     <div class="chart-canvas-wrap">
       <canvas id="regime-chart" height="200"></canvas>
     </div>
     <div class="chart-stats-row" id="chart-stats-row">
-      <!-- filled by JS from API -->
       <span class="chart-stat-pill" style="color:#22c55e;border-color:rgba(34,197,94,0.3);">Expansion —%</span>
       <span class="chart-stat-pill" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);">Tightening —%</span>
       <span class="chart-stat-pill" style="color:#3b82f6;border-color:rgba(59,130,246,0.3);">Recovery —%</span>
       <span class="chart-stat-pill" style="color:#ef4444;border-color:rgba(239,68,68,0.3);">Risk-Off —%</span>
     </div>
     <div class="chart-legend">
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22c55e"></div> Expansion</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#3b82f6"></div> Recovery</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#f59e0b"></div> Tightening</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef4444"></div> Risk-Off</div>
-      <div class="chart-legend-item" style="margin-left:auto;"><div class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></div> S&amp;P 500</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(234,179,8,0.7)"></div> Gold</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#3b82f6"></div> MacroPulse Strategy</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(255,255,255,0.3)"></div> Buy &amp; Hold</div>
+      <div class="chart-legend-item" style="margin-left:auto;font-size:0.68rem;color:var(--dim);">Regime-weighted allocation · base 100</div>
     </div>
   </div>
 </div>
 
-<!-- PROOF CALLOUT -->
-<div class="proof-callout">
-  <div class="container">
-    <div class="proof-callout-inner">
-      <p>MacroPulse is not opinion. It's a Hidden Markov Model trained on 10 macro features.</p>
-      <div class="proof-stats">
-        <div class="proof-stat">
-          <div class="proof-stat-val pos">1.69</div>
-          <div class="proof-stat-lbl">Sharpe (2yr)</div>
-        </div>
-        <div class="proof-stat">
-          <div class="proof-stat-val neg">−5.9%</div>
-          <div class="proof-stat-lbl">Max drawdown</div>
-        </div>
-        <div class="proof-stat">
-          <div class="proof-stat-val" id="proof-days">845+</div>
-          <div class="proof-stat-lbl">Days classified</div>
-        </div>
-        <div class="proof-stat">
-          <div class="proof-stat-val" style="color:#f0f0f0;">~44</div>
-          <div class="proof-stat-lbl">Avg persistence</div>
-        </div>
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="container" style="padding:0 2rem;">
+    <div class="stats-bar-inner">
+      <div class="sb-item">
+        <span class="sb-val pos" id="stat-sharpe">1.69</span>
+        <span class="sb-lbl">Sharpe · 2yr</span>
+      </div>
+      <div class="sb-item">
+        <span class="sb-val neg" id="stat-dd">−5.9%</span>
+        <span class="sb-lbl">Max drawdown</span>
+      </div>
+      <div class="sb-item">
+        <span class="sb-val" id="proof-days">730+</span>
+        <span class="sb-lbl">Days classified</span>
+      </div>
+      <div class="sb-item" style="border-right:none;">
+        <span class="sb-val">~44d</span>
+        <span class="sb-lbl">Avg regime persistence</span>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- SOCIAL PROOF -->
-<div class="social-proof">
-  <div class="container">
-    <div class="social-proof-inner">
-      <p class="social-proof-quote">
-        "<strong>The Macro Middleware.</strong> MacroPulse is a specialized tool for developers seeking to automate macro-regime analysis.
-        Its strength lies in its rigid adherence to statistical models (HMM/PCA) and its positioning as a
-        <strong>developer-first infrastructure component</strong> rather than a retail trading platform."
-      </p>
-      <div class="social-proof-attr">— Independent Technical Review, March 2026</div>
-    </div>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div id="register">
-  <div class="container">
-    <div class="register-section">
-      <div class="register-inner">
-        <div class="register-left">
-          <h2>Start free in<br/>60 seconds</h2>
-          <p>No credit card required. Get your API key and make your first call instantly. 50 requests/day on the free tier — enough to prototype and explore.</p>
-        </div>
-        <div class="register-right">
-          <!-- Step 1: email -->
-          <div class="reg-step1" id="reg-step1">
-            <div class="reg-form">
-              <input type="email" class="reg-input" id="reg-email" placeholder="you@example.com" />
-              <button class="reg-btn" id="reg-btn" onclick="register()">Get Key</button>
-            </div>
-            <p class="reg-note">We'll email a verification code. No password needed.</p>
-          </div>
-          <!-- Step 2: verify code -->
-          <div class="reg-step2" id="reg-step2">
-            <p class="reg-verify-info">Code sent to <strong id="reg-sent-to"></strong></p>
-            <div class="reg-verify-form">
-              <input type="text" class="reg-code-input" id="reg-code" placeholder="000000" maxlength="6" inputmode="numeric" />
-              <button class="reg-btn" id="reg-verify-btn" onclick="verifyCode()">Verify</button>
-            </div>
-            <button class="reg-back" onclick="resetRegister()">← Use a different email</button>
-          </div>
-          <!-- Result / error -->
-          <div class="reg-result" id="reg-result">
-            <div class="reg-result-label" id="reg-result-label">Your API key — save this, shown once:</div>
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;">
-              <code class="reg-key" id="reg-key" style="flex:1;"></code>
-              <button id="reg-copy-btn" onclick="copyApiKey()" style="display:none;flex-shrink:0;font-size:0.7rem;font-family:'JetBrains Mono',monospace;padding:0.3rem 0.6rem;border-radius:4px;border:1px solid rgba(34,197,94,0.3);background:transparent;color:var(--green);cursor:pointer;">copy</button>
-            </div>
-            <div id="reg-next-steps" style="display:none;margin-top:1rem;padding-top:0.875rem;border-top:1px solid rgba(34,197,94,0.15);">
-              <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">Next steps</div>
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <a href="https://api.macropulse.live" target="_blank" style="font-size:0.8rem;font-weight:600;padding:0.45rem 0.875rem;background:#f0f0f0;color:#0a0a0a;border-radius:6px;text-decoration:none;">Open Dashboard →</a>
-                <a href="/api-docs.html" style="font-size:0.8rem;font-weight:500;padding:0.45rem 0.875rem;border:1px solid var(--border2);color:var(--muted);border-radius:6px;text-decoration:none;">API Docs</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div style="border-top:1px solid var(--border);padding:0.5rem 0 0.75rem;text-align:center;">
+      <span class="sb-method">PCA · Gaussian HMM · 10 macro inputs · updated daily 18:30 UTC</span>
     </div>
   </div>
 </div>
@@ -875,34 +1356,146 @@
 <div id="pipeline" style="border-top:1px solid var(--border);">
   <div class="container">
     <div class="section-wrap">
-      <div class="section-eyebrow">How it works</div>
-      <h2 class="section-title">From raw macro data<br/>to tradeable signals</h2>
-      <p class="section-sub">Every trading day after US market close, the pipeline ingests 10 macro indicators and runs the full inference chain.</p>
-      <div class="pipeline" style="border-top:1px solid var(--border);border-left:1px solid var(--border);">
-        <div class="pipe-step">
-          <div class="pipe-num">01 / 04</div>
-          <h4>Data ingestion</h4>
-          <p>Fed balance sheet, RRPO, TGA, Treasury yields (2y/10y), HY spreads, VIX, DXY, SPX pulled from FRED and Yahoo Finance.</p>
+      <div class="section-eyebrow">Methodology</div>
+      <h2 class="section-title">The inference chain</h2>
+      <p class="section-sub">Every trading day after US market close, the pipeline runs automatically. No manual intervention. No editorial discretion.</p>
+      <div class="pipeline-upgraded">
+
+        <!-- Step 1: Ingest -->
+        <div class="pipe-card">
+          <div class="pipe-icon-wrap" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div class="pipe-step-label" style="color:#3b82f6;">Step 1 · Ingest</div>
+          <h4>Raw data pull</h4>
+          <p>Fed balance sheet, RRPO, TGA, 2y/10y yields, HY spreads, VIX, DXY, SPX — sourced from FRED and Yahoo Finance.</p>
+          <div class="pipe-card-detail">FRED API · yfinance<br/>10 macro series · daily</div>
         </div>
-        <div class="pipe-step">
-          <div class="pipe-num">02 / 04</div>
-          <h4>PCA compression</h4>
-          <p>10 correlated features → 4 orthogonal latent factors capturing >85% of variance. Removes noise and collinearity.</p>
+
+        <!-- Step 2: Compress -->
+        <div class="pipe-card">
+          <div class="pipe-icon-wrap" style="background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/>
+            </svg>
+          </div>
+          <div class="pipe-step-label" style="color:#6366f1;">Step 2 · Compress</div>
+          <h4>PCA dimensionality</h4>
+          <p>Principal Component Analysis reduces 10 correlated inputs to 4 orthogonal latent factors, capturing &gt;85% of variance.</p>
+          <div class="pipe-card-detail">PCA · 4 components<br/>&gt;85% variance explained</div>
         </div>
-        <div class="pipe-step">
-          <div class="pipe-num">03 / 04</div>
-          <h4>HMM regime detection</h4>
-          <p>Gaussian Hidden Markov Model trained on the factor sequence identifies 4 macro states with per-regime probabilities.</p>
+
+        <!-- Step 3: Classify -->
+        <div class="pipe-card">
+          <div class="pipe-icon-wrap" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="pipe-step-label" style="color:#f59e0b;">Step 3 · Classify</div>
+          <h4>HMM Viterbi decode</h4>
+          <p>A Gaussian Hidden Markov Model runs Viterbi decoding on the factor sequence to assign a regime label and per-state probability vector.</p>
+          <div class="pipe-card-detail">Gaussian HMM · 4 states<br/>Viterbi algorithm</div>
         </div>
-        <div class="pipe-step">
-          <div class="pipe-num">04 / 04</div>
-          <h4>Signal delivery</h4>
-          <p>REST API and live dashboard. Includes regime label, confidence, persistence days, expected duration, and net liquidity signals.</p>
+
+        <!-- Step 4: Deliver -->
+        <div class="pipe-card">
+          <div class="pipe-icon-wrap" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="pipe-step-label" style="color:#22c55e;">Step 4 · Deliver</div>
+          <h4>REST API response</h4>
+          <p>Regime label, confidence, persistence days, expected duration, net liquidity z-score, and PCA factor scores — at a single endpoint.</p>
+          <div class="pipe-card-detail">REST + WebSocket<br/>JSON · updated 18:30 UTC</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REGIMES -->
+<div id="regimes" style="border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="regimes-section">
+      <div class="section-eyebrow">The four regimes</div>
+      <h2 class="section-title">Every macro state has a label</h2>
+      <p class="section-sub">The HMM identifies four persistent states from the latent factor sequence. Each maps to a distinct risk posture and expected asset behaviour.</p>
+      <div class="regime-cards-grid">
+        <div class="rc">
+          <div class="rc-header">
+            <div class="rc-pip" style="background:#22c55e"></div>
+            <span class="rc-name">Expansion</span>
+            <span class="rc-exposure" style="color:#22c55e">100% EQ</span>
+          </div>
+          <p class="rc-desc">Fed liquidity ample, credit spreads tight, volatility suppressed. The highest-return macro environment across asset classes.</p>
+          <div class="rc-signals">net_liq_zscore &gt; +1 · VIX &lt; 15 · HY spreads tight</div>
+        </div>
+        <div class="rc">
+          <div class="rc-header">
+            <div class="rc-pip" style="background:#3b82f6"></div>
+            <span class="rc-name">Recovery</span>
+            <span class="rc-exposure" style="color:#3b82f6">75% EQ</span>
+          </div>
+          <p class="rc-desc">Liquidity re-injecting after stress. Risk appetite healing but not fully restored — positive bias with elevated caution.</p>
+          <div class="rc-signals">net_liq rising · spreads normalising · VIX declining</div>
+        </div>
+        <div class="rc">
+          <div class="rc-header">
+            <div class="rc-pip" style="background:#f59e0b"></div>
+            <span class="rc-name">Tightening</span>
+            <span class="rc-exposure" style="color:#f59e0b">25% EQ</span>
+          </div>
+          <p class="rc-desc">Fed hiking or draining liquidity. Credit spreads widening. Defensive positioning — avoid duration risk and leveraged exposure.</p>
+          <div class="rc-signals">net_liq falling · 2y yield rising · HY spreads widening</div>
+        </div>
+        <div class="rc">
+          <div class="rc-header">
+            <div class="rc-pip" style="background:#ef4444"></div>
+            <span class="rc-name">Risk-Off</span>
+            <span class="rc-exposure" style="color:#ef4444">0% EQ</span>
+          </div>
+          <p class="rc-desc">Acute stress or crisis. Emergency liquidity injections, spiking spreads and volatility. Capital preservation is the only objective.</p>
+          <div class="rc-signals">VIX spike · credit stress · RRPO drain or surge</div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- REGIME CALENDAR -->
+<div class="regime-calendar-section" id="regime-calendar">
+  <div class="container">
+    <div class="cal-header">
+      <div>
+        <div class="section-eyebrow">Regime history</div>
+        <h2 class="section-title" style="font-size:1.5rem;margin-bottom:0;">Macro regime calendar</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.75rem;">
+        <div class="chart-filters">
+          <button class="chart-filter" data-cal-range="90"  onclick="setCalRange(90)">3M</button>
+          <button class="chart-filter" data-cal-range="180" onclick="setCalRange(180)">6M</button>
+          <button class="chart-filter active" data-cal-range="365" onclick="setCalRange(365)">1Y</button>
+          <button class="chart-filter" data-cal-range="730" onclick="setCalRange(730)">2Y</button>
+        </div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e"></div> Expansion</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#3b82f6"></div> Recovery</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f59e0b"></div> Tightening</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#ef4444"></div> Risk-Off</div>
+        </div>
+      </div>
+    </div>
+    <div class="cal-wrap">
+      <div id="cal-grid-container"></div>
+    </div>
+  </div>
+</div>
+<div id="cal-tooltip" class="cal-tooltip"></div>
 
 <!-- CODE SAMPLE -->
 <div class="code-section">
@@ -951,87 +1544,28 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
   </div>
 </div>
 
-<!-- REGIMES -->
-<div id="regimes" style="border-top:1px solid var(--border);">
+<!-- USE CASES -->
+<div style="border-top:1px solid var(--border);">
   <div class="container">
-    <div class="regimes-section">
-      <div class="section-eyebrow">The four regimes</div>
-      <h2 class="section-title">A label for every macro state</h2>
-      <p class="section-sub">The HMM identifies four persistent macro states from the latent factor sequence. Each maps to a distinct risk posture.</p>
-      <table class="regime-table">
-        <thead>
-          <tr>
-            <th>Regime</th>
-            <th>Equity Exposure</th>
-            <th>Conditions</th>
-            <th>Key Signals</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <div class="regime-name">
-                <div class="regime-pip" style="background:#22c55e"></div>
-                <span>Expansion</span>
-              </div>
-            </td>
-            <td><span class="regime-exposure" style="color:#22c55e">100%</span></td>
-            <td class="muted">Fed liquidity ample, credit spreads tight, volatility low. Historically the strongest return environment.</td>
-            <td class="muted">High net liq z-score, low VIX, tight HY spreads</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="regime-name">
-                <div class="regime-pip" style="background:#3b82f6"></div>
-                <span>Recovery</span>
-              </div>
-            </td>
-            <td><span class="regime-exposure" style="color:#3b82f6">75%</span></td>
-            <td class="muted">Liquidity re-injecting after stress. Risk appetite healing but not fully restored. Positive but cautious.</td>
-            <td class="muted">Rising net liq, normalizing spreads, VIX declining</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="regime-name">
-                <div class="regime-pip" style="background:#f59e0b"></div>
-                <span>Tightening</span>
-              </div>
-            </td>
-            <td><span class="regime-exposure" style="color:#f59e0b">25%</span></td>
-            <td class="muted">Fed hiking or draining liquidity. Credit spreads widening. Defensive positioning, avoid duration risk.</td>
-            <td class="muted">Declining net liq, rising 2y yield, widening HY</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="regime-name">
-                <div class="regime-pip" style="background:#ef4444"></div>
-                <span>Risk-Off</span>
-              </div>
-            </td>
-            <td><span class="regime-exposure" style="color:#ef4444">0%</span></td>
-            <td class="muted">Crisis or acute stress. Emergency liquidity injections, spiking spreads and vol. Capital preservation first.</td>
-            <td class="muted">VIX spike, credit stress, RRPO drain or surge</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- NEWSLETTER -->
-<div id="newsletter">
-  <div class="newsletter-section">
-    <div class="container">
-      <div class="newsletter-inner">
-        <div class="section-eyebrow">Weekly Macro Brief — Free</div>
-        <h2>Stay current without an API key.</h2>
-        <p>Every Monday: current regime classification, liquidity state, and key macro signals.<br/>No API key needed — just an email.</p>
-        <div class="newsletter-form">
-          <input type="email" class="newsletter-input" id="nl-email" placeholder="you@example.com" />
-          <button class="newsletter-btn" id="nl-btn" onclick="subscribeNewsletter()">Subscribe</button>
+    <div class="section-wrap" style="padding-bottom:4rem;">
+      <div class="section-eyebrow">Who uses it</div>
+      <h2 class="section-title">Three use cases,<br/>one endpoint</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:2.5rem;">
+        <div style="background:var(--bg);padding:1.75rem;">
+          <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Portfolio Manager</div>
+          <h4 style="font-size:0.95rem;font-weight:600;margin-bottom:0.6rem;">Regime-aware allocation</h4>
+          <p style="font-size:0.82rem;color:var(--muted);line-height:1.65;">Adjust equity exposure daily based on the macro regime. 100% in Expansion, 0% in Risk-Off. Systematic, not discretionary.</p>
         </div>
-        <div class="newsletter-note" id="nl-note">Join traders and analysts who read the brief.</div>
-        <div class="newsletter-success" id="nl-success">You're in. Check your inbox for a confirmation.</div>
+        <div style="background:var(--bg);padding:1.75rem;border-left:1px solid var(--border);border-right:1px solid var(--border);">
+          <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Quant Developer</div>
+          <h4 style="font-size:0.95rem;font-weight:600;margin-bottom:0.6rem;">ML feature engineering</h4>
+          <p style="font-size:0.82rem;color:var(--muted);line-height:1.65;">Feed regime state, probabilities, and factor scores as features into your ML pipeline. Orthogonal macro signal, no overlap with price data.</p>
+        </div>
+        <div style="background:var(--bg);padding:1.75rem;">
+          <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Risk Manager</div>
+          <h4 style="font-size:0.95rem;font-weight:600;margin-bottom:0.6rem;">Conditional risk limits</h4>
+          <p style="font-size:0.82rem;color:var(--muted);line-height:1.65;">Set drawdown limits and position sizing rules that automatically tighten when the model detects Tightening or Risk-Off macro conditions.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -1092,7 +1626,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
           </div>
-          <button class="plan-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
+          <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Starter" class="plan-btn solid" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
         </div>
 
         <!-- Pro -->
@@ -1117,11 +1651,114 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
           </div>
-          <button class="plan-btn blue" onclick="openCheckout('pro')">Subscribe →</button>
+          <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Pro" class="plan-btn blue" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
         </div>
 
       </div>
-      <p class="pricing-note">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</p>
+      <p class="pricing-note">14-day money-back guarantee · Cancel anytime</p>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="register">
+  <div class="cta-section">
+    <div class="container" style="position:relative;z-index:1;max-width:640px;">
+
+      <!-- Step progress indicator -->
+      <div class="cta-steps" id="cta-steps">
+        <div class="cta-step-item">
+          <div class="cta-step-num active" id="step-num-1">1</div>
+          <span class="cta-step-label">Email</span>
+        </div>
+        <div class="cta-step-sep"></div>
+        <div class="cta-step-item">
+          <div class="cta-step-num inactive" id="step-num-2">2</div>
+          <span class="cta-step-label">Verify</span>
+        </div>
+        <div class="cta-step-sep"></div>
+        <div class="cta-step-item">
+          <div class="cta-step-num inactive" id="step-num-3">3</div>
+          <span class="cta-step-label">Get key</span>
+        </div>
+      </div>
+
+      <div class="section-eyebrow" style="margin-bottom:1rem;justify-content:center;display:flex;">Free tier · no credit card · instant key</div>
+      <h2 class="cta-heading">Start building.<br/><em>Free forever.</em></h2>
+      <p class="cta-sub">Get your API key and make your first call in under 60 seconds. 50 requests/day — enough to integrate, prototype, and prove the signal.</p>
+
+      <div class="cta-form-wrap">
+
+        <!-- Step 1: email -->
+        <div class="reg-step1" id="reg-step1">
+          <div class="cta-pill">
+            <input type="email" class="cta-pill-input" id="reg-email" placeholder="you@example.com" autocomplete="email" />
+            <button class="cta-pill-btn" id="reg-btn" onclick="register()">Get Free Key →</button>
+          </div>
+          <p class="cta-note">We'll send a 6-digit code. No password ever.</p>
+        </div>
+
+        <!-- Step 2: verify code -->
+        <div class="reg-step2" id="reg-step2">
+          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.875rem;text-align:center;">Code sent to <strong id="reg-sent-to" style="color:var(--text);"></strong></p>
+          <div class="cta-pill">
+            <input type="text" class="cta-code-input" id="reg-code" placeholder="000000" maxlength="6" inputmode="numeric" />
+            <button class="cta-pill-btn" id="reg-verify-btn" onclick="verifyCode()">Verify →</button>
+          </div>
+          <div style="text-align:center;margin-top:0.875rem;">
+            <button class="reg-back" onclick="resetRegister()">← Use a different email</button>
+          </div>
+        </div>
+
+        <!-- Result / error -->
+        <div class="reg-result" id="reg-result">
+          <div class="reg-result-label" id="reg-result-label">Your API key — save this, it is shown once:</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;">
+            <code class="reg-key" id="reg-key" style="flex:1;"></code>
+            <button id="reg-copy-btn" onclick="copyApiKey()" style="display:none;flex-shrink:0;font-size:0.7rem;font-family:'JetBrains Mono',monospace;padding:0.3rem 0.6rem;border-radius:4px;border:1px solid rgba(34,197,94,0.3);background:transparent;color:var(--green);cursor:pointer;">copy</button>
+          </div>
+          <div id="reg-next-steps" style="display:none;margin-top:1rem;padding-top:0.875rem;border-top:1px solid rgba(34,197,94,0.15);">
+            <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">Next steps</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+              <a href="https://api.macropulse.live" target="_blank" style="font-size:0.8rem;font-weight:600;padding:0.5rem 1rem;background:#f0f0f0;color:#0a0a0a;border-radius:7px;text-decoration:none;position:relative;overflow:hidden;">Open Dashboard →</a>
+              <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener" style="font-size:0.8rem;font-weight:500;padding:0.5rem 1rem;border:1px solid var(--border2);color:var(--muted);border-radius:7px;text-decoration:none;">API Docs</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Trust signals -->
+      <div class="cta-trust">
+        <div class="trust-item"><span class="trust-check">✓</span> No credit card</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Key delivered instantly</div>
+        <div class="trust-item"><span class="trust-check">✓</span> 50 req/day free</div>
+        <div class="trust-item"><span class="trust-check">✓</span> Upgrade anytime</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NEWSLETTER -->
+<div id="newsletter">
+  <div class="nl-strip">
+    <div class="container">
+      <div class="nl-strip-inner">
+        <div class="nl-strip-left">
+          <div class="nl-strip-label">Weekly Macro Brief — Free</div>
+          <div class="nl-strip-title">Stay current without an API key.</div>
+          <div class="nl-strip-sub">Every Monday: regime, liquidity state, key signals. Just an email.</div>
+        </div>
+        <div>
+          <div class="nl-strip-form">
+            <input type="email" class="nl-strip-input" id="nl-email" placeholder="you@example.com" />
+            <button class="nl-strip-btn" id="nl-btn" onclick="subscribeNewsletter()">Subscribe →</button>
+          </div>
+          <div class="newsletter-note" id="nl-note" style="margin-top:0.5rem;font-size:0.72rem;">Join traders and analysts who read the brief.</div>
+          <div class="newsletter-success" id="nl-success">You're in. Check your inbox.</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1130,17 +1767,24 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 <footer>
   <div class="footer-inner">
     <span class="footer-brand">© 2026 MacroPulse</span>
+    <div class="social-links">
+      <a href="https://discord.gg/YxTH5hPaeN" target="_blank" rel="noopener" class="social-link" title="Join our Discord">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </a>
+      <a href="https://x.com/macropulselv" target="_blank" rel="noopener" class="social-link" title="Follow @macropulselv on X">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
     <div class="footer-links">
+      <a href="/changelog.html">Changelog</a>
       <a href="/terms.html">Terms</a>
       <a href="/privacy.html">Privacy</a>
       <a href="/refund.html">Refund Policy</a>
-      <a href="/api-docs.html">API Docs</a>
+      <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
     </div>
   </div>
 </footer>
 
-<!-- Paddle.js -->
-<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
   const API = 'https://api.macropulse.live';
 
@@ -1153,37 +1797,6 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     tightening: 'Tightening', risk_off: 'Risk-Off',
   };
 
-  // ── Paddle — loaded dynamically from /v1/config ───────────────
-  let PRICE_IDS = { starter: '', pro: '' };
-  let paddleReady = false;
-
-  async function initPaddle() {
-    try {
-      const cfg = await fetch(`${API}/v1/config`).then(r => r.json());
-      if (cfg.paddle_environment === 'sandbox') Paddle.Environment.set('sandbox');
-      Paddle.Initialize({ token: cfg.paddle_client_token });
-      PRICE_IDS.starter = cfg.paddle_starter_price_id;
-      PRICE_IDS.pro     = cfg.paddle_pro_price_id;
-      paddleReady = true;
-    } catch (e) {
-      // Paddle unavailable — checkout buttons show alert
-    }
-  }
-
-  function openCheckout(tier) {
-    if (!paddleReady || !PRICE_IDS[tier]) {
-      alert('Checkout unavailable — please email support@macropulse.live to subscribe.');
-      return;
-    }
-    const email = document.getElementById('reg-email').value.trim();
-    const opts = {
-      items: [{ priceId: PRICE_IDS[tier], quantity: 1 }],
-      customData: { tier },
-    };
-    if (email) opts.customer = { email };
-    Paddle.Checkout.open(opts);
-  }
-
   // ── Free key registration — 2-step ──────────────────────────
   let _pendingEmail = '';
 
@@ -1193,6 +1806,13 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     document.getElementById('reg-result').style.display = 'none';
     document.getElementById('reg-code').value = '';
     _pendingEmail = '';
+    // Reset step indicators
+    document.getElementById('step-num-1').className = 'cta-step-num active';
+    document.getElementById('step-num-1').textContent = '1';
+    document.getElementById('step-num-2').className = 'cta-step-num inactive';
+    document.getElementById('step-num-2').textContent = '2';
+    document.getElementById('step-num-3').className = 'cta-step-num inactive';
+    document.getElementById('step-num-3').textContent = '3';
   }
 
   async function register() {
@@ -1232,6 +1852,10 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         document.getElementById('reg-sent-to').textContent = email;
         document.getElementById('reg-step1').classList.add('hidden');
         document.getElementById('reg-step2').classList.add('active');
+        // Animate step indicators
+        document.getElementById('step-num-1').className = 'cta-step-num done';
+        document.getElementById('step-num-1').textContent = '✓';
+        document.getElementById('step-num-2').className = 'cta-step-num active';
         setTimeout(() => document.getElementById('reg-code').focus(), 80);
       }
     } catch (e) {
@@ -1277,8 +1901,12 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         document.getElementById('reg-result-label').textContent = '';
         keyEl.textContent = data.detail || 'Verification failed.';
       } else {
-        // Success — show key
+        // Success — show key + animate step 3
         document.getElementById('reg-step2').classList.remove('active');
+        document.getElementById('step-num-2').className = 'cta-step-num done';
+        document.getElementById('step-num-2').textContent = '✓';
+        document.getElementById('step-num-3').className = 'cta-step-num done';
+        document.getElementById('step-num-3').textContent = '✓';
         result.className = 'reg-result';
         result.style.display = 'block';
         document.getElementById('reg-result-label').textContent = 'Your API key — save this, it is shown once:';
@@ -1380,7 +2008,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       const resp = await fetch(`${API}/v1/public/chart-data`);
       if (!resp.ok) return;
       const payload = await resp.json();
-      _chartData = [...payload.series].reverse(); // oldest → newest
+      _chartData = payload.series; // already oldest → newest from API
 
       // Update stats row
       const dist = payload.stats?.regime_distribution || {};
@@ -1401,6 +2029,12 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       if (daysEl && payload.stats?.total_days) {
         daysEl.textContent = payload.stats.total_days + '+';
       }
+
+      // Update stats bar from live API data
+      const statsEl = document.getElementById('stat-sharpe');
+      const ddEl    = document.getElementById('stat-dd');
+      if (statsEl && payload.stats?.sharpe_proxy) statsEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
+      if (ddEl    && payload.stats?.max_drawdown)  ddEl.textContent  = payload.stats.max_drawdown.toFixed(1) + '%';
 
       // Update current state bar above chart
       if (_chartData.length) {
@@ -1441,7 +2075,140 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       }
 
       renderRegimeChart(_chartData, 730);
+      renderRegimeCalendar(_chartData, 365);
+
+      // Populate performance comparison (full 2Y window)
+      if (_chartData.length >= 2) {
+        const first = _chartData[0];
+        const last  = _chartData[_chartData.length - 1];
+        const stratRet = ((last.strategy / first.strategy) - 1) * 100;
+        const bnhRet   = ((last.sp500   / first.sp500)    - 1) * 100;
+        const alpha    = stratRet - bnhRet;
+        const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+        const perfEl = document.getElementById('perf-compare');
+        if (perfEl) {
+          document.getElementById('perf-strategy').textContent = fmt(stratRet);
+          document.getElementById('perf-bnh').textContent      = fmt(bnhRet);
+          const alphaEl = document.getElementById('perf-alpha');
+          alphaEl.textContent   = fmt(alpha);
+          alphaEl.style.color   = alpha >= 0 ? '#22c55e' : '#ef4444';
+          perfEl.style.display  = 'flex';
+        }
+        // Update explainer stats
+        const ddEl = document.getElementById('explainer-dd');
+        const srEl = document.getElementById('explainer-sharpe');
+        if (ddEl && payload.stats?.max_drawdown) ddEl.textContent = payload.stats.max_drawdown.toFixed(1) + '%';
+        if (srEl && payload.stats?.sharpe_proxy) srEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
+      }
     } catch (e) { /* silent */ }
+  }
+
+  function setCalRange(days) {
+    document.querySelectorAll('[data-cal-range]').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.calRange) === days);
+    });
+    renderRegimeCalendar(_chartData, days);
+  }
+
+  // ── Regime calendar (GitHub contribution graph style) ─────────
+  function renderRegimeCalendar(allData, rangeDays) {
+    const container = document.getElementById('cal-grid-container');
+    if (!container || !allData.length) return;
+    const data = rangeDays ? allData.slice(-rangeDays) : allData;
+    allData = data;
+
+    // date → regime lookup
+    const regimeByDate = {};
+    allData.forEach(d => { regimeByDate[d.date] = d.regime; });
+
+    // Find first Monday on or before the first data point
+    const firstDate = new Date(allData[0].date + 'T00:00:00Z');
+    const startDay  = new Date(firstDate);
+    const dow = startDay.getUTCDay(); // 0=Sun
+    startDay.setUTCDate(startDay.getUTCDate() - (dow === 0 ? 6 : dow - 1));
+
+    // Find Sunday on or after the last data point
+    const lastDate = new Date(allData[allData.length - 1].date + 'T00:00:00Z');
+    const endDay   = new Date(lastDate);
+    const edow = endDay.getUTCDay();
+    if (edow !== 0) endDay.setUTCDate(endDay.getUTCDate() + (7 - edow));
+
+    // Build weeks (each week = 7 days, Mon→Sun)
+    const weeks = [];
+    const cur   = new Date(startDay);
+    while (cur <= endDay) {
+      const week = [];
+      for (let d = 0; d < 7; d++) {
+        const ds = cur.toISOString().slice(0, 10);
+        week.push({ date: ds, regime: regimeByDate[ds] || null });
+        cur.setUTCDate(cur.getUTCDate() + 1);
+      }
+      weeks.push(week);
+    }
+
+    // Month label per week (show label only when month changes)
+    const CELL_W = 13 + 3; // cell + gap
+    let lastMonth = -1;
+    const monthLabels = weeks.map(week => {
+      const m = new Date(week[0].date + 'T00:00:00Z').getUTCMonth();
+      if (m !== lastMonth) {
+        lastMonth = m;
+        return new Date(week[0].date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+      }
+      return '';
+    });
+
+    // Build HTML
+    let html = '<div class="cal-inner">';
+
+    // Day-of-week labels (left column)
+    html += '<div class="cal-day-labels">';
+    ['Mon','','Wed','','Fri','','Sun'].forEach(l => {
+      html += `<div class="cal-day-label">${l}</div>`;
+    });
+    html += '</div>';
+
+    html += '<div class="cal-grid">';
+
+    // Month labels row
+    html += '<div class="cal-months">';
+    weeks.forEach((_, i) => {
+      html += `<div class="cal-month-label" style="width:${CELL_W}px;">${monthLabels[i]}</div>`;
+    });
+    html += '</div>';
+
+    // Week columns
+    html += '<div class="cal-weeks">';
+    weeks.forEach(week => {
+      html += '<div class="cal-week">';
+      week.forEach(day => {
+        const cls   = day.regime ? ` ${day.regime}` : '';
+        const label = day.regime ? (REGIME_LABELS[day.regime] || day.regime) : '';
+        html += `<div class="cal-cell${cls}" data-date="${day.date}" data-regime="${day.regime || ''}" data-label="${label}"></div>`;
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+
+    html += '</div></div>';
+    container.innerHTML = html;
+
+    // Tooltip interaction
+    const tooltip = document.getElementById('cal-tooltip');
+    container.querySelectorAll('.cal-cell[data-regime]').forEach(cell => {
+      cell.addEventListener('mouseenter', () => {
+        const r = cell.dataset.regime;
+        if (!r) return;
+        tooltip.style.color   = REGIME_COLORS[r] || 'var(--text)';
+        tooltip.textContent   = `${cell.dataset.date}  ·  ${cell.dataset.label}`;
+        tooltip.classList.add('visible');
+      });
+      cell.addEventListener('mousemove', e => {
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top  = (e.clientY - 34) + 'px';
+      });
+      cell.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+    });
   }
 
   function setChartRange(days) {
@@ -1456,13 +2223,13 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     const data = allData.slice(-rangeDays);
     const labels = data.map(d => d.date);
 
-    // Re-baseline SP500 and Gold to 100 at start of visible window
-    const sp500Raw = data.map(d => d.sp500 ?? null);
-    const goldRaw  = data.map(d => d.gold  ?? null);
+    // Re-baseline Strategy and SP500 to 100 at start of visible window
+    const stratRaw  = data.map(d => d.strategy ?? null);
+    const sp500Raw  = data.map(d => d.sp500 ?? null);
+    const stratBase = stratRaw.find(v => v != null) || 100;
     const sp500Base = sp500Raw.find(v => v != null) || 100;
-    const goldBase  = goldRaw.find(v => v != null)  || 100;
-    const sp500 = sp500Raw.map(v => v != null ? Math.round((v / sp500Base) * 100 * 10) / 10 : null);
-    const gold  = goldRaw.map(v  => v != null ? Math.round((v / goldBase)  * 100 * 10) / 10 : null);
+    const strategy  = stratRaw.map(v => v != null ? Math.round((v / stratBase) * 100 * 10) / 10 : null);
+    const sp500     = sp500Raw.map(v => v != null ? Math.round((v / sp500Base) * 100 * 10) / 10 : null);
 
     // Build colored background bands per contiguous regime segment
     const bands = [];
@@ -1500,26 +2267,28 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         labels,
         datasets: [
           {
-            label: 'S&P 500',
-            data: sp500,
-            borderColor: 'rgba(34,197,94,0.8)',
-            backgroundColor: 'transparent',
-            borderWidth: 1.5,
+            label: 'MacroPulse Strategy',
+            data: data.map(d => d.strategy ?? null),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            borderWidth: 2,
             pointRadius: 0,
             tension: 0.3,
             yAxisID: 'yAsset',
             spanGaps: true,
+            fill: true,
           },
           {
-            label: 'Gold',
-            data: gold,
-            borderColor: 'rgba(234,179,8,0.7)',
+            label: 'Buy & Hold',
+            data: data.map(d => d.sp500 ?? null),
+            borderColor: 'rgba(255,255,255,0.25)',
             backgroundColor: 'transparent',
             borderWidth: 1.5,
             pointRadius: 0,
             tension: 0.3,
             yAxisID: 'yAsset',
             spanGaps: true,
+            borderDash: [4, 4],
           },
         ],
       },
@@ -1572,8 +2341,8 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
               label(item) {
                 const d = data[item.dataIndex];
                 const regime = REGIME_LABELS[d.regime] || d.regime;
-                if (item.datasetIndex === 0) return `S&P 500  ${item.formattedValue}  ·  ${regime}`;
-                if (item.datasetIndex === 1) return `Gold     ${item.formattedValue}`;
+                if (item.datasetIndex === 0) return `Strategy  ${item.formattedValue}  ·  ${regime}`;
+                if (item.datasetIndex === 1) return `Buy&Hold  ${item.formattedValue}`;
                 return '';
               },
             },
@@ -1631,12 +2400,70 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     if (e.key === 'Enter') subscribeNewsletter();
   });
 
+  // ── Mobile nav ────────────────────────────────────────────────────────────
+  function toggleMobileNav() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('mobile-menu');
+    if (menu.classList.contains('open') && !e.target.closest('nav') && !e.target.closest('#mobile-menu')) {
+      menu.classList.remove('open');
+    }
+  });
+
   // ── Init ─────────────────────────────────────────────────────
-  initPaddle();
   loadSignal();
   loadPublicChartData();
-  // Refresh terminal every 5 minutes
   setInterval(loadSignal, 5 * 60 * 1000);
+
+  // ── Parallax hero grid ────────────────────────────────────────
+  (function() {
+    const hero = document.querySelector('.hero');
+    if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      hero.style.backgroundPositionY = `calc(-5% + ${y * 0.18}px), ${y * 0.12}px, ${y * 0.12}px`;
+    }, { passive: true });
+  })();
+
+  // ── Scroll reveal ─────────────────────────────────────────────
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const targets = [
+      '.pipe-card', '.rc', '.pricing-card',
+      '.code-block', '.code-feature',
+      '.strategy-explainer', '.regime-calendar-section .cal-header',
+    ];
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.08 });
+    targets.forEach(sel => {
+      document.querySelectorAll(sel).forEach((el, i) => {
+        el.classList.add('reveal');
+        if (i > 0) el.classList.add(`reveal-delay-${Math.min(i, 4)}`);
+        obs.observe(el);
+      });
+    });
+  })();
+
+  // ── Stats count-up ────────────────────────────────────────────
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const statsBar = document.querySelector('.stats-bar');
+    if (!statsBar) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        document.querySelectorAll('.sb-val').forEach(el => {
+          el.style.animation = 'count-up 0.5s ease forwards';
+        });
+        obs.unobserve(statsBar);
+      }
+    }, { threshold: 0.5 });
+    obs.observe(statsBar);
+  })();
 </script>
 </body>
 </html>

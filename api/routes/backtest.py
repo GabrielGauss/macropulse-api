@@ -10,10 +10,11 @@ import datetime as dt
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from api.auth import require_api_key
+from api.deps import require_paid
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +43,12 @@ class BacktestResponse(BaseModel):
     timeline: list[dict[str, Any]]
 
 
-_UPGRADE_URL = "https://macropulse.live/#pricing"
-
-
 @router.post("/backtest", response_model=BacktestResponse)
 def run_backtest_endpoint(
     req: BacktestRequest,
-    key_record: dict = Depends(require_api_key),
+    key_record: dict = Depends(require_paid),
 ) -> BacktestResponse:
     """Run a historical regime backtest."""
-    if key_record.get("tier", "free") == "free":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Backtest engine requires Starter or Pro. Upgrade at {_UPGRADE_URL}",
-        )
     try:
         from config.settings import get_settings
         from data.ingestion.fred_client import fetch_all_fred

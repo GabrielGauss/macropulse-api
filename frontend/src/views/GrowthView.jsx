@@ -1,13 +1,16 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
-  ComposedChart, Line, XAxis, YAxis, Tooltip,
+  ComposedChart, Line, Area, XAxis, YAxis, Tooltip,
   CartesianGrid, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { useFetch } from '../hooks/useFetch';
 import { api } from '../lib/api';
 import { REGIME_CONFIG } from '../lib/utils';
+import StatCard from '../components/StatCard';
+import ChartTooltip from '../components/ChartTooltip';
 
 const TICK = { fill: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: 'JetBrains Mono' };
+const RANGE_OPTS = [{ l: '30d', v: 30 }, { l: '60d', v: 60 }, { l: '90d', v: 90 }, { l: '180d', v: 180 }];
 
 const REGIME_CONTEXT = {
   expansion:  { text: 'Expansion is the strongest growth environment. Equities outperform, credit spreads compress, and the yield curve is positively sloped. Cyclicals and growth stocks lead. This is the regime where being fully invested is rewarded.' },
@@ -16,56 +19,65 @@ const REGIME_CONTEXT = {
   risk_off:   { text: 'Risk-Off is a growth shock. Equities sell off sharply, credit spreads blow out, and growth expectations collapse. This is the regime where cash, Gold, and short-duration Treasuries preserve capital while equities and cyclicals suffer.' },
 };
 
-function StatCard({ label, value, sub, color }) {
+function RangePicker({ value, onChange }) {
   return (
-    <div className="card p-4">
-      <div className="text-[10px] font-mono uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>{label}</div>
-      <div className="text-[22px] font-semibold font-mono leading-none mb-1" style={{ color: color || '#f0f0f0' }}>{value}</div>
-      {sub && <div className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{sub}</div>}
-    </div>
-  );
-}
-
-function ChartTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: '#141414', border: '1px solid #2a2a2a', borderRadius: 6, padding: '8px 12px', fontSize: 11, fontFamily: 'JetBrains Mono' }}>
-      <div style={{ color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>{label}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} style={{ color: p.color }}>
-          {p.name}: {p.value > 0 ? '+' : ''}{(p.value * 100).toFixed(3)}%
-        </div>
-      ))}
+    <div style={{ display: 'flex', alignItems: 'center', borderRadius: 5, background: '#111', border: '1px solid #1f1f1f', padding: 2, gap: 2 }}>
+      {RANGE_OPTS.map(({ l, v }) => {
+        const active = value === v;
+        return (
+          <button key={v} onClick={() => onChange(v)}
+            style={{ borderRadius: 4, padding: '2px 8px', fontFamily: 'JetBrains Mono', fontSize: 10, fontWeight: 500, cursor: 'pointer', border: 'none', background: active ? '#222' : 'transparent', color: active ? '#f0f0f0' : 'rgba(255,255,255,0.3)', transition: 'all 0.1s' }}>
+            {l}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 export default function GrowthView() {
-  const features = useFetch(useCallback(() => api.getFeatures(120), []));
+  const [rangeDays, setRangeDays] = useState(90);
+  const features = useFetch(useCallback(() => api.getFeatures(180), []));
   const regime = useFetch(useCallback(() => api.getCurrentRegime(), []));
 
   const data = useMemo(() => {
     if (!features.data) return [];
-    return [...features.data].reverse().map((r) => ({
-      time: new Date(r.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      d_sp500: r.d_sp500 ?? 0,
-      d_yield_curve: r.d_yield_curve ?? 0,
-      d_liquidity: (r.d_liquidity ?? 0) / 1e6, // scale to comparable range
-    }));
+    const slice = [...features.data].reverse().slice(-rangeDays);
+    let logSP = 0, cCurve = 0;
+    return slice.map(r => {
+      logSP  += (r.d_sp500       ?? 0);
+      cCurve += (r.d_yield_curve ?? 0);
+      return {
+        time:   new Date(r.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        spIdx:  +(Math.exp(logSP) * 100).toFixed(2),
+        cCurve: +(cCurve * 100).toFixed(2),
+      };
+    });
+  }, [features.data, rangeDays]);
+
+  const last = data[data.length - 1] ?? { spIdx: 100, cCurve: 0 };
+
+  const avg20sp = useMemo(() => {
+    if (!features.data) return 0;
+    return features.data.slice(0, 20).reduce((s, r) => s + (r.d_sp500 ?? 0), 0) / 20;
   }, [features.data]);
 
-  const avg20 = (col, transform) => {
-    if (!features.data) return 0;
-    const slice = features.data.slice(0, 20);
-    return slice.reduce((s, r) => s + (transform ? transform(r[col] ?? 0) : (r[col] ?? 0)), 0) / slice.length;
-  };
-
-  const equityDir = avg20('d_sp500');
-  const curveDir = avg20('d_yield_curve');
-  const liquidity20 = features.data?.slice(0, 20).reduce((s, r) => s + (r.d_liquidity ?? 0), 0) ?? 0;
+  const growthSignal = avg20sp > 0.001 ? 'Accelerating' : avg20sp < -0.001 ? 'Decelerating' : 'Neutral';
+  const growthColor = avg20sp > 0.001 ? '#22c55e' : avg20sp < -0.001 ? '#ef4444' : '#94a3b8';
 
   const regimeCfg = regime.data ? REGIME_CONFIG[regime.data.macro_regime] : null;
   const ctx = regime.data ? REGIME_CONTEXT[regime.data.macro_regime] : null;
+
+  if (features.loading) return (
+    <div className="card p-5"><div className="animate-pulse space-y-3">
+      {[1,2,3].map(i => <div key={i} style={{height: 60, background: 'rgba(255,255,255,0.03)', borderRadius: 6}} />)}
+    </div></div>
+  );
+  if (features.error) return (
+    <div className="card p-5 flex items-center justify-center" style={{height: 200}}>
+      <span style={{fontSize: 11, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)'}}>Features unavailable — requires Starter or Pro plan</span>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -76,51 +88,66 @@ export default function GrowthView() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <StatCard
-          label="Equity Momentum"
-          value={equityDir > 0 ? 'Positive' : 'Negative'}
-          sub={`S&P 500 20d avg: ${equityDir > 0 ? '+' : ''}${(equityDir * 100).toFixed(3)}%`}
-          color={equityDir > 0 ? '#22c55e' : '#ef4444'}
+          label="S&P 500 Return"
+          value={last.spIdx >= 100 ? 'Gaining' : 'Declining'}
+          sub={`${last.spIdx >= 100 ? '+' : ''}${(last.spIdx - 100).toFixed(1)}% (${rangeDays}d)`}
+          color={last.spIdx >= 100 ? '#22c55e' : '#ef4444'}
         />
         <StatCard
           label="Yield Curve"
-          value={curveDir > 0 ? 'Steepening' : 'Flattening'}
-          sub={`Growth signal: ${curveDir > 0 ? 'positive' : 'negative'}`}
-          color={curveDir > 0 ? '#22c55e' : '#f59e0b'}
+          value={last.cCurve >= 0 ? 'Steepening' : 'Flattening'}
+          sub={`${last.cCurve >= 0 ? '+' : ''}${last.cCurve.toFixed(0)}bps (${rangeDays}d)`}
+          color={last.cCurve >= 0 ? '#3b82f6' : '#f59e0b'}
         />
         <StatCard
-          label="Liquidity Flow"
-          value={liquidity20 > 0 ? 'Expanding' : 'Contracting'}
-          sub={`20d net: ${liquidity20 > 0 ? '+' : ''}$${(liquidity20 / 1e6).toFixed(1)}T`}
-          color={liquidity20 > 0 ? '#22c55e' : '#ef4444'}
+          label="Growth Signal"
+          value={growthSignal}
+          sub="20d momentum signal"
+          color={growthColor}
         />
       </div>
 
       <div className="card p-5">
-        <div className="label mb-4">Growth Indicators (120 days)</div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
+          <div>
+            <div className="label">Growth Indicators</div>
+            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>S&P 500 rebased to 100 · yield curve in bps</div>
+          </div>
+          <RangePicker value={rangeDays} onChange={setRangeDays} />
+        </div>
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: -18 }}>
+            <defs>
+              <linearGradient id="spGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.03)" vertical={false} />
             <XAxis dataKey="time" tick={TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-            <YAxis tick={TICK} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v * 100).toFixed(2)}%`} />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" />
+            <YAxis tick={TICK} axisLine={false} tickLine={false} tickFormatter={v => `${v >= 100 ? '+' : ''}${(v - 100).toFixed(0)}%`} />
+            <ReferenceLine y={100} stroke="rgba(255,255,255,0.08)" />
             <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
-            <Line type="monotone" dataKey="d_sp500" name="S&P500 Δ" stroke="#22c55e" strokeWidth={1.5} dot={false} />
-            <Line type="monotone" dataKey="d_yield_curve" name="Curve Δ" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
+            <Area type="monotone" dataKey="spIdx" name="S&P 500" stroke="#22c55e" strokeWidth={1.5} fill="url(#spGradient)" dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
+        <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 16, height: 2, background: '#22c55e', borderRadius: 1 }} />
+            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>S&P 500</span>
+          </div>
+        </div>
       </div>
 
       {ctx && (
         <div className="card p-4" style={{ borderColor: `${regimeCfg?.color}22` }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-1.5 w-1.5 rounded-full" style={{ background: regimeCfg?.color }} />
-            <span className="text-[10px] font-mono uppercase tracking-wide" style={{ color: regimeCfg?.color }}>
-              {regimeCfg?.label} regime — growth context
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: regimeCfg?.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', textTransform: 'uppercase', letterSpacing: '0.08em', color: regimeCfg?.color }}>
+              {regimeCfg?.label} regime · growth context
             </span>
           </div>
-          <p className="text-[11px] font-mono leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            {ctx.text}
-          </p>
+          <p style={{ fontSize: 11, fontFamily: 'JetBrains Mono', lineHeight: 1.7, color: 'rgba(255,255,255,0.45)', margin: 0 }}>{ctx.text}</p>
         </div>
       )}
     </div>

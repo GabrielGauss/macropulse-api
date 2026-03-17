@@ -8,16 +8,23 @@ import FactorsChart from './components/FactorsChart';
 import DriftPanel from './components/DriftPanel';
 import SignalGauges from './components/SignalGauges';
 import MacroHeatmap from './components/MacroHeatmap';
+import RegimeCalendar from './components/RegimeCalendar';
 import LiquidityView from './views/LiquidityView';
 import SignalsView from './views/SignalsView';
 import BacktestView from './views/BacktestView';
+import PerformanceView from './views/PerformanceView';
 import InflationView from './views/InflationView';
 import GrowthView from './views/GrowthView';
 import RatesView from './views/RatesView';
 import CommoditiesView from './views/CommoditiesView';
 import FXView from './views/FXView';
 import CryptoView from './views/CryptoView';
+import QuantView from './views/QuantView';
+import ForecastCard from './components/ForecastCard';
+import CommentaryCard from './components/CommentaryCard';
+import CompositeAnalysisCard from './components/CompositeAnalysisCard';
 import { useFetch } from './hooks/useFetch';
+import { GuideModeContext, useGuideModeState } from './lib/guideMode';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
 import { api } from './lib/api';
 
@@ -50,6 +57,7 @@ function UpgradeGate({ feature }) {
 export default function App() {
   const { connected, lastMessage } = useRegimeSocket();
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [guideMode, toggleGuideMode] = useGuideModeState();
   const [historyDays, setHistoryDays] = useState(90);
   const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'|'owner'
   const [meInfo, setMeInfo] = useState(null); // { email, tier }
@@ -96,6 +104,7 @@ export default function App() {
   useEffect(() => { history.refetch(); }, [historyDays]);
 
   return (
+    <GuideModeContext.Provider value={guideMode}>
     <div className="flex h-screen overflow-hidden bg-surface-0">
       <Sidebar
         regime={regime.data}
@@ -105,7 +114,7 @@ export default function App() {
       />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header connected={connected} regime={regime.data} meInfo={meInfo} />
+        <Header connected={connected} regime={regime.data} meInfo={meInfo} guideMode={guideMode} onToggleGuide={toggleGuideMode} />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-5">
           {regime.error && (
@@ -130,11 +139,15 @@ export default function App() {
                   onHistoryDaysChange={isFree ? undefined : setHistoryDays}
                   isFree={isFree}
                 />
+                <RegimeCalendar isFree={isFree} />
                 <div className="grid gap-4 lg:grid-cols-3">
                   <LiquidityChart data={liquidity.data} />
                   <FactorsChart data={factors.data} />
                   <DriftPanel data={drift.data} />
                 </div>
+                <CompositeAnalysisCard />
+                <ForecastCard />
+                <CommentaryCard tier={tier} />
               </div>
             )}
 
@@ -146,6 +159,11 @@ export default function App() {
             {/* ── Signals ── */}
             {activeSection === 'signals' && (
               isFree ? <UpgradeGate feature="Signal Deep-Dive" /> : <SignalsView />
+            )}
+
+            {/* ── Performance ── */}
+            {activeSection === 'performance' && (
+              <PerformanceView />
             )}
 
             {/* ── Backtests ── */}
@@ -160,6 +178,7 @@ export default function App() {
             {activeSection === 'commodities' && (isFree ? <UpgradeGate feature="Commodities Analysis" /> : <CommoditiesView />)}
             {activeSection === 'fx'          && (isFree ? <UpgradeGate feature="FX Analysis" />         : <FXView />)}
             {activeSection === 'crypto'      && (isFree ? <UpgradeGate feature="Crypto Analysis" />     : <CryptoView />)}
+            {activeSection === 'quant'       && (isFree ? <UpgradeGate feature="Quant HUD" />           : <QuantView />)}
 
             <footer className="pt-4 mt-4 text-center text-[10px] text-white/10 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence
@@ -168,5 +187,6 @@ export default function App() {
         </main>
       </div>
     </div>
+    </GuideModeContext.Provider>
   );
 }

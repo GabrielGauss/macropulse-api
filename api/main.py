@@ -35,6 +35,8 @@ from api.routes.performance import router as performance_router
 from api.routes.regime import router as regime_router
 from api.routes.public_config import router as public_config_router
 from api.routes.signals import router as signals_router
+from api.routes.model import router as model_router
+from api.routes.pipeline import router as pipeline_router
 from api.routes.public import router as public_router
 from api.routes.websocket import router as ws_router
 from api.schemas.responses import HealthResponse
@@ -51,13 +53,15 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Start / stop the background scheduler with the app lifecycle."""
+    """Start / stop the background scheduler and DB pool with the app lifecycle."""
     from services.scheduler import start_scheduler, stop_scheduler
+    from database.connection import close_pool
 
     logger.info("Starting MacroPulse API v%s", settings.app_version)
     start_scheduler()
     yield
     stop_scheduler()
+    close_pool()
     logger.info("MacroPulse API shut down.")
 
 
@@ -97,6 +101,8 @@ app.include_router(analysis_router)
 app.include_router(performance_router)
 app.include_router(public_config_router)
 app.include_router(signals_router)
+app.include_router(model_router)
+app.include_router(pipeline_router)
 app.include_router(public_router)
 
 @app.get("/docs", include_in_schema=False)

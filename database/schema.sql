@@ -119,9 +119,34 @@ CREATE TABLE IF NOT EXISTS api_keys (
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     last_used_at    TIMESTAMPTZ,
-    revoked_at      TIMESTAMPTZ
+    revoked_at      TIMESTAMPTZ,
+    usage_date      DATE,                       -- date of current daily counter
+    daily_requests  INTEGER NOT NULL DEFAULT 0  -- requests made on usage_date
 );
+
+-- Migration guard: add columns if upgrading from earlier schema
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS usage_date     DATE;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS daily_requests INTEGER NOT NULL DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_hash   ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_user   ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(is_active) WHERE is_active = TRUE;
+
+-- ── TimescaleDB retention + compression ──────────────────────────
+-- Keeps 3 years of data; compresses chunks older than 7 days.
+-- These calls are idempotent — safe to re-run on schema reload.
+
+ALTER TABLE macro_features     SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC');
+ALTER TABLE macro_factors       SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC');
+ALTER TABLE macro_regimes       SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC');
+ALTER TABLE model_drift_metrics SET (timescaledb.compress, timescaledb.compress_orderby = 'time DESC');
+
+SELECT add_compression_policy('macro_features',     INTERVAL '7 days',  if_not_exists => TRUE);
+SELECT add_compression_policy('macro_factors',       INTERVAL '7 days',  if_not_exists => TRUE);
+SELECT add_compression_policy('macro_regimes',       INTERVAL '7 days',  if_not_exists => TRUE);
+SELECT add_compression_policy('model_drift_metrics', INTERVAL '7 days',  if_not_exists => TRUE);
+
+SELECT add_retention_policy('macro_features',     INTERVAL '3 years', if_not_exists => TRUE);
+SELECT add_retention_policy('macro_factors',       INTERVAL '3 years', if_not_exists => TRUE);
+SELECT add_retention_policy('macro_regimes',       INTERVAL '3 years', if_not_exists => TRUE);
+SELECT add_retention_policy('model_drift_metrics', INTERVAL '3 years', if_not_exists => TRUE);

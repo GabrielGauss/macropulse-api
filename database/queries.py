@@ -122,6 +122,20 @@ def upsert_drift_metrics(row: dict[str, Any]) -> None:
         cur.execute(sql, row)
 
 
+def fetch_latest_pipeline_run() -> dict[str, Any] | None:
+    """Return the most recent pipeline_runs row, or None if no runs recorded."""
+    sql = """
+        SELECT run_ts, status, data_lag, duration_sec, error_message, model_version
+        FROM pipeline_runs
+        ORDER BY run_ts DESC
+        LIMIT 1;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql)
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+
 def insert_pipeline_run(row: dict[str, Any]) -> None:
     """Log a pipeline execution."""
     sql = """
@@ -367,6 +381,47 @@ def touch_api_key(key_hash: str) -> None:
     sql = "UPDATE api_keys SET last_used_at = now() WHERE key_hash = %(hash)s;"
     with get_sync_cursor() as cur:
         cur.execute(sql, {"hash": key_hash})
+
+
+def increment_daily_usage(key_hash: str) -> int:
+    """
+    Atomically increment the daily request counter for a key.
+
+    Resets the counter when the date changes (UTC).
+    Returns the new count after incrementing.
+    Persists across container restarts — the counter lives in the DB.
+    """
+    sql = """
+        UPDATE api_keys
+        SET
+            usage_date      = CURRENT_DATE,
+            daily_requests  = CASE
+                                WHEN usage_date = CURRENT_DATE THEN daily_requests + 1
+                                ELSE 1
+                              END,
+            last_used_at    = now()
+        WHERE key_hash = %(hash)s
+        RETURNING daily_requests;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"hash": key_hash})
+        row = cur.fetchone()
+        return int(row["daily_requests"]) if row else 1
+
+
+def get_daily_usage(key_hash: str) -> int:
+    """Return today's request count for a key (0 if not found or date differs)."""
+    sql = """
+        SELECT daily_requests
+        FROM api_keys
+        WHERE key_hash = %(hash)s
+          AND usage_date = CURRENT_DATE
+          AND is_active = TRUE;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"hash": key_hash})
+        row = cur.fetchone()
+        return int(row["daily_requests"]) if row else 0
 
 
 def fetch_subscriber_emails() -> list[str]:

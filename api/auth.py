@@ -1,7 +1,9 @@
 """
 API key authentication for MacroPulse.
 
-Supports both header-based (X-MacroPulse-Key) and query-param (?api_key=) auth.
+Only accepts header-based auth: X-MacroPulse-Key.
+Query-param auth (?api_key=) is intentionally NOT supported — keys in URLs
+appear in server logs, browser history, and Referer headers.
 
 Keys are verified against the database (SHA-256 hash comparison).
 Dev-mode bypass: if no rows exist in api_keys AND settings.api_keys is empty,
@@ -16,14 +18,13 @@ import secrets
 from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Security, status
-from fastapi.security import APIKeyHeader, APIKeyQuery
+from fastapi.security import APIKeyHeader
 
 from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 _header_scheme = APIKeyHeader(name="X-MacroPulse-Key", auto_error=False)
-_query_scheme = APIKeyQuery(name="api_key", auto_error=False)
 
 
 def hash_key(key: str) -> str:
@@ -43,7 +44,6 @@ def _lookup_key(raw_key: str) -> dict[str, Any] | None:
 
 async def require_api_key(
     header_key: Annotated[str | None, Security(_header_scheme)] = None,
-    query_key: Annotated[str | None, Security(_query_scheme)] = None,
 ) -> dict[str, Any]:
     """
     FastAPI dependency that enforces API key auth against the DB.
@@ -55,7 +55,7 @@ async def require_api_key(
     all requests pass through (returns a synthetic dev record).
     """
     settings = get_settings()
-    raw_key = header_key or query_key
+    raw_key = header_key
 
     # Dev-mode: no keys configured anywhere → allow all
     if not settings.api_keys and raw_key is None:
@@ -76,7 +76,7 @@ async def require_api_key(
     if not raw_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing API key. Provide via X-MacroPulse-Key header or api_key query param.",
+            detail="Missing API key. Provide via X-MacroPulse-Key header.",
         )
 
     # Owner key — master access, all features, no rate limit

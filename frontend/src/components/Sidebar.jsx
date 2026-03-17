@@ -10,6 +10,7 @@ const Icon = ({ d, size = 16 }) => (
 
 const ICONS = {
   dashboard:   'M2 2h5v5H2V2zm7 0h5v5H9V2zm-7 7h5v5H2V9zm7 0h5v5H9V9z',
+  performance: 'M2 13l4-4 3 3 4-7 3 3',
   liquidity:   'M8 1c0 0-5 4.5-5 8a5 5 0 0010 0c0-3.5-5-8-5-8z',
   signals:     'M1 8l3-3 3 3 3-4 3 3 2-2',
   backtest:    'M2 14V6l4-4 4 4V2l3 3M2 14h12M6 14v-4h4v4',
@@ -19,14 +20,16 @@ const ICONS = {
   fx:          'M3 5h10M3 8h10M3 11h10M8 2v12',
   commodities: 'M8 2L2 14h12L8 2zM8 9v3',
   crypto:      'M5 7h4c1 0 2 .5 2 1.5S10 10 9 10H5V7zm0 3h4.5c1 0 2 .5 2 1.5S10.5 13 9.5 13H5v-3zM5 4h3',
+  quant:       'M2 14L5 9l3 2 2-4 2 3 2-6',
   collapse:    'M10 4L6 8l4 4',
   expand:      'M6 4l4 4-4 4',
 };
 
-const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest', 'inflation', 'growth', 'rates', 'commodities', 'fx', 'crypto']);
+const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest', 'inflation', 'growth', 'rates', 'commodities', 'fx', 'crypto', 'quant']);
 
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',    icon: 'dashboard',   available: true  },
+  { id: 'performance', label: 'Performance',  icon: 'performance', available: true  },
   { id: 'liquidity',   label: 'Liquidity',    icon: 'liquidity',   available: true  },
   { id: 'signals',     label: 'Signals',      icon: 'signals',     available: true  },
   { id: 'backtest',    label: 'Backtests',    icon: 'backtest',    available: true  },
@@ -37,6 +40,8 @@ const NAV_ITEMS = [
   { id: 'commodities', label: 'Commodities',  icon: 'commodities', available: true },
   { id: 'fx',          label: 'FX',           icon: 'fx',          available: true },
   { id: 'crypto',      label: 'Crypto',       icon: 'crypto',      available: true },
+  null, // divider
+  { id: 'quant',       label: 'Quant HUD',    icon: 'quant',       available: true },
 ];
 
 export default function Sidebar({ regime, activeSection = 'dashboard', onNavigate, tier }) {
@@ -197,7 +202,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           )}
         </a>
         <a
-          href="https://macropulse.live/api-docs"
+          href="https://github.com/GabrielGauss/macropulse-api"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center rounded-md transition-colors duration-100"

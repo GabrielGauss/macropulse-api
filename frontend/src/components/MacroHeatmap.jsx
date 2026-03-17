@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { REGIME_CONFIG } from '../lib/utils';
+import { useGuideMode } from '../lib/guideMode';
 
 // Historical bias matrix: asset × regime
 // +2 = strong bullish, +1 = mild bullish, 0 = neutral, -1 = mild bearish, -2 = strong bearish
@@ -14,6 +15,52 @@ const BIAS = {
   Bitcoin:      {       expansion: 2,  recovery: 2,  tightening: -2, risk_off: -2 },
 };
 
+// Per-cell explanations for tooltip
+const RATIONALE = {
+  Equities: {
+    expansion: 'Growth + loose policy = earnings up, multiples expand.',
+    recovery: 'Recession behind us; early-cycle momentum favors equities.',
+    tightening: 'Rising rates compress P/E multiples and slow growth.',
+    risk_off: 'Flight to safety. Equity risk premium collapses.',
+  },
+  'Long Bonds': {
+    expansion: 'Strong growth keeps rates elevated, pressuring duration.',
+    recovery: 'Rates falling as Fed pivots. Duration performs well.',
+    tightening: 'Fed hiking = bond prices fall hardest at long end.',
+    risk_off: 'Safe-haven bid drives yields down, prices up.',
+  },
+  'Short Bonds': {
+    expansion: 'Neutral — front end anchored by Fed, minimal duration risk.',
+    recovery: 'Mild tailwind as curve steepens from the front.',
+    tightening: 'Short end rises with hikes, but less duration damage.',
+    risk_off: 'Mild safe-haven bid. Less upside than long bonds.',
+  },
+  Gold: {
+    expansion: 'Real rates rising = opportunity cost of gold high. Neutral.',
+    recovery: 'Inflation hedge + weak dollar = mild tailwind.',
+    tightening: 'Inflation concern supports gold even with rate headwind.',
+    risk_off: 'Classic safe haven. Dollar demand can cap upside.',
+  },
+  Oil: {
+    expansion: 'Peak demand cycle. Global growth drives commodity prices.',
+    recovery: 'Early-cycle demand recovery, supply adjusting.',
+    tightening: 'Demand still ok but growth headwinds building.',
+    risk_off: 'Demand destruction fears. Price drops on growth concerns.',
+  },
+  Dollar: {
+    expansion: 'Growth differential may support dollar, but risk-on = outflows.',
+    recovery: 'Weak dollar = carry trade out, EM and commodities win.',
+    tightening: 'Rate differential strongly bullish dollar. Fed hikes vs peers.',
+    risk_off: 'Flight to dollar as reserve currency. DXY spikes.',
+  },
+  Bitcoin: {
+    expansion: 'Risk-on + liquidity = BTC outperforms. High beta to equities.',
+    recovery: 'Early-cycle liquidity surge. BTC leads risk assets.',
+    tightening: 'Tighter liquidity kills high-beta assets. BTC hit hardest.',
+    risk_off: 'Correlation to equities increases in selloffs. No safe haven.',
+  },
+};
+
 const REGIMES = ['expansion', 'recovery', 'tightening', 'risk_off'];
 
 const LABELS = {
@@ -25,7 +72,6 @@ const LABELS = {
 };
 
 function biasColor(value, active) {
-  const opacity = active ? 1 : 0.45;
   if (value === 2)  return `rgba(34,197,94,${active ? 0.18 : 0.06})`;
   if (value === 1)  return `rgba(34,197,94,${active ? 0.09 : 0.03})`;
   if (value === 0)  return 'transparent';
@@ -51,10 +97,13 @@ function textColor(value, active) {
 export default function MacroHeatmap({ regime }) {
   const currentRegime = regime?.macro_regime;
   const assets = Object.keys(BIAS);
+  const guideMode = useGuideMode();
+  const [hoverCell, setHoverCell] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   return (
     <div className="card p-5 animate-in">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <div className="label">Asset × Regime Heatmap</div>
         {currentRegime && (
           <span
@@ -65,6 +114,12 @@ export default function MacroHeatmap({ regime }) {
           </span>
         )}
       </div>
+      {guideMode && (
+        <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginBottom: 10, lineHeight: 1.5 }}>
+          Historical asset-regime bias matrix. Active regime column is highlighted. ++ = strong tailwind, −− = strong headwind. Hover any cell for rationale. These are macro tendencies, not trade signals.
+        </div>
+      )}
+      {!guideMode && <div className="mb-3" />}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
@@ -118,11 +173,11 @@ export default function MacroHeatmap({ regime }) {
                   const val = BIAS[asset][r];
                   const isActive = r === currentRegime;
                   const meta = LABELS[String(val)];
+                  const isHovered = hoverCell?.asset === asset && hoverCell?.regime === r;
                   return (
                     <td
                       key={r}
                       className="py-1.5 text-center"
-                      title={meta?.title}
                       style={{
                         fontSize: 10,
                         fontFamily: 'JetBrains Mono, monospace',
@@ -132,7 +187,16 @@ export default function MacroHeatmap({ regime }) {
                         borderLeft: isActive ? `1px solid ${REGIME_CONFIG[r]?.color}18` : 'none',
                         borderRight: isActive ? `1px solid ${REGIME_CONFIG[r]?.color}18` : 'none',
                         borderBottom: ai < assets.length - 1 ? '1px solid #111' : 'none',
+                        cursor: 'default',
+                        outline: isHovered ? `1px solid rgba(255,255,255,0.12)` : 'none',
+                        transition: 'outline 0.1s',
                       }}
+                      onMouseEnter={(e) => {
+                        setHoverCell({ asset, regime: r, val, meta, rationale: RATIONALE[asset]?.[r] });
+                        setTooltipPos({ x: e.clientX + 14, y: e.clientY - 56 });
+                      }}
+                      onMouseMove={(e) => setTooltipPos({ x: e.clientX + 14, y: e.clientY - 56 })}
+                      onMouseLeave={() => setHoverCell(null)}
                     >
                       {meta?.text}
                     </td>
@@ -161,6 +225,37 @@ export default function MacroHeatmap({ regime }) {
           </div>
         ))}
       </div>
+
+      {/* Hover tooltip */}
+      {hoverCell && (
+        <div style={{
+          position: 'fixed', zIndex: 999,
+          left: tooltipPos.x, top: tooltipPos.y,
+          background: '#0d0d0d',
+          border: `1px solid ${hoverCell.val > 0 ? 'rgba(34,197,94,0.3)' : hoverCell.val < 0 ? 'rgba(239,68,68,0.3)' : '#2a2a2a'}`,
+          borderRadius: 8, padding: '10px 14px',
+          fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
+          pointerEvents: 'none', maxWidth: 240,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+        }}>
+          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginBottom: 4 }}>
+            {hoverCell.asset} · {REGIME_CONFIG[hoverCell.regime]?.label}
+          </div>
+          <div style={{
+            color: hoverCell.val === 2 ? '#22c55e' : hoverCell.val === 1 ? '#4ade80'
+              : hoverCell.val === 0 ? 'rgba(255,255,255,0.4)'
+              : hoverCell.val === -1 ? '#f87171' : '#ef4444',
+            fontWeight: 700, marginBottom: 6,
+          }}>
+            {hoverCell.meta?.title}
+          </div>
+          {hoverCell.rationale && (
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, lineHeight: 1.55 }}>
+              {hoverCell.rationale}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

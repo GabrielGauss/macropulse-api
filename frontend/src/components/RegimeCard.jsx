@@ -1,5 +1,6 @@
 import React from 'react';
-import { REGIME_CONFIG, formatDate, riskColor, confidenceBadge } from '../lib/utils';
+import { REGIME_CONFIG, formatDate, riskColor, confidenceBadge, EQUITY_EXPOSURE } from '../lib/utils';
+import { useGuideMode } from '../lib/guideMode';
 
 export default function RegimeCard({ regime }) {
   if (!regime) {
@@ -15,6 +16,21 @@ export default function RegimeCard({ regime }) {
   const cfg   = REGIME_CONFIG[regime.macro_regime] || REGIME_CONFIG.expansion;
   const score = regime.risk_score ?? 0;
   const conf  = confidenceBadge(regime.confidence ?? null);
+  const guideMode = useGuideMode();
+
+  // Conviction = dominant state probability (max of all 4 probs)
+  const probs = regime.probabilities || {};
+  const conviction = Object.values(probs).length
+    ? Math.max(...Object.values(probs))
+    : null;
+  const convictionLabel = conviction == null ? null
+    : conviction >= 0.80 ? 'high'
+    : conviction >= 0.60 ? 'transitioning'
+    : 'ambiguous';
+  const convictionColor = conviction == null ? '#555'
+    : conviction >= 0.80 ? '#22c55e'
+    : conviction >= 0.60 ? '#f59e0b'
+    : '#ef4444';
 
   // gauge: score from -100 to +100, bar starts at center (50%)
   const gaugeOffset = score < 0 ? (50 - Math.abs(score) / 2) : 50;
@@ -35,8 +51,13 @@ export default function RegimeCard({ regime }) {
               {cfg.label}
             </h2>
             <div className="text-[11px] text-white/30 font-mono mt-0.5">
-              {formatDate(regime.timestamp)}
+              <span className="text-white/15 mr-1">as of</span>{formatDate(regime.timestamp)}
             </div>
+            {guideMode && (
+              <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginTop: 5, maxWidth: 280, lineHeight: 1.5 }}>
+                HMM outputs 4 regime states from daily PCA factors. "as of" = last pipeline run (daily, ~6 AM UTC). Score &gt; 0 = risk-on bias; &lt; 0 = risk-off.
+              </div>
+            )}
           </div>
         </div>
 
@@ -114,6 +135,63 @@ export default function RegimeCard({ regime }) {
           );
         })}
       </div>
+
+      {/* Equity Exposure */}
+      {(() => {
+        const exposure = EQUITY_EXPOSURE[regime.macro_regime];
+        if (exposure === undefined) return null;
+        const pct = Math.round(exposure * 100);
+        const expColor = pct >= 75 ? '#22c55e' : pct >= 25 ? '#f59e0b' : '#ef4444';
+        return (
+          <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Eq. Exposure</span>
+              <span className="font-mono text-lg font-semibold" style={{ color: expColor }}>{pct}%</span>
+            </div>
+            <div className="relative h-1.5 rounded-full bg-surface-3 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${pct}%`, background: expColor }}
+              />
+            </div>
+            <div className="flex justify-between mt-1 text-[9px] text-white/20 font-mono">
+              <span>0% Risk-Off</span>
+              <span>100% Expansion</span>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Conviction */}
+      {conviction != null && (
+        <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Signal Conviction</span>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-[9px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
+                style={{ color: convictionColor, border: `1px solid ${convictionColor}44`, background: `${convictionColor}10` }}
+              >
+                {convictionLabel}
+              </span>
+              <span className="font-mono text-base font-semibold" style={{ color: convictionColor }}>
+                {(conviction * 100).toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          <div className="relative h-1 rounded-full bg-surface-3 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${conviction * 100}%`, background: convictionColor }}
+            />
+          </div>
+          {guideMode && (
+            <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginTop: 4, lineHeight: 1.5 }}>
+              Conviction = dominant state probability. &gt;80% = high confidence. 60–80% = transitioning. &lt;60% = treat as noise.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Persistence */}
       {regime.persistence_days != null && (
