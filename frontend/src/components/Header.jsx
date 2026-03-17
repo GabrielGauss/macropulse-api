@@ -48,6 +48,15 @@ export default function Header({ connected, regime }) {
   const storedKey = api.getKey();
   const keyPrefix = storedKey ? storedKey.slice(0, 16) + '…' : null;
 
+  const [copied, setCopied] = useState(false);
+  function copyKey() {
+    if (!storedKey) return;
+    navigator.clipboard.writeText(storedKey).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
   return (
     <header
       className="flex items-center justify-between border-b border-[#1f1f1f] bg-surface-0 flex-shrink-0 relative"
@@ -62,12 +71,25 @@ export default function Header({ connected, regime }) {
         <div className="relative" ref={popoverRef}>
           {hasKey ? (
             <div className="flex items-center gap-2">
-              <span
-                className="text-[10px] font-mono"
-                style={{ color: 'rgba(34,197,94,0.5)' }}
+              <button
+                onClick={copyKey}
+                className="flex items-center gap-1.5 transition-opacity"
+                style={{ opacity: 0.5 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                title="Copy API key"
               >
-                {keyPrefix}
-              </span>
+                <span className="text-[10px] font-mono" style={{ color: '#22c55e' }}>
+                  {keyPrefix}
+                </span>
+                {copied ? (
+                  <span className="text-[9px] font-mono" style={{ color: '#22c55e' }}>✓</span>
+                ) : (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                )}
+              </button>
               <button
                 onClick={clearKey}
                 className="text-[10px] font-mono transition-colors"
