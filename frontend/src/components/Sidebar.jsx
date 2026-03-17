@@ -220,7 +220,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           )}
         </a>
         <a
-          href="DISCORD_INVITE_URL"
+          href="https://discord.gg/YxTH5hPaeN"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center rounded-md transition-colors duration-100"
