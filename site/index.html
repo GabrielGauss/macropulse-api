@@ -776,7 +776,8 @@
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#3b82f6"></div> Recovery</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#f59e0b"></div> Tightening</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef4444"></div> Risk-Off</div>
-      <div class="chart-legend-item" style="margin-left:auto;"><span style="font-size:0.7rem;color:var(--dim);">Risk score line (right axis)</span></div>
+      <div class="chart-legend-item" style="margin-left:auto;"><div class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></div> S&amp;P 500</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(234,179,8,0.7)"></div> Gold</div>
     </div>
   </div>
 </div>
@@ -1454,7 +1455,14 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     if (!allData.length) return;
     const data = allData.slice(-rangeDays);
     const labels = data.map(d => d.date);
-    const scores = data.map(d => d.risk_score);
+
+    // Re-baseline SP500 and Gold to 100 at start of visible window
+    const sp500Raw = data.map(d => d.sp500 ?? null);
+    const goldRaw  = data.map(d => d.gold  ?? null);
+    const sp500Base = sp500Raw.find(v => v != null) || 100;
+    const goldBase  = goldRaw.find(v => v != null)  || 100;
+    const sp500 = sp500Raw.map(v => v != null ? Math.round((v / sp500Base) * 100 * 10) / 10 : null);
+    const gold  = goldRaw.map(v  => v != null ? Math.round((v / goldBase)  * 100 * 10) / 10 : null);
 
     // Build colored background bands per contiguous regime segment
     const bands = [];
@@ -1468,22 +1476,19 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 
     const canvas = document.getElementById('regime-chart');
     if (!canvas) return;
-
-    if (_chartInstance) {
-      _chartInstance.destroy();
-      _chartInstance = null;
-    }
+    if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
 
     const bandPlugin = {
       id: 'regimeBands',
       beforeDatasetsDraw(chart) {
         const { ctx, chartArea: { left, right, top, bottom }, scales } = chart;
+        const step = (right - left) / Math.max(labels.length - 1, 1);
         bands.forEach(b => {
           const x0 = scales.x.getPixelForValue(b.start);
           const x1 = scales.x.getPixelForValue(b.end);
           const color = REGIME_COLORS[b.regime] || '#888';
-          ctx.fillStyle = color + '18';
-          ctx.fillRect(x0, top, x1 - x0 + (right - left) / labels.length, bottom - top);
+          ctx.fillStyle = color + '15';
+          ctx.fillRect(x0, top, x1 - x0 + step, bottom - top);
         });
       }
     };
@@ -1493,16 +1498,30 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       plugins: [bandPlugin],
       data: {
         labels,
-        datasets: [{
-          data: scores,
-          borderColor: 'rgba(34,197,94,0.7)',
-          backgroundColor: 'rgba(34,197,94,0.06)',
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: true,
-          tension: 0.3,
-          yAxisID: 'y',
-        }],
+        datasets: [
+          {
+            label: 'S&P 500',
+            data: sp500,
+            borderColor: 'rgba(34,197,94,0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.3,
+            yAxisID: 'yAsset',
+            spanGaps: true,
+          },
+          {
+            label: 'Gold',
+            data: gold,
+            borderColor: 'rgba(234,179,8,0.7)',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.3,
+            yAxisID: 'yAsset',
+            spanGaps: true,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -1526,10 +1545,14 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             grid: { color: 'rgba(255,255,255,0.04)' },
             border: { color: 'rgba(255,255,255,0.08)' },
           },
-          y: {
+          yAsset: {
             position: 'right',
-            title: { display: true, text: 'risk score', color: 'rgba(255,255,255,0.15)', font: { family: "'JetBrains Mono', monospace", size: 9 } },
-            ticks: { color: 'rgba(255,255,255,0.2)', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+            title: { display: true, text: 'indexed (base 100)', color: 'rgba(255,255,255,0.15)', font: { family: "'JetBrains Mono', monospace", size: 9 } },
+            ticks: {
+              color: 'rgba(255,255,255,0.2)',
+              font: { family: "'JetBrains Mono', monospace", size: 10 },
+              callback: v => v.toFixed(0),
+            },
             grid: { color: 'rgba(255,255,255,0.04)' },
             border: { color: 'rgba(255,255,255,0.08)' },
           },
@@ -1548,9 +1571,10 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
               title(items) { return items[0]?.label || ''; },
               label(item) {
                 const d = data[item.dataIndex];
-                const label = REGIME_LABELS[d.regime] || d.regime;
-                const score = d.risk_score;
-                return [`${label}  ·  score ${score > 0 ? '+' : ''}${score}`];
+                const regime = REGIME_LABELS[d.regime] || d.regime;
+                if (item.datasetIndex === 0) return `S&P 500  ${item.formattedValue}  ·  ${regime}`;
+                if (item.datasetIndex === 1) return `Gold     ${item.formattedValue}`;
+                return '';
               },
             },
           },

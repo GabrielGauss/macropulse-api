@@ -42,8 +42,21 @@ def get_chart_data():
         logger.error("public chart-data DB error: %s", exc)
         raise HTTPException(status_code=503, detail="Data temporarily unavailable")
 
-    series = [
-        {
+    import math
+
+    # rows are newest-first; reverse so we compute cumulative correctly
+    rows_asc = list(reversed(rows))
+
+    # Compute cumulative returns (base 100) from daily log-returns
+    sp500_cum = 100.0
+    gold_cum  = 100.0
+    series = []
+    for row in rows_asc:
+        d_sp = float(row.get("d_sp500") or 0)
+        d_gd = float(row.get("d_gold")  or 0)
+        sp500_cum *= math.exp(d_sp)
+        gold_cum  *= math.exp(d_gd)
+        series.append({
             "date": (
                 row["time"].strftime("%Y-%m-%d")
                 if hasattr(row.get("time"), "strftime")
@@ -51,9 +64,9 @@ def get_chart_data():
             ),
             "regime": row["regime"],
             "risk_score": round(float(row["risk_score"]), 2) if row.get("risk_score") is not None else 0.0,
-        }
-        for row in rows
-    ]
+            "sp500": round(sp500_cum, 2),
+            "gold":  round(gold_cum, 2),
+        })
 
     # Compute regime distribution from returned rows
     dist: dict[str, int] = {}

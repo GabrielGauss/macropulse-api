@@ -179,11 +179,20 @@ def fetch_regime_history(
 
 
 def fetch_public_chart_data(limit: int = 730) -> list[dict[str, Any]]:
-    """Return regime history for the public marketing-site chart (no auth required)."""
+    """
+    Return regime history + SP500/Gold daily returns for the public chart.
+    LEFT JOINs macro_features so regime rows without feature data still appear.
+    """
     sql = """
-        SELECT time, regime, risk_score
-        FROM macro_regimes
-        ORDER BY time DESC
+        SELECT
+            r.time,
+            r.regime,
+            r.risk_score,
+            COALESCE(f.d_sp500, 0) AS d_sp500,
+            COALESCE(f.d_gold,  0) AS d_gold
+        FROM macro_regimes r
+        LEFT JOIN macro_features f ON f.time::date = r.time::date
+        ORDER BY r.time DESC
         LIMIT %(limit)s;
     """
     with get_sync_cursor() as cur:

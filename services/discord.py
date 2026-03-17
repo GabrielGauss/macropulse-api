@@ -17,11 +17,9 @@ from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Fallback hardcoded webhook (used when DISCORD_WEBHOOK_URL env var is not set)
-_FALLBACK_WEBHOOK = (
-    "https://discord.com/api/webhooks/1483172357303435380"
-    "/MoQlfxlxy8-oeZRBJe5NA-7QEK92Ng1OKJHqpQAsTKVz6EhFvYvDQ4YTIy5TCHeXkgR3"
-)
+# Set DISCORD_WEBHOOK_URL in .env to enable daily signal posts.
+# Create a webhook: Discord server → channel settings → Integrations → Webhooks → New Webhook
+_FALLBACK_WEBHOOK = None
 
 # Regime display config
 _REGIME_EMOJI = {
