@@ -23,13 +23,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/signals", tags=["Signals"])
 
 
+_UPGRADE_URL = "https://macropulse.live/#pricing"
+_FREE_GATE_MSG = "Full signal package requires Starter or Pro. Upgrade at " + _UPGRADE_URL
+
+
+def _require_paid(key_record: dict) -> None:
+    """Raise 403 if the key belongs to the free tier."""
+    if key_record.get("tier", "free") == "free":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=_FREE_GATE_MSG,
+        )
+
+
 @router.get(
     "/latest",
     response_model=SignalPackageResponse,
     summary="Latest unified signal package",
 )
 def get_latest_signal(
-    _key: str = Depends(require_api_key),
+    key_record: dict = Depends(require_api_key),
 ) -> SignalPackageResponse:
     """
     Return the most recent unified macro signal package.
@@ -37,6 +50,7 @@ def get_latest_signal(
     Combines HMM regime, net liquidity state, PCA factors, and model metadata
     into a single response.  This is the primary integration endpoint for clients.
     """
+    _require_paid(key_record)
     pkg = build_signal_package()
     if pkg is None:
         raise HTTPException(
@@ -54,13 +68,14 @@ def get_latest_signal(
 def get_signal_range(
     start: dt.date = Query(..., description="Start date (YYYY-MM-DD)"),
     end: dt.date = Query(..., description="End date (YYYY-MM-DD)"),
-    _key: str = Depends(require_api_key),
+    key_record: dict = Depends(require_api_key),
 ) -> list[SignalPackageResponse]:
     """
     Return signal packages for every trading day in [start, end].
 
     Capped at 365 days.  Returns an empty list if no data exists for the range.
     """
+    _require_paid(key_record)
     if end < start:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -77,13 +92,14 @@ def get_signal_range(
 )
 def get_signal_by_date(
     date: dt.date,
-    _key: str = Depends(require_api_key),
+    key_record: dict = Depends(require_api_key),
 ) -> SignalPackageResponse:
     """
     Return the signal package for a specific date (YYYY-MM-DD).
 
     Returns 404 if no regime data exists for that date.
     """
+    _require_paid(key_record)
     pkg = build_signal_package(target_date=date)
     if pkg is None:
         raise HTTPException(

@@ -42,12 +42,20 @@ class BacktestResponse(BaseModel):
     timeline: list[dict[str, Any]]
 
 
+_UPGRADE_URL = "https://macropulse.live/#pricing"
+
+
 @router.post("/backtest", response_model=BacktestResponse)
 def run_backtest_endpoint(
     req: BacktestRequest,
-    _key: str = Depends(require_api_key),
+    key_record: dict = Depends(require_api_key),
 ) -> BacktestResponse:
     """Run a historical regime backtest."""
+    if key_record.get("tier", "free") == "free":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Backtest engine requires Starter or Pro. Upgrade at {_UPGRADE_URL}",
+        )
     try:
         from config.settings import get_settings
         from data.ingestion.fred_client import fetch_all_fred

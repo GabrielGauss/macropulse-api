@@ -8,8 +8,9 @@ import datetime as dt
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.auth import require_api_key
 from api.schemas.responses import (
     DriftResponse,
     DriftRow,
@@ -49,13 +50,21 @@ def get_current_regime() -> RegimeResponse:
     )
 
 
+_FREE_HISTORY_LIMIT = 30
+_UPGRADE_URL = "https://macropulse.live/#pricing"
+
+
 @router.get("/regime/history", response_model=list[RegimeResponse])
 def get_regime_history(
     start: Optional[dt.date] = Query(None, description="Start date (inclusive)"),
     end: Optional[dt.date] = Query(None, description="End date (inclusive)"),
     limit: int = Query(90, ge=1, le=1000),
+    key_record: dict = Depends(require_api_key),
 ) -> list[RegimeResponse]:
     """Return historical regime signals."""
+    tier = key_record.get("tier", "free")
+    if tier == "free":
+        limit = min(limit, _FREE_HISTORY_LIMIT)
     rows = queries.fetch_regime_history(start=start, end=end, limit=limit)
     return [
         RegimeResponse(
