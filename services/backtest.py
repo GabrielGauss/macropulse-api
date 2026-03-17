@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from data.processing.feature_engineering import MODEL_FEATURE_COLS
+from data.processing.feature_engineering import MODEL_FEATURE_COLS, MODEL_FEATURE_COLS_V1
 from models.regime_classifier import RegimeClassifier, compute_risk_score
 from services.inference import RegimeInferenceService
 
@@ -56,7 +56,8 @@ def run_backtest(
     BacktestResult with full regime timeline and summary statistics.
     """
     svc = RegimeInferenceService(model_version=model_version)
-    X = features[MODEL_FEATURE_COLS].values
+    feature_cols = MODEL_FEATURE_COLS_V1 if svc.version == "v1" else MODEL_FEATURE_COLS
+    X = features[feature_cols].values
     dates_raw = features.index
 
     if window and window < len(X):
