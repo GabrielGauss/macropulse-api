@@ -78,7 +78,11 @@ def build_features(
     # First differences for level / spread series
     features["d_liquidity"] = combined["net_liquidity"].diff()
     features["d_vix"] = combined["vix"].diff() if "vix" in combined.columns else pd.Series(0.0, index=combined.index)
-    features["d_dxy"] = combined["dxy"].diff()
+    if "dxy" in combined.columns and combined["dxy"].notna().any():
+        features["d_dxy"] = combined["dxy"].diff().fillna(0.0)
+    else:
+        logger.warning("DXY data unavailable; d_dxy set to 0.")
+        features["d_dxy"] = pd.Series(0.0, index=combined.index)
     features["d_hy_spread"] = combined["BAMLH0A0HYM2"].diff()
     features["d_yield_curve"] = combined["yield_curve"].diff()
     features["d_10y"] = combined["DGS10"].diff()
