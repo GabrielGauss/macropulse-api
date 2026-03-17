@@ -2,7 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { REGIME_CONFIG } from '../lib/utils';
 import { api } from '../lib/api';
 
-export default function Header({ connected, regime }) {
+const TIER_COLOR = {
+  free:    'rgba(255,255,255,0.2)',
+  starter: '#3b82f6',
+  pro:     '#f59e0b',
+  owner:   '#22c55e',
+};
+
+export default function Header({ connected, regime, meInfo }) {
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
   });
@@ -149,6 +156,25 @@ export default function Header({ connected, regime }) {
             </div>
           )}
         </div>
+
+        {/* Email + tier */}
+        {meInfo && (
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              {meInfo.email}
+            </span>
+            <span
+              className="text-[9px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
+              style={{
+                color: TIER_COLOR[meInfo.tier] || TIER_COLOR.free,
+                border: `1px solid ${TIER_COLOR[meInfo.tier] || TIER_COLOR.free}`,
+                opacity: 0.85,
+              }}
+            >
+              {meInfo.tier}
+            </span>
+          </div>
+        )}
 
         {/* Connection status */}
         <div className="flex items-center gap-1.5">

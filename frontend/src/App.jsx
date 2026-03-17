@@ -45,7 +45,8 @@ export default function App() {
   const { connected, lastMessage } = useRegimeSocket();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [historyDays, setHistoryDays] = useState(90);
-  const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'
+  const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'|'owner'
+  const [meInfo, setMeInfo] = useState(null); // { email, tier }
 
   // Derive capabilities from tier
   const isFree = tier === 'free' || tier === null;
@@ -54,7 +55,10 @@ export default function App() {
   useEffect(() => {
     if (!api.hasKey()) { setTier('free'); return; }
     api.getMe()
-      .then(me => setTier(me.tier || 'free'))
+      .then(me => {
+        setTier(me.tier || 'free');
+        setMeInfo({ email: me.email, tier: me.tier || 'free' });
+      })
       .catch(() => setTier('free'));
   }, []);
 
@@ -95,7 +99,7 @@ export default function App() {
       />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header connected={connected} regime={regime.data} />
+        <Header connected={connected} regime={regime.data} meInfo={meInfo} />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-5">
           {regime.error && (
