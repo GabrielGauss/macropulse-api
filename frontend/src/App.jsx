@@ -11,6 +11,12 @@ import MacroHeatmap from './components/MacroHeatmap';
 import LiquidityView from './views/LiquidityView';
 import SignalsView from './views/SignalsView';
 import BacktestView from './views/BacktestView';
+import InflationView from './views/InflationView';
+import GrowthView from './views/GrowthView';
+import RatesView from './views/RatesView';
+import CommoditiesView from './views/CommoditiesView';
+import FXView from './views/FXView';
+import CryptoView from './views/CryptoView';
 import { useFetch } from './hooks/useFetch';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
 import { api } from './lib/api';
@@ -146,6 +152,14 @@ export default function App() {
             {activeSection === 'backtest' && (
               isFree ? <UpgradeGate feature="Backtest Engine" /> : <BacktestView />
             )}
+
+            {/* ── Domain Views ── */}
+            {activeSection === 'inflation'   && (isFree ? <UpgradeGate feature="Inflation Analysis" />  : <InflationView />)}
+            {activeSection === 'growth'      && (isFree ? <UpgradeGate feature="Growth Analysis" />     : <GrowthView />)}
+            {activeSection === 'rates'       && (isFree ? <UpgradeGate feature="Rates Analysis" />      : <RatesView />)}
+            {activeSection === 'commodities' && (isFree ? <UpgradeGate feature="Commodities Analysis" /> : <CommoditiesView />)}
+            {activeSection === 'fx'          && (isFree ? <UpgradeGate feature="FX Analysis" />         : <FXView />)}
+            {activeSection === 'crypto'      && (isFree ? <UpgradeGate feature="Crypto Analysis" />     : <CryptoView />)}
 
             <footer className="pt-4 mt-4 text-center text-[10px] text-white/10 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence

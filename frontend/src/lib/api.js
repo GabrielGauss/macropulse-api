@@ -20,6 +20,7 @@ export const api = {
   getFactors:        (limit = 60) => apiFetch(`/v1/factors?limit=${limit}`),
   getDrift:          (limit = 30) => apiFetch(`/v1/drift?limit=${limit}`),
   getScorecard:      () => apiFetch('/v1/scorecard'),
+  getFeatures:       (limit = 90) => apiFetch(`/v1/features?limit=${limit}`),
   getSignals:        () => apiFetch('/v1/signals/latest'),
   runBacktest:       (params) => apiFetch('/v1/backtest', { method: 'POST', body: JSON.stringify(params) }),
   getMe:             () => apiFetch('/v1/auth/me'),

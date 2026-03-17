@@ -24,10 +24,12 @@ def upsert_macro_features(row: dict[str, Any]) -> None:
     sql = """
         INSERT INTO macro_features (
             time, net_liquidity, d_liquidity, d_sp500, d_vix,
-            d_dxy, d_hy_spread, d_yield_curve, d_10y, d_2y
+            d_dxy, d_hy_spread, d_yield_curve, d_10y, d_2y,
+            d_gold, d_oil, d_btc, d_eth
         ) VALUES (
             %(time)s, %(net_liquidity)s, %(d_liquidity)s, %(d_sp500)s, %(d_vix)s,
-            %(d_dxy)s, %(d_hy_spread)s, %(d_yield_curve)s, %(d_10y)s, %(d_2y)s
+            %(d_dxy)s, %(d_hy_spread)s, %(d_yield_curve)s, %(d_10y)s, %(d_2y)s,
+            %(d_gold)s, %(d_oil)s, %(d_btc)s, %(d_eth)s
         )
         ON CONFLICT (time) DO UPDATE SET
             net_liquidity  = EXCLUDED.net_liquidity,
@@ -38,8 +40,17 @@ def upsert_macro_features(row: dict[str, Any]) -> None:
             d_hy_spread    = EXCLUDED.d_hy_spread,
             d_yield_curve  = EXCLUDED.d_yield_curve,
             d_10y          = EXCLUDED.d_10y,
-            d_2y           = EXCLUDED.d_2y;
+            d_2y           = EXCLUDED.d_2y,
+            d_gold         = EXCLUDED.d_gold,
+            d_oil          = EXCLUDED.d_oil,
+            d_btc          = EXCLUDED.d_btc,
+            d_eth          = EXCLUDED.d_eth;
     """
+    # Ensure optional fields have defaults so old callers still work
+    row.setdefault("d_gold", 0)
+    row.setdefault("d_oil", 0)
+    row.setdefault("d_btc", 0)
+    row.setdefault("d_eth", 0)
     with get_sync_cursor() as cur:
         cur.execute(sql, row)
 
@@ -396,10 +407,14 @@ def verify_email_code(email: str, code: str) -> bool:
 
 
 def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
-    """Return recent macro feature rows (used by performance attribution)."""
+    """Return recent macro feature rows (used by domain views and performance attribution)."""
     sql = """
         SELECT time, d_sp500, d_vix, d_dxy, d_hy_spread,
-               d_yield_curve, d_10y, d_2y, net_liquidity, d_liquidity
+               d_yield_curve, d_10y, d_2y, net_liquidity, d_liquidity,
+               COALESCE(d_gold, 0) AS d_gold,
+               COALESCE(d_oil,  0) AS d_oil,
+               COALESCE(d_btc,  0) AS d_btc,
+               COALESCE(d_eth,  0) AS d_eth
         FROM macro_features
         ORDER BY time DESC
         LIMIT %(limit)s;

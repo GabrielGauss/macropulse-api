@@ -21,6 +21,8 @@ _MARKET_TICKERS: dict[str, str] = {
     "DX=F": "dxy",   # Dollar Index Futures — DX-Y.NYB was delisted from yfinance
     "GC=F": "gold",
     "CL=F": "oil",
+    "BTC-USD": "btc",
+    "ETH-USD": "eth",
 }
 
 

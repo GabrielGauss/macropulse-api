@@ -101,10 +101,24 @@ def build_features(
         logger.warning("Oil data unavailable; d_oil set to 0.")
         features["d_oil"] = pd.Series(0.0, index=combined.index)
 
+    if "btc" in combined.columns and combined["btc"].notna().any():
+        features["d_btc"] = np.log(combined["btc"].replace(0, np.nan)).diff()
+    else:
+        logger.warning("BTC data unavailable; d_btc set to 0.")
+        features["d_btc"] = pd.Series(0.0, index=combined.index)
+
+    if "eth" in combined.columns and combined["eth"].notna().any():
+        features["d_eth"] = np.log(combined["eth"].replace(0, np.nan)).diff()
+    else:
+        logger.warning("ETH data unavailable; d_eth set to 0.")
+        features["d_eth"] = pd.Series(0.0, index=combined.index)
+
     # Fill any remaining NaNs in optional columns with 0 before dropna
-    # so that gaps in commodity data do not purge otherwise-complete rows.
+    # so that gaps in commodity/crypto data do not purge otherwise-complete rows.
     features["d_gold"] = features["d_gold"].fillna(0.0)
     features["d_oil"] = features["d_oil"].fillna(0.0)
+    features["d_btc"] = features["d_btc"].fillna(0.0)
+    features["d_eth"] = features["d_eth"].fillna(0.0)
 
     features = features.dropna()
     logger.info("Built feature matrix: %s", features.shape)

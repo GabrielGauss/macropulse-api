@@ -117,6 +117,27 @@ def get_drift(
     )
 
 
+@router.get("/features", tags=["MacroPulse"])
+def get_features(
+    limit: int = Query(90, ge=1, le=500),
+    key_record: dict = Depends(require_api_key),
+) -> list[dict]:
+    """Return recent macro feature time series (d_10y, d_2y, d_yield_curve, d_sp500, etc.)"""
+    tier = key_record.get("tier", "free")
+    if tier == "free":
+        from fastapi import HTTPException as _HTTPException
+        raise _HTTPException(
+            status_code=403,
+            detail="Features endpoint requires Starter or Pro. Upgrade at https://macropulse.live/#pricing",
+        )
+    rows = queries.fetch_latest_features(limit=limit)
+    # Convert datetime objects to ISO strings for JSON serialisation
+    return [
+        {**row, "time": row["time"].isoformat() if hasattr(row.get("time"), "isoformat") else row["time"]}
+        for row in rows
+    ]
+
+
 @router.get("/scorecard", tags=["MacroPulse"])
 def get_scorecard() -> dict:
     """

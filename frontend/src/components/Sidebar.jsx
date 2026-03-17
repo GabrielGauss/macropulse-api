@@ -23,7 +23,7 @@ const ICONS = {
   expand:      'M6 4l4 4-4 4',
 };
 
-const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest']);
+const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest', 'inflation', 'growth', 'rates', 'commodities', 'fx', 'crypto']);
 
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',    icon: 'dashboard',   available: true  },
@@ -31,12 +31,12 @@ const NAV_ITEMS = [
   { id: 'signals',     label: 'Signals',      icon: 'signals',     available: true  },
   { id: 'backtest',    label: 'Backtests',    icon: 'backtest',    available: true  },
   null, // divider
-  { id: 'inflation',   label: 'Inflation',    icon: 'inflation',   available: false },
-  { id: 'growth',      label: 'Growth',       icon: 'growth',      available: false },
-  { id: 'rates',       label: 'Rates',        icon: 'rates',       available: false },
-  { id: 'commodities', label: 'Commodities',  icon: 'commodities', available: false },
-  { id: 'fx',          label: 'FX',           icon: 'fx',          available: false },
-  { id: 'crypto',      label: 'Crypto',       icon: 'crypto',      available: false },
+  { id: 'inflation',   label: 'Inflation',    icon: 'inflation',   available: true },
+  { id: 'growth',      label: 'Growth',       icon: 'growth',      available: true },
+  { id: 'rates',       label: 'Rates',        icon: 'rates',       available: true },
+  { id: 'commodities', label: 'Commodities',  icon: 'commodities', available: true },
+  { id: 'fx',          label: 'FX',           icon: 'fx',          available: true },
+  { id: 'crypto',      label: 'Crypto',       icon: 'crypto',      available: true },
 ];
 
 export default function Sidebar({ regime, activeSection = 'dashboard', onNavigate, tier }) {

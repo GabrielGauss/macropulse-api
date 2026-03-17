@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS macro_features (
     d_yield_curve   DOUBLE PRECISION,
     d_10y           DOUBLE PRECISION,
     d_2y            DOUBLE PRECISION,
+    d_gold          DOUBLE PRECISION DEFAULT 0,
+    d_oil           DOUBLE PRECISION DEFAULT 0,
+    d_btc           DOUBLE PRECISION DEFAULT 0,
+    d_eth           DOUBLE PRECISION DEFAULT 0,
     PRIMARY KEY (time)
 );
 
