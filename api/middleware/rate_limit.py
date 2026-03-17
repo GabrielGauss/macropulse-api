@@ -46,6 +46,7 @@ TIER_LIMITS: dict[str, int] = {
     "free":    50,
     "starter": 500,
     "pro":     0,
+    "owner":   0,  # unlimited — all features, no billing
 }
 
 # In-memory store: client_id → (date_string, request_count)

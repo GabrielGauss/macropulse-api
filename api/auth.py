@@ -79,6 +79,16 @@ async def require_api_key(
             detail="Missing API key. Provide via X-MacroPulse-Key header or api_key query param.",
         )
 
+    # Owner key — master access, all features, no rate limit
+    if settings.owner_api_key and raw_key == settings.owner_api_key:
+        return {
+            "user_id": 0,
+            "email": "owner@macropulse",
+            "tier": "owner",
+            "key_prefix": raw_key[:12],
+            "is_active": True,
+        }
+
     # Legacy env-key support (settings.api_keys list) so existing deployments
     # don't break before the DB is migrated.
     if settings.api_keys and raw_key in settings.api_keys:

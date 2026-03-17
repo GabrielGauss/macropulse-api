@@ -70,6 +70,7 @@ class Settings(BaseSettings):
 
     # ── Auth ────────────────────────────────────────────────────────
     api_keys: list[str] = []  # Empty = dev-mode (no auth enforced)
+    owner_api_key: str = ""   # Master key — tier="owner", all features, no rate limit
 
     # ── Paddle Billing ───────────────────────────────────────────────
     paddle_api_key: str = ""                        # Bearer token for Paddle API
