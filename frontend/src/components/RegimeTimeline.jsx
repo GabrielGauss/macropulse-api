@@ -63,6 +63,7 @@ export default function RegimeTimeline({
   history,
   historyDays = 90,
   onHistoryDaysChange,
+  isFree = false,
 }) {
   if (!history || history.length === 0) {
     return (
@@ -96,8 +97,24 @@ export default function RegimeTimeline({
             ))}
           </div>
 
-          {/* Time filter pills */}
-          <div
+          {/* Free tier — upgrade nudge instead of range picker */}
+          {isFree && (
+            <a
+              href="https://macropulse.live/#pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] font-mono transition-colors"
+              style={{ color: 'rgba(255,255,255,0.2)', textDecoration: 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+              title="Upgrade for full 2-year history"
+            >
+              30d · <span style={{ textDecoration: 'underline' }}>upgrade for 2Y →</span>
+            </a>
+          )}
+
+          {/* Time filter pills (Starter / Pro only) */}
+          {!isFree && <div
             className="flex items-center rounded"
             style={{ background: '#111', border: '1px solid #1f1f1f', padding: 2, gap: 2 }}
           >
@@ -121,7 +138,7 @@ export default function RegimeTimeline({
                 </button>
               );
             })}
-          </div>
+          </div>}
         </div>
       </div>
 

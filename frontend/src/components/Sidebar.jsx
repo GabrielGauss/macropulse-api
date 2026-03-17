@@ -23,6 +23,8 @@ const ICONS = {
   expand:      'M6 4l4 4-4 4',
 };
 
+const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest']);
+
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',    icon: 'dashboard',   available: true  },
   { id: 'liquidity',   label: 'Liquidity',    icon: 'liquidity',   available: true  },
@@ -37,7 +39,8 @@ const NAV_ITEMS = [
   { id: 'crypto',      label: 'Crypto',       icon: 'crypto',      available: false },
 ];
 
-export default function Sidebar({ regime, activeSection = 'dashboard', onNavigate }) {
+export default function Sidebar({ regime, activeSection = 'dashboard', onNavigate, tier }) {
+  const isFree = !tier || tier === 'free';
   const [collapsed, setCollapsed] = useState(false);
   const cfg = regime ? REGIME_CONFIG[regime.macro_regime] : null;
 
@@ -82,6 +85,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
             );
           }
 
+          const isLocked = isFree && FREE_LOCKED.has(item.id);
           const isActive = item.id === activeSection && item.available;
 
           return (
@@ -122,7 +126,12 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
               {!collapsed && (
                 <span className="text-[12px] font-medium truncate">{item.label}</span>
               )}
-              {!collapsed && !item.available && (
+              {!collapsed && isLocked && (
+                <svg className="ml-auto flex-shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              )}
+              {!collapsed && !item.available && !isLocked && (
                 <span
                   className="ml-auto text-[8px] font-mono uppercase tracking-wide"
                   style={{ color: 'rgba(255,255,255,0.15)' }}

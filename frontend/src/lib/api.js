@@ -22,6 +22,7 @@ export const api = {
   getScorecard:      () => apiFetch('/v1/scorecard'),
   getSignals:        () => apiFetch('/v1/signals/latest'),
   runBacktest:       (params) => apiFetch('/v1/backtest', { method: 'POST', body: JSON.stringify(params) }),
+  getMe:             () => apiFetch('/v1/auth/me'),
   getHealth:         () => apiFetch('/health'),
   setKey:            (key) => { if (key) localStorage.setItem('mp_api_key', key.trim()); else localStorage.removeItem('mp_api_key'); },
   getKey,

@@ -15,13 +15,51 @@ import { useFetch } from './hooks/useFetch';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
 import { api } from './lib/api';
 
+function UpgradeGate({ feature }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div
+        className="mb-6 rounded-full flex items-center justify-center"
+        style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.04)', border: '1px solid #2a2a2a' }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div className="text-[13px] font-semibold text-white/60 mb-1">{feature}</div>
+      <div className="text-[11px] text-white/25 font-mono mb-5">Available on Starter and Pro plans</div>
+      <a
+        href="https://macropulse.live/#pricing"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-md text-[12px] font-semibold px-5 py-2 transition-opacity hover:opacity-85"
+        style={{ background: '#f0f0f0', color: '#0a0a0a', textDecoration: 'none' }}
+      >
+        View plans →
+      </a>
+    </div>
+  );
+}
+
 export default function App() {
   const { connected, lastMessage } = useRegimeSocket();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [historyDays, setHistoryDays] = useState(90);
+  const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'
+
+  // Derive capabilities from tier
+  const isFree = tier === 'free' || tier === null;
+  const FREE_HISTORY_LIMIT = 30;
+
+  useEffect(() => {
+    if (!api.hasKey()) { setTier('free'); return; }
+    api.getMe()
+      .then(me => setTier(me.tier || 'free'))
+      .catch(() => setTier('free'));
+  }, []);
 
   const fetchRegime    = useCallback(() => api.getCurrentRegime(), []);
-  const fetchHistory   = useCallback(() => api.getRegimeHistory(historyDays), [historyDays]);
+  const fetchHistory   = useCallback(() => api.getRegimeHistory(isFree ? FREE_HISTORY_LIMIT : historyDays), [historyDays, isFree]);
   const fetchLiquidity = useCallback(() => api.getLiquidity(60), []);
   const fetchFactors   = useCallback(() => api.getFactors(60), []);
   const fetchDrift     = useCallback(() => api.getDrift(30), []);
@@ -53,6 +91,7 @@ export default function App() {
         regime={regime.data}
         activeSection={activeSection}
         onNavigate={setActiveSection}
+        tier={tier}
       />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -77,8 +116,9 @@ export default function App() {
                 </div>
                 <RegimeTimeline
                   history={history.data}
-                  historyDays={historyDays}
-                  onHistoryDaysChange={setHistoryDays}
+                  historyDays={isFree ? FREE_HISTORY_LIMIT : historyDays}
+                  onHistoryDaysChange={isFree ? undefined : setHistoryDays}
+                  isFree={isFree}
                 />
                 <div className="grid gap-4 lg:grid-cols-3">
                   <LiquidityChart data={liquidity.data} />
@@ -89,13 +129,19 @@ export default function App() {
             )}
 
             {/* ── Liquidity ── */}
-            {activeSection === 'liquidity' && <LiquidityView />}
+            {activeSection === 'liquidity' && (
+              isFree ? <UpgradeGate feature="Liquidity Analysis" /> : <LiquidityView />
+            )}
 
             {/* ── Signals ── */}
-            {activeSection === 'signals' && <SignalsView />}
+            {activeSection === 'signals' && (
+              isFree ? <UpgradeGate feature="Signal Deep-Dive" /> : <SignalsView />
+            )}
 
             {/* ── Backtests ── */}
-            {activeSection === 'backtest' && <BacktestView />}
+            {activeSection === 'backtest' && (
+              isFree ? <UpgradeGate feature="Backtest Engine" /> : <BacktestView />
+            )}
 
             <footer className="pt-4 mt-4 text-center text-[10px] text-white/10 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence
