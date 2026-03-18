@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { REGIME_CONFIG } from '../lib/utils';
 import { api } from '../lib/api';
 import { useFetch } from '../hooks/useFetch';
+import { useCountdown } from '../hooks/useCountdown';
 
 const TIER_COLOR = {
   free:    'rgba(255,255,255,0.2)',
@@ -21,6 +22,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   const fetchPipelineStatus = useCallback(() => api.getPipelineStatus(), []);
   const pipelineStatus = useFetch(fetchPipelineStatus);
   const ps = pipelineStatus.data;
+  const countdown = useCountdown();
 
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [keyDraft, setKeyDraft] = useState('');
@@ -77,8 +79,24 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
       className="flex items-center justify-between border-b border-[#1f1f1f] bg-surface-0 flex-shrink-0 relative"
       style={{ height: 48, paddingLeft: 16, paddingRight: 16 }}
     >
-      {/* Data timestamp + pipeline freshness */}
+      {/* MacroPulse logo + data timestamp + pipeline freshness + countdown */}
       <div className="flex items-center gap-3">
+        <a
+          href="https://macropulse.live"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: 12,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.7)',
+            textDecoration: 'none',
+            letterSpacing: '0.06em',
+            marginRight: 4,
+          }}
+        >
+          MacroPulse
+        </a>
         <span className="text-[11px] text-white/50 font-mono">
           <span className="text-white/45 mr-1">data</span>{dataDate}
         </span>
@@ -93,6 +111,11 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
             title={ps.last_run_at ? `Pipeline: ${ps.status} · ${new Date(ps.last_run_at).toLocaleString('en-US', { timeZone: 'UTC' })} UTC` : 'No pipeline runs recorded'}
           >
             {ps.data_lag ? 'data lag' : ps.status === 'success' ? 'fresh' : ps.status}
+          </span>
+        )}
+        {countdown && (
+          <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {countdown}
           </span>
         )}
       </div>
