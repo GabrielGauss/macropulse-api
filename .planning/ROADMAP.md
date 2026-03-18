@@ -78,7 +78,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. There is exactly one API docs page that contains all endpoint documentation — the detailed /api-docs content and the dashboard sidebar reference are unified
   2. The unified API docs page matches the dark visual style of macropulse.live (no light-mode or mismatched styling)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-sidebar-link-fix-PLAN.md — Fix "API Docs" sidebar link to point to macropulse.live/api-docs.html (DOCS-01)
+- [ ] 04-02-api-docs-token-align-PLAN.md — Align api-docs.html CSS tokens to match index.html brand values (DOCS-02)
 
 ## Progress
 
@@ -90,10 +94,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
 | 3. Marketing Site | 2/3 | Complete    | 2026-03-18 |
-| 4. API Docs | 0/TBD | Not started | - |
+| 4. API Docs | 1/2 | In Progress|  |
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
 *Updated: 2026-03-18 — Phase 1 planned (4 plans)*
 *Updated: 2026-03-18 — Phase 2 planned (2 plans)*
 *Updated: 2026-03-18 — Phase 3 planned (3 plans)*
+*Updated: 2026-03-18 — Phase 4 planned (2 plans)*
