@@ -51,7 +51,7 @@ export default function RegimeCard({ regime }) {
               {cfg.label}
             </h2>
             <div className="text-[11px] text-white/50 font-mono mt-0.5">
-              <span className="text-white/45 mr-1">as of</span>{formatDate(regime.timestamp)}
+              <span className="text-white/45 mr-1">as of</span>{formatDate(new Date())}
             </div>
             {guideMode && (
               <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginTop: 5, maxWidth: 280, lineHeight: 1.5 }}>
