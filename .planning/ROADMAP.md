@@ -64,7 +64,12 @@ Plans:
   2. Clicking an open FAQ accordion item a second time collapses it closed
   3. The "Data Edge" section content is accurate and complete as verified by the owner
   4. The macro regime calendar on the marketing site opens in a 6-month centered view by default
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Update hero H1 to "Stop predicting. Start allocating." and social meta tags (SITE-01)
+- [ ] 03-02-PLAN.md — Change calendar default from 90 to 180 days; swap 6M button active state (SITE-04)
+- [ ] 03-03-PLAN.md — Browser smoke-test all 4 SITE requirements (SITE-01, SITE-02, SITE-03, SITE-04)
 
 ### Phase 4: API Docs
 **Goal**: Developers have one definitive, visually polished API reference to consult
@@ -84,10 +89,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
-| 3. Marketing Site | 0/TBD | Not started | - |
+| 3. Marketing Site | 0/3 | Not started | - |
 | 4. API Docs | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
 *Updated: 2026-03-18 — Phase 1 planned (4 plans)*
 *Updated: 2026-03-18 — Phase 2 planned (2 plans)*
+*Updated: 2026-03-18 — Phase 3 planned (3 plans)*
