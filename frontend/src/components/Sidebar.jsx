@@ -202,7 +202,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           )}
         </a>
         <a
-          href="https://github.com/GabrielGauss/macropulse-api"
+          href="https://macropulse.live/api-docs.html"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center rounded-md transition-colors duration-100"
