@@ -11,8 +11,8 @@ Requirements for v1.0 Ship-Ready milestone.
 
 - [ ] **DASH-01**: Calendar initializes to correct date range for user's tier (1Y for paid/owner) on mount, not 30d default
 - [ ] **DASH-02**: Calendar scroll position updates correctly when user switches between 1Y / 2Y view buttons
-- [ ] **DASH-03**: Header logo acts as clickable anchor link to macropulse.live home page
-- [ ] **DASH-04**: AI commentary panel displays lock icon and "Coming Soon" label with countdown to next pipeline run
+- [x] **DASH-03**: Header logo acts as clickable anchor link to macropulse.live home page
+- [x] **DASH-04**: AI commentary panel displays lock icon and "Coming Soon" label with countdown to next pipeline run
 - [ ] **DASH-05**: Help/guide button is present in dashboard nav header and opens contextual guidance
 - [ ] **DASH-06**: Webhook setup guide is visible at the bottom of the dashboard
 - [ ] **DASH-07**: Current macro regime card displays today's date and fresh data (no stale dates)
@@ -83,8 +83,8 @@ Deferred — next milestone (monetization).
 | BUG-02 | Phase 1 | Complete |
 | DASH-01 | Phase 2 | Pending |
 | DASH-02 | Phase 2 | Pending |
-| DASH-03 | Phase 2 | Pending |
-| DASH-04 | Phase 2 | Pending |
+| DASH-03 | Phase 2 | Complete |
+| DASH-04 | Phase 2 | Complete |
 | DASH-05 | Phase 2 | Pending |
 | DASH-06 | Phase 2 | Pending |
 | DASH-07 | Phase 2 | Pending |
