@@ -141,7 +141,7 @@ export default function App() {
                   onHistoryDaysChange={isFree ? undefined : setHistoryDays}
                   isFree={isFree}
                 />
-                <RegimeCalendar isFree={isFree} />
+                <RegimeCalendar isFree={isFree} tier={tier} />
                 <div className="grid gap-4 lg:grid-cols-3">
                   <LiquidityChart data={liquidity.data} />
                   <FactorsChart data={factors.data} />

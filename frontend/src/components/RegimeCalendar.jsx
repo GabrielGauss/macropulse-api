@@ -16,7 +16,7 @@ const REGIME_DESC = {
   risk_off:   'Risk-off: defensive posture. 0% equity exposure.',
 };
 
-export default function RegimeCalendar({ isFree = false }) {
+export default function RegimeCalendar({ isFree = false, tier }) {
   const maxDays = isFree ? 30 : 730;
   const fetchFull = useCallback(() => api.getRegimeHistory(maxDays), [maxDays]);
   const { data: raw, loading } = useFetch(fetchFull);
@@ -53,7 +53,7 @@ export default function RegimeCalendar({ isFree = false }) {
     URL.revokeObjectURL(url);
   }
 
-  if (loading) {
+  if (loading || tier === null) {
     return (
       <div className="card p-5">
         <div className="label mb-4">Regime Calendar</div>
