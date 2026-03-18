@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { api } from '../lib/api';
 import { useGuideMode } from '../lib/guideMode';
+import { useCountdown } from '../hooks/useCountdown';
 
 function RefreshIcon() {
   return (
@@ -98,6 +99,7 @@ function BlurredUpgradeOverlay() {
 }
 
 function UnconfiguredPlaceholder() {
+  const countdown = useCountdown();
   return (
     <div className="py-4 text-center">
       <div
@@ -107,6 +109,11 @@ function UnconfiguredPlaceholder() {
         AI commentary requires <span style={{ color: 'rgba(255,255,255,0.5)' }}>ANTHROPIC_API_KEY</span> in the server environment.
         Configure it in <span style={{ color: 'rgba(255,255,255,0.5)' }}>.env</span> to enable daily macro narratives.
       </div>
+      {countdown && (
+        <div className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          Next update in {countdown}
+        </div>
+      )}
     </div>
   );
 }
