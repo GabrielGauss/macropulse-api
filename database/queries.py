@@ -424,6 +424,31 @@ def get_daily_usage(key_hash: str) -> int:
         return int(row["daily_requests"]) if row else 0
 
 
+def get_alert_recipients() -> list[dict]:
+    """Return all active users on starter/pro/owner tier for regime change alerts."""
+    with get_sync_cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT ON (u.id)
+                u.id, u.email, k.tier, u.webhook_url, u.alerts_enabled
+            FROM users u
+            JOIN api_keys k ON k.user_id = u.id
+            WHERE k.is_active = TRUE
+              AND k.tier IN ('starter', 'pro', 'owner')
+              AND u.alerts_enabled = TRUE
+            ORDER BY u.id, k.created_at DESC
+        """)
+        return [dict(r) for r in cur.fetchall()]
+
+
+def update_webhook_url(user_id: int, webhook_url: str | None) -> None:
+    """Set or clear a user's webhook URL."""
+    with get_sync_cursor() as cur:
+        cur.execute(
+            "UPDATE users SET webhook_url = %s WHERE id = %s",
+            (webhook_url, user_id)
+        )
+
+
 def fetch_subscriber_emails() -> list[str]:
     """Return emails of all Starter/Pro users with an active API key (paid digest only)."""
     sql = """

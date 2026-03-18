@@ -106,8 +106,14 @@ CREATE TABLE IF NOT EXISTS users (
     name                 TEXT,
     created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
     paddle_customer_id   TEXT,
-    paddle_subscription_id TEXT
+    paddle_subscription_id TEXT,
+    webhook_url          TEXT DEFAULT NULL,
+    alerts_enabled       BOOLEAN DEFAULT TRUE
 );
+
+-- Migration guard: add alert columns if upgrading from earlier schema
+ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url    TEXT DEFAULT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS alerts_enabled BOOLEAN DEFAULT TRUE;
 
 -- Tiers: free (50 req/day) | starter (500 req/day) | pro (unlimited)
 CREATE TABLE IF NOT EXISTS api_keys (

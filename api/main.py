@@ -38,6 +38,7 @@ from api.routes.signals import router as signals_router
 from api.routes.model import router as model_router
 from api.routes.pipeline import router as pipeline_router
 from api.routes.public import router as public_router
+from api.routes.webhook import router as webhook_router
 from api.routes.websocket import router as ws_router
 from api.schemas.responses import HealthResponse
 from config.settings import get_settings
@@ -104,6 +105,7 @@ app.include_router(signals_router)
 app.include_router(model_router)
 app.include_router(pipeline_router)
 app.include_router(public_router)
+app.include_router(webhook_router)
 
 @app.get("/docs", include_in_schema=False)
 def redirect_docs():

@@ -229,6 +229,20 @@ def run_daily_pipeline(
                 timestamp=ts_iso,
             )
 
+    # Regime change alert (email + webhook delivery to subscribers)
+    try:
+        from services.alerts import send_regime_change_alerts
+        history = queries.fetch_regime_history(limit=2)
+        if len(history) >= 2 and history[0]["regime"] != history[1]["regime"]:
+            send_regime_change_alerts(
+                prev_regime=history[1]["regime"],
+                new_regime=history[0]["regime"],
+                risk_score=float(history[0].get("risk_score", 0)),
+                date=str(history[0].get("time", ""))[:10],
+            )
+    except Exception as exc:
+        logger.warning("regime alert dispatch failed: %s", exc)
+
     # ── 11. Drift metrics ────────────────────────────────────────
     # X is already filtered to the correct feature_cols above.
     pca_drift = compute_pca_variance_drift(pca_model, X[-60:])

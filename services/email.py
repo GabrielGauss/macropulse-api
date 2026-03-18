@@ -54,6 +54,20 @@ def _post(payload: dict) -> None:
         logger.error("Brevo email unexpected error", exc_info=True)
 
 
+def send_email(to: str, subject: str, html: str) -> None:
+    """
+    Generic transactional email helper.
+    Used by the alert system for regime change notifications.
+    Fire-and-forget — never blocks or raises.
+    """
+    _post({
+        "sender":      _get_sender(),
+        "to":          [{"email": to}],
+        "subject":     subject,
+        "htmlContent": html,
+    })
+
+
 def send_newsletter_confirmation(to: str) -> None:
     """
     Send newsletter subscription confirmation email.

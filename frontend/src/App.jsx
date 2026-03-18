@@ -21,6 +21,7 @@ import FXView from './views/FXView';
 import CryptoView from './views/CryptoView';
 import QuantView from './views/QuantView';
 import ForecastCard from './components/ForecastCard';
+import AlertSettings from './components/AlertSettings';
 import CommentaryCard from './components/CommentaryCard';
 import CompositeAnalysisCard from './components/CompositeAnalysisCard';
 import { useFetch } from './hooks/useFetch';
@@ -148,6 +149,7 @@ export default function App() {
                 <CompositeAnalysisCard />
                 <ForecastCard />
                 <CommentaryCard tier={tier} />
+                <AlertSettings tier={tier} />
               </div>
             )}
 
