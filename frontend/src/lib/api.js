@@ -24,6 +24,11 @@ export const api = {
   getSignals:        () => apiFetch('/v1/signals/latest'),
   runBacktest:       (params) => apiFetch('/v1/backtest', { method: 'POST', body: JSON.stringify(params) }),
   getMe:             () => apiFetch('/v1/auth/me'),
+  exportRegimeCsv: (limit = 730) => {
+    const key = getKey();
+    const url = `${BASE}/v1/regime/export?limit=${limit}`;
+    return fetch(url, { headers: key ? { 'X-MacroPulse-Key': key } : {} });
+  },
   getHealth:         () => apiFetch('/health'),
   getPipelineStatus:       () => apiFetch('/v1/pipeline/status'),
   getTransitionMatrix:     () => apiFetch('/v1/model/transition-matrix'),

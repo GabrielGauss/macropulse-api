@@ -9,21 +9,21 @@ import DriftPanel from './components/DriftPanel';
 import SignalGauges from './components/SignalGauges';
 import MacroHeatmap from './components/MacroHeatmap';
 import RegimeCalendar from './components/RegimeCalendar';
-import LiquidityView from './views/LiquidityView';
-import SignalsView from './views/SignalsView';
-import BacktestView from './views/BacktestView';
-import PerformanceView from './views/PerformanceView';
-import InflationView from './views/InflationView';
-import GrowthView from './views/GrowthView';
-import RatesView from './views/RatesView';
-import CommoditiesView from './views/CommoditiesView';
-import FXView from './views/FXView';
-import CryptoView from './views/CryptoView';
-import QuantView from './views/QuantView';
-import ForecastCard from './components/ForecastCard';
-import AlertSettings from './components/AlertSettings';
-import CommentaryCard from './components/CommentaryCard';
-import CompositeAnalysisCard from './components/CompositeAnalysisCard';
+const InflationView         = React.lazy(() => import('./views/InflationView'));
+const GrowthView            = React.lazy(() => import('./views/GrowthView'));
+const RatesView             = React.lazy(() => import('./views/RatesView'));
+const CommoditiesView       = React.lazy(() => import('./views/CommoditiesView'));
+const FXView                = React.lazy(() => import('./views/FXView'));
+const CryptoView            = React.lazy(() => import('./views/CryptoView'));
+const QuantView             = React.lazy(() => import('./views/QuantView'));
+const LiquidityView         = React.lazy(() => import('./views/LiquidityView'));
+const SignalsView           = React.lazy(() => import('./views/SignalsView'));
+const BacktestView          = React.lazy(() => import('./views/BacktestView'));
+const PerformanceView       = React.lazy(() => import('./views/PerformanceView'));
+const ForecastCard          = React.lazy(() => import('./components/ForecastCard'));
+const CommentaryCard        = React.lazy(() => import('./components/CommentaryCard'));
+const CompositeAnalysisCard = React.lazy(() => import('./components/CompositeAnalysisCard'));
+const AlertSettings         = React.lazy(() => import('./components/AlertSettings'));
 import { useFetch } from './hooks/useFetch';
 import { GuideModeContext, useGuideModeState } from './lib/guideMode';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
@@ -125,6 +125,7 @@ export default function App() {
           )}
 
           <div className="mx-auto max-w-screen-xl">
+            <React.Suspense fallback={<div className="flex items-center justify-center h-full"><span className="text-[11px] text-white/30 font-mono">Loading…</span></div>}>
 
             {/* ── Dashboard ── */}
             {activeSection === 'dashboard' && (
@@ -182,6 +183,7 @@ export default function App() {
             {activeSection === 'crypto'      && (isFree ? <UpgradeGate feature="Crypto Analysis" />     : <CryptoView />)}
             {activeSection === 'quant'       && (isFree ? <UpgradeGate feature="Quant HUD" />           : <QuantView />)}
 
+            </React.Suspense>
             <footer className="pt-4 mt-4 text-center text-[10px] text-white/35 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence
             </footer>

@@ -4,11 +4,14 @@ FastAPI route definitions for MacroPulse v1 endpoints.
 
 from __future__ import annotations
 
+import csv
 import datetime as dt
+import io
 import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 
 from api.auth import require_api_key
 from api.deps import require_paid
@@ -83,6 +86,51 @@ def get_regime_history(
         )
         for r in rows
     ]
+
+
+@router.get("/regime/export")
+def export_regime_history(
+    limit: int = Query(730, ge=1, le=730),
+    key_record: dict = Depends(require_api_key),
+):
+    """
+    Download regime history as CSV.
+    Free: 30 days. Starter/Pro: up to 730 days.
+    """
+    tier = key_record.get("tier", "free")
+    if tier == "free":
+        limit = min(limit, 30)
+
+    rows = queries.fetch_regime_history(limit=limit)
+    rows_asc = list(reversed(rows))
+
+    _EXPOSURE = {"expansion": 1.00, "recovery": 0.75, "tightening": 0.25, "risk_off": 0.00}
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["date", "regime", "risk_score", "equity_exposure",
+                     "prob_expansion", "prob_recovery", "prob_tightening", "prob_risk_off"])
+
+    for r in rows_asc:
+        regime = r.get("regime", "")
+        writer.writerow([
+            str(r.get("time", ""))[:10],
+            regime,
+            round(float(r.get("risk_score") or 0), 2),
+            _EXPOSURE.get(regime, ""),
+            round(float(r.get("prob_expansion") or 0), 4),
+            round(float(r.get("prob_recovery") or 0), 4),
+            round(float(r.get("prob_tightening") or 0), 4),
+            round(float(r.get("prob_risk_off") or 0), 4),
+        ])
+
+    output.seek(0)
+    filename = f"macropulse_regimes_{str(rows_asc[-1].get('time', ''))[:10]}.csv" if rows_asc else "macropulse_regimes.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/liquidity", response_model=LiquidityResponse)

@@ -41,6 +41,18 @@ export default function RegimeCalendar({ isFree = false }) {
     scrollRef.current.scrollLeft = Math.max(0, weeksUntilToday * pixelsPerWeek - scrollRef.current.clientWidth + 80);
   }, [raw]);
 
+  async function handleExport() {
+    const resp = await api.exportRegimeCsv(isFree ? 30 : 730);
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `macropulse_regimes.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) {
     return (
       <div className="card p-5">
@@ -123,6 +135,13 @@ export default function RegimeCalendar({ isFree = false }) {
               <span className="text-[10px] text-white/50 font-mono uppercase">{cfg.short}</span>
             </div>
           ))}
+          <button
+            onClick={handleExport}
+            title="Download CSV"
+            style={{ background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 8px', cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
+          >
+            ↓ CSV
+          </button>
         </div>
       </div>
       {guideMode && (

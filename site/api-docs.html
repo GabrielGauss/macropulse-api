@@ -1412,6 +1412,54 @@ bt = resp.<span class="t-fn">json</span>()
       </div>
     </section>
 
+    <!-- Regime Export -->
+    <section class="section" id="ep-export">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="endpoint-path">/v1/regime/export</span>
+        <span class="tier-badge starter">Starter</span>
+        <span class="tier-badge pro">Pro</span>
+      </div>
+      <p class="section-desc">Download the full regime history as a CSV file. Free tier is limited to 30 days. Starter and Pro receive up to 730 days.</p>
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <table class="params-table">
+        <tr><td class="param-name">limit</td><td class="param-type">integer</td><td>Max rows to return. Free: capped at 30. Starter/Pro: up to 730. Default: 730.</td></tr>
+      </table>
+      <h3 class="section-subtitle">Response</h3>
+      <p class="section-desc">Returns a <code>text/csv</code> file with columns: <code>date, regime, risk_score, equity_exposure, prob_expansion, prob_recovery, prob_tightening, prob_risk_off</code>.</p>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>date,regime,risk_score,equity_exposure,prob_expansion,...
+2026-03-17,recovery,1.24,0.75,0.12,0.71,0.11,0.06
+2026-03-16,recovery,1.18,0.75,0.13,0.69,0.12,0.06</pre></div>
+    </section>
+
+    <!-- Webhook -->
+    <section class="section" id="ep-webhook">
+      <div class="endpoint-header">
+        <span class="method post">POST</span>
+        <span class="endpoint-path">/v1/webhook/set</span>
+        <span class="tier-badge pro">Pro</span>
+      </div>
+      <p class="section-desc">Configure a webhook URL to receive a JSON POST on every regime transition. Pro tier only. Set <code>url</code> to <code>null</code> to remove the webhook.</p>
+      <h3 class="section-subtitle">Request Body</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{ "url": "https://your-endpoint.com/macropulse" }</pre></div>
+      <h3 class="section-subtitle">Webhook Payload</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "regime_change": {
+    "from": "recovery",
+    "to": "tightening",
+    "from_label": "Recovery",
+    "to_label": "Tightening",
+    "equity_exposure": "25%",
+    "risk_score": -1.4,
+    "date": "2026-03-17"
+  }
+}</pre></div>
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ</span>
+        <span>Use <code>GET /v1/webhook/test</code> to send a test payload to your configured URL. Use <code>GET /v1/webhook/info</code> to inspect your current configuration.</span>
+      </div>
+    </section>
+
   </main>
 </div>
 
