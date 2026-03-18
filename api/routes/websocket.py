@@ -49,7 +49,7 @@ async def broadcast_regime(payload: dict[str, Any]) -> None:
         return
     message = json.dumps(payload, default=str)
     stale: list[WebSocket] = []
-    for ws in _connections:
+    for ws in list(_connections):
         try:
             await ws.send_text(message)
         except Exception:
