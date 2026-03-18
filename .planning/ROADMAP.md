@@ -49,7 +49,11 @@ Plans:
   5. A help/guide button is visible in the dashboard nav header and opens contextual guidance when clicked
   6. A webhook setup guide is visible at the bottom of the dashboard without any additional navigation
   7. The regime card displays today's date and shows data that matches the most recent pipeline run
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Create useCountdown hook, refactor Header.jsx (logo + hook), wire countdown into CommentaryCard (DASH-03, DASH-04)
+- [ ] 02-02-PLAN.md — Fix calendar tier race, open WebhookGuide by default, fix RegimeCard date, verify all 7 DASH requirements (DASH-01, DASH-02, DASH-05, DASH-06, DASH-07)
 
 ### Phase 3: Marketing Site
 **Goal**: The marketing site is accurate, interactive, and optimized for its first impression on potential customers
@@ -79,10 +83,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
-| 2. Dashboard UX | 0/TBD | Not started | - |
+| 2. Dashboard UX | 0/2 | Not started | - |
 | 3. Marketing Site | 0/TBD | Not started | - |
 | 4. API Docs | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
 *Updated: 2026-03-18 — Phase 1 planned (4 plans)*
+*Updated: 2026-03-18 — Phase 2 planned (2 plans)*
