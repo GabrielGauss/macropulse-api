@@ -13,7 +13,7 @@ MacroPulse v0 shipped with all core capabilities: regime signal pipeline, REST A
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Security & Backend Bugs** - Eliminate hardcoded credentials, race conditions, and data correctness bugs (completed 2026-03-18)
-- [ ] **Phase 2: Dashboard UX** - Fix all user-facing dashboard issues and missing UI elements
+- [x] **Phase 2: Dashboard UX** - Fix all user-facing dashboard issues and missing UI elements (completed 2026-03-18)
 - [ ] **Phase 3: Marketing Site** - Polish the public-facing site for conversion readiness
 - [ ] **Phase 4: API Docs** - Consolidate and unify the API reference into one authoritative page
 
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
-| 2. Dashboard UX | 1/2 | In Progress|  |
+| 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
 | 3. Marketing Site | 0/TBD | Not started | - |
 | 4. API Docs | 0/TBD | Not started | - |
 
