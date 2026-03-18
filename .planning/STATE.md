@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-dashboard-ux/02-02-PLAN.md
-last_updated: "2026-03-18T20:44:19.854Z"
+stopped_at: Completed 03-marketing-site/03-02-PLAN.md
+last_updated: "2026-03-18T21:35:47.619Z"
 last_activity: "2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 75
 ---
 
@@ -55,6 +55,7 @@ Progress: [████████░░] 75%
 | Phase 01-security-backend-bugs P01-rate-limit-race | 5 | 2 tasks | 1 files |
 | Phase 02-dashboard-ux P01 | 2 | 3 tasks | 3 files |
 | Phase 02-dashboard-ux P02 | 5min | 3 tasks | 4 files |
+| Phase 03-marketing-site P02 | <1min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Recent decisions affecting current work:
 - [Phase 02-dashboard-ux]: MacroPulse wordmark rendered as text anchor with inline styles in Header.jsx — consistent with existing inline-style pattern, no SVG asset needed (DASH-03)
 - [Phase 02-dashboard-ux]: Tier null guard in RegimeCalendar useEffect prevents 30-day flash; raw tier prop passed from App.jsx alongside derived isFree boolean
 - [Phase 02-dashboard-ux]: RegimeCard uses new Date() for today's date — card represents current regime state, not pipeline run timestamp (DASH-07)
+- [Phase 03-marketing-site]: Calendar default changed to 180 days via renderRegimeCalendar argument and HTML button active class swap — setCalRange() unchanged as it correctly manages state on user interaction (SITE-04)
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T20:32:25.632Z
-Stopped at: Completed 02-dashboard-ux/02-02-PLAN.md
+Last session: 2026-03-18T21:35:47.614Z
+Stopped at: Completed 03-marketing-site/03-02-PLAN.md
 Resume file: None
