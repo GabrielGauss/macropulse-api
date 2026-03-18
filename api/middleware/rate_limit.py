@@ -195,31 +195,32 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         else:
             # ── Anonymous path: in-memory IP counter ─────────────────────
             today = dt.date.today().isoformat()
-            date_str, count = _anon_counters[client_ip]
-            if date_str != today:
-                count = 0
+            async with _anon_locks[client_ip]:
+                date_str, count = _anon_counters[client_ip]
+                if date_str != today:
+                    count = 0
 
-            if count >= limit:
-                return JSONResponse(
-                    status_code=429,
-                    content={
-                        "error": "rate_limit_exceeded",
-                        "detail": (
-                            f"Daily limit of {limit} requests reached. "
-                            "Provide an API key or wait until midnight UTC."
-                        ),
-                        "reset_at": reset,
-                    },
-                    headers={
-                        "X-RateLimit-Limit":     str(limit),
-                        "X-RateLimit-Remaining": "0",
-                        "X-RateLimit-Reset":     str(reset),
-                        "Retry-After": str(reset - int(dt.datetime.now(dt.timezone.utc).timestamp())),
-                    },
-                )
+                if count >= limit:
+                    return JSONResponse(
+                        status_code=429,
+                        content={
+                            "error": "rate_limit_exceeded",
+                            "detail": (
+                                f"Daily limit of {limit} requests reached. "
+                                "Provide an API key or wait until midnight UTC."
+                            ),
+                            "reset_at": reset,
+                        },
+                        headers={
+                            "X-RateLimit-Limit":     str(limit),
+                            "X-RateLimit-Remaining": "0",
+                            "X-RateLimit-Reset":     str(reset),
+                            "Retry-After": str(reset - int(dt.datetime.now(dt.timezone.utc).timestamp())),
+                        },
+                    )
 
-            count += 1
-            _anon_counters[client_ip] = (today, count)
+                count += 1
+                _anon_counters[client_ip] = (today, count)
 
             response = await call_next(request)
             response.headers["X-RateLimit-Limit"]     = str(limit)
