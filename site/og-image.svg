@@ -1,0 +1,57 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <!-- Subtle grid -->
+  <line x1="0" y1="315" x2="1200" y2="315" stroke="#1a1a1a" stroke-width="1"/>
+  <line x1="600" y1="0" x2="600" y2="630" stroke="#1a1a1a" stroke-width="1"/>
+
+  <!-- Regime color bars (bottom accent) -->
+  <rect x="0" y="610" width="300" height="20" fill="#22c55e" opacity="0.7"/>
+  <rect x="300" y="610" width="300" height="20" fill="#3b82f6" opacity="0.7"/>
+  <rect x="600" y="610" width="300" height="20" fill="#f59e0b" opacity="0.7"/>
+  <rect x="900" y="610" width="300" height="20" fill="#ef4444" opacity="0.7"/>
+
+  <!-- Logo mark -->
+  <circle cx="100" cy="100" r="18" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+  <ellipse cx="100" cy="100" rx="9" ry="18" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+  <line x1="82" y1="100" x2="118" y2="100" stroke="#22c55e" stroke-width="1.2"/>
+
+  <!-- Logo text -->
+  <text x="130" y="107" font-family="monospace" font-size="18" font-weight="600" fill="#f0f0f0">MacroPulse</text>
+
+  <!-- Main headline -->
+  <text x="100" y="260" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#f0f0f0">Know the regime.</text>
+  <text x="100" y="340" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#f0f0f0">Allocate <tspan font-style="italic" fill="#3b82f6">accordingly.</tspan></text>
+
+  <!-- Sub -->
+  <text x="100" y="400" font-family="monospace" font-size="20" fill="#666">PCA + Hidden Markov Model · 4 regimes · Updated daily at 18:30 UTC</text>
+
+  <!-- Regime pills -->
+  <rect x="100" y="440" width="130" height="36" rx="6" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="165" y="463" font-family="monospace" font-size="13" fill="#22c55e" text-anchor="middle">Expansion</text>
+
+  <rect x="244" y="440" width="130" height="36" rx="6" fill="#3b82f6" fill-opacity="0.12" stroke="#3b82f6" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="309" y="463" font-family="monospace" font-size="13" fill="#3b82f6" text-anchor="middle">Recovery</text>
+
+  <rect x="388" y="440" width="130" height="36" rx="6" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="453" y="463" font-family="monospace" font-size="13" fill="#f59e0b" text-anchor="middle">Tightening</text>
+
+  <rect x="532" y="440" width="130" height="36" rx="6" fill="#ef4444" fill-opacity="0.12" stroke="#ef4444" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="597" y="463" font-family="monospace" font-size="13" fill="#ef4444" text-anchor="middle">Risk-Off</text>
+
+  <!-- Stats (right side) -->
+  <rect x="820" y="200" width="280" height="220" rx="10" fill="#111" stroke="#1f1f1f" stroke-width="1"/>
+
+  <text x="960" y="240" font-family="monospace" font-size="11" fill="#444" text-anchor="middle" letter-spacing="2">LIVE STATS</text>
+
+  <text x="960" y="295" font-family="monospace" font-size="42" font-weight="700" fill="#22c55e" text-anchor="middle">2.29</text>
+  <text x="960" y="318" font-family="monospace" font-size="11" fill="#444" text-anchor="middle">Sharpe ratio · 2yr</text>
+
+  <line x1="860" y1="338" x2="1060" y2="338" stroke="#1f1f1f" stroke-width="1"/>
+
+  <text x="960" y="368" font-family="monospace" font-size="28" font-weight="700" fill="#ef4444" text-anchor="middle">−5.9%</text>
+  <text x="960" y="390" font-family="monospace" font-size="11" fill="#444" text-anchor="middle">Max drawdown</text>
+
+  <!-- URL -->
+  <text x="100" y="580" font-family="monospace" font-size="16" fill="#333">macropulse.live</text>
+</svg>

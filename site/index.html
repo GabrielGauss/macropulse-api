@@ -5,17 +5,23 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2322c55e' stroke-width='1.5'/%3E%3Cellipse cx='16' cy='16' rx='4.5' ry='9' fill='none' stroke='%2322c55e' stroke-width='1.2'/%3E%3Cline x1='7' y1='16' x2='25' y2='16' stroke='%2322c55e' stroke-width='1.2'/%3E%3Cpath d='M8.5 11.5Q16 13 23.5 11.5' fill='none' stroke='%2322c55e' stroke-width='1' opacity='0.6'/%3E%3Cpath d='M8.5 20.5Q16 19 23.5 20.5' fill='none' stroke='%2322c55e' stroke-width='1' opacity='0.6'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPulse — Macro Regime Intelligence API</title>
-  <meta name="description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
-  <meta property="og:title" content="MacroPulse — Macro Regime Intelligence API" />
-  <meta property="og:description" content="PCA + Hidden Markov Model pipeline classifying macro conditions into 4 regimes daily. REST API for systematic traders and quant developers." />
-  <meta property="og:image" content="https://macropulse.live/og-image.png" />
+  <!-- SEO -->
+  <meta name="description" content="MacroPulse classifies the macro environment daily into Expansion, Recovery, Tightening, or Risk-Off using PCA + Hidden Markov Models. REST API for systematic traders and quant developers." />
+  <link rel="canonical" href="https://macropulse.live" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MacroPulse — Know the Regime. Allocate Accordingly." />
+  <meta property="og:description" content="Daily macro regime classification powered by PCA + HMM. 4 states, 10 variables, updated at 18:30 UTC. REST API for algo traders." />
+  <meta property="og:image" content="https://macropulse.live/og-image.svg" />
   <meta property="og:url" content="https://macropulse.live" />
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="MacroPulse" />
+
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="MacroPulse — Macro Regime Intelligence API" />
-  <meta name="twitter:description" content="PCA + HMM pipeline classifying macro conditions into 4 regimes daily." />
-  <meta name="twitter:image" content="https://macropulse.live/og-image.png" />
-  <link rel="canonical" href="https://macropulse.live" />
+  <meta name="twitter:title" content="MacroPulse — Know the Regime. Allocate Accordingly." />
+  <meta name="twitter:description" content="Daily macro regime classification. Expansion → 100% equity. Risk-Off → 0%. Sharpe 2.29. REST API." />
+  <meta name="twitter:image" content="https://macropulse.live/og-image.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -1152,7 +1158,7 @@
   <div class="hero">
     <!-- Left: copy -->
     <div>
-      <div class="hero-eyebrow">The Macro Middleware · Updated daily</div>
+      <div class="hero-eyebrow">Macro regime intelligence · Updated daily at 18:30 UTC</div>
       <h1>Know the regime.<br/>Allocate<br/><em>accordingly.</em></h1>
       <p class="hero-sub">
         MacroPulse classifies the macro environment daily — Expansion, Recovery, Tightening, or Risk-Off — and tells your system exactly how much equity to hold. 100% when conditions are right. 0% when they're not. Backed by data, never by opinion.
@@ -1578,8 +1584,8 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
   <div class="pricing-section">
     <div class="container">
       <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-title">Simple, transparent pricing</h2>
-      <p class="section-sub">Start free. Upgrade when you go live.</p>
+      <h2 class="section-title">Built for serious traders</h2>
+      <p class="section-sub">50 req/day free forever. Upgrade when your edge depends on it.</p>
       <div class="pricing-grid">
 
         <!-- Free -->
@@ -1590,18 +1596,16 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           <div class="plan-divider"></div>
           <div class="plan-features">
             <div class="plan-feature"><span class="pf-check">✓</span> <span>50 API requests / day</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Latest signal endpoint</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Latest regime signal</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>30-day history window</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Discord alerts</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Liquidity analysis</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Signals deep-dive</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard access</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Regime change alerts</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Liquidity &amp; factor analysis</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Domain views (Rates, FX, Crypto…)</span></div>
             <div class="plan-feature"><span class="pf-no">✗</span> <span>Backtest engine</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Inflation · Growth · Rates</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Commodities · FX · Crypto</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Daily email brief</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>Performance attribution</span></div>
-            <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Regime forecast (5-day)</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Quant HUD &amp; model internals</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Webhook delivery</span></div>
           </div>
           <button class="plan-btn outline" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get started free</button>
         </div>
@@ -1617,16 +1621,15 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>500 API requests / day</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Discord alerts</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Liquidity analysis</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Signals deep-dive</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard access</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime change alerts (email)</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Liquidity &amp; factor analysis</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Domain views (Rates, FX, Crypto…)</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Backtest engine</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Inflation · Growth · Rates</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Commodities · FX · Crypto</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Daily email brief</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast (5-day)</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Quant HUD &amp; model internals</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>Webhook delivery</span></div>
+            <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
           </div>
           <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Starter" class="plan-btn solid" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
         </div>
@@ -1638,26 +1641,24 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           <div class="plan-period">per month</div>
           <div class="plan-divider"></div>
           <div class="plan-features">
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited requests</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited API requests</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Discord alerts</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Liquidity analysis</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Signals deep-dive</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Live dashboard access</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime change alerts (email)</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Liquidity &amp; factor analysis</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Domain views (Rates, FX, Crypto…)</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Backtest engine</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Inflation · Growth · Rates</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Commodities · FX · Crypto</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Daily email brief</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
-            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Regime forecast (5-day)</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Quant HUD &amp; model internals</span></div>
+            <div class="plan-feature"><span class="pf-check">✓</span> <span>Webhook delivery</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
           </div>
           <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Pro" class="plan-btn blue" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
         </div>
 
       </div>
-      <p class="pricing-note">14-day money-back guarantee · Cancel anytime</p>
+      <p class="pricing-note">14-day money-back guarantee · Cancel anytime · Regime alerts live within 24h of upgrade</p>
     </div>
   </div>
 </div>
@@ -1687,7 +1688,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 
       <div class="section-eyebrow" style="margin-bottom:1rem;justify-content:center;display:flex;">Free tier · no credit card · instant key</div>
       <h2 class="cta-heading">Start building.<br/><em>Free forever.</em></h2>
-      <p class="cta-sub">Get your API key and make your first call in under 60 seconds. 50 requests/day — enough to integrate, prototype, and prove the signal.</p>
+      <p class="cta-sub">Get your API key and make your first call in under 60 seconds. 50 requests/day free — enough to integrate, backtest, and prove the signal before you commit.</p>
 
       <div class="cta-form-wrap">
 
