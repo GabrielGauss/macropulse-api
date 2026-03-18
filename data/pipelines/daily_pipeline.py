@@ -144,7 +144,7 @@ def run_daily_pipeline(
 
     # ── 6. Data-lag guard ────────────────────────────────────────
     latest_fred_date = fred_df.index.max().date() if len(fred_df) else None
-    if latest_fred_date and (today - latest_fred_date).days > 3:
+    if latest_fred_date and (today - latest_fred_date).days >= 3:
         data_lag = True
         logger.warning("FRED data lag: latest=%s, target=%s", latest_fred_date, today)
         duration = time.monotonic() - t0
