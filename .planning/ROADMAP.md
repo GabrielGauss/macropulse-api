@@ -12,7 +12,7 @@ MacroPulse v0 shipped with all core capabilities: regime signal pipeline, REST A
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Security & Backend Bugs** - Eliminate hardcoded credentials, race conditions, and data correctness bugs
+- [x] **Phase 1: Security & Backend Bugs** - Eliminate hardcoded credentials, race conditions, and data correctness bugs (completed 2026-03-18)
 - [ ] **Phase 2: Dashboard UX** - Fix all user-facing dashboard issues and missing UI elements
 - [ ] **Phase 3: Marketing Site** - Polish the public-facing site for conversion readiness
 - [ ] **Phase 4: API Docs** - Consolidate and unify the API reference into one authoritative page
@@ -29,7 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Sending requests from multiple concurrent clients does not trigger a rate limit counter race (counter stays consistent under load)
   4. Data lag warnings trigger correctly after 3 days of staleness, not 2
   5. When one WebSocket client disconnects mid-broadcast, all other connected clients continue receiving messages normally
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-env-example-audit-PLAN.md — Document all missing env vars in .env.example (SEC-01)
+- [ ] 01-pipeline-fixes-PLAN.md — Remove duplicate regime alert call and fix data-lag threshold (SEC-02, BUG-01)
+- [ ] 01-rate-limit-race-PLAN.md — Add per-IP asyncio.Lock to anonymous rate-limit counter (SEC-03)
+- [x] 01-websocket-disconnect-PLAN.md — Snapshot _connections before broadcast iteration (BUG-02)
 
 ### Phase 2: Dashboard UX
 **Goal**: The dashboard presents correct, complete information and provides the guidance users need
@@ -72,10 +78,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Backend Bugs | 0/TBD | Not started | - |
+| 1. Security & Backend Bugs | 4/4 | Complete   | 2026-03-18 |
 | 2. Dashboard UX | 0/TBD | Not started | - |
 | 3. Marketing Site | 0/TBD | Not started | - |
 | 4. API Docs | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
+*Updated: 2026-03-18 — Phase 1 planned (4 plans)*

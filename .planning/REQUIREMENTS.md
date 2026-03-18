@@ -31,14 +31,14 @@ Requirements for v1.0 Ship-Ready milestone.
 
 ### Security
 
-- [ ] **SEC-01**: Owner API key sourced exclusively from environment variable, removed from source code
-- [ ] **SEC-02**: Duplicate alerting system consolidated — only one module fires alerts
+- [x] **SEC-01**: Owner API key sourced exclusively from environment variable, removed from source code
+- [x] **SEC-02**: Duplicate alerting system consolidated — only one module fires alerts
 - [ ] **SEC-03**: Rate limit IP counter uses async-safe atomic operations (no TOCTOU race)
 
 ### Backend Bugs
 
-- [ ] **BUG-01**: Data lag guard threshold corrected to >3 days stale (was incorrectly >2 days)
-- [ ] **BUG-02**: WebSocket broadcast continues to all healthy clients when one client connection fails
+- [x] **BUG-01**: Data lag guard threshold corrected to >3 days stale (was incorrectly >2 days)
+- [x] **BUG-02**: WebSocket broadcast continues to all healthy clients when one client connection fails
 
 ## v2 Requirements
 
@@ -76,11 +76,11 @@ Deferred — next milestone (monetization).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
+| SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Pending |
-| BUG-01 | Phase 1 | Pending |
-| BUG-02 | Phase 1 | Pending |
+| BUG-01 | Phase 1 | Complete |
+| BUG-02 | Phase 1 | Complete |
 | DASH-01 | Phase 2 | Pending |
 | DASH-02 | Phase 2 | Pending |
 | DASH-03 | Phase 2 | Pending |
