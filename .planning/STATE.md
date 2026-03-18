@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-dashboard-ux/02-01-PLAN.md
-last_updated: "2026-03-18T20:12:15.605Z"
+stopped_at: Completed 02-dashboard-ux/02-02-PLAN.md
+last_updated: "2026-03-18T20:32:25.635Z"
 last_activity: "2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 75
 ---
 
@@ -54,6 +54,7 @@ Progress: [████████░░] 75%
 | Phase 01-security-backend-bugs P01-env-example-audit | 8 | 1 tasks | 1 files |
 | Phase 01-security-backend-bugs P01-rate-limit-race | 5 | 2 tasks | 1 files |
 | Phase 02-dashboard-ux P01 | 2 | 3 tasks | 3 files |
+| Phase 02-dashboard-ux P02 | 5min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 01-security-backend-bugs]: Lock scope tight: only counter state ops inside asyncio.Lock; await call_next stays outside to avoid holding lock across network I/O (SEC-03)
 - [Phase 02-dashboard-ux]: useCountdown hook extracted as standalone named export — avoids duplicating setInterval logic across Header and CommentaryCard
 - [Phase 02-dashboard-ux]: MacroPulse wordmark rendered as text anchor with inline styles in Header.jsx — consistent with existing inline-style pattern, no SVG asset needed (DASH-03)
+- [Phase 02-dashboard-ux]: Tier null guard in RegimeCalendar useEffect prevents 30-day flash; raw tier prop passed from App.jsx alongside derived isFree boolean
+- [Phase 02-dashboard-ux]: RegimeCard uses new Date() for today's date — card represents current regime state, not pipeline run timestamp (DASH-07)
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T20:12:15.600Z
-Stopped at: Completed 02-dashboard-ux/02-01-PLAN.md
+Last session: 2026-03-18T20:32:25.632Z
+Stopped at: Completed 02-dashboard-ux/02-02-PLAN.md
 Resume file: None
