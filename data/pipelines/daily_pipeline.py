@@ -40,7 +40,7 @@ from models.garch_model import GARCHModel
 from models.hmm_model import HMMModel
 from models.pca_model import PCAModel
 from models.regime_classifier import RegimeClassifier
-from services.alerting import alert_drift_warning, alert_regime_change
+from services.alerting import alert_drift_warning
 from services.drift_monitor import (
     compute_feature_shift,
     compute_pca_variance_drift,
@@ -217,18 +217,6 @@ def run_daily_pipeline(
     queries.upsert_macro_regime(regime_row)
 
     # ── 10. Regime change detection + alerting ───────────────────
-    prev_regime_row = queries.fetch_regime_history(limit=2)
-    if len(prev_regime_row) >= 2:
-        prev_regime = prev_regime_row[1]["regime"]
-        if prev_regime != result["regime"]:
-            alert_regime_change(
-                previous=prev_regime,
-                current=result["regime"],
-                risk_score=result["risk_score"],
-                probabilities=result["probabilities"],
-                timestamp=ts_iso,
-            )
-
     # Regime change alert (email + webhook delivery to subscribers)
     try:
         from services.alerts import send_regime_change_alerts
