@@ -24,6 +24,7 @@ const ForecastCard          = React.lazy(() => import('./components/ForecastCard
 const CommentaryCard        = React.lazy(() => import('./components/CommentaryCard'));
 const CompositeAnalysisCard = React.lazy(() => import('./components/CompositeAnalysisCard'));
 const AlertSettings         = React.lazy(() => import('./components/AlertSettings'));
+const WebhookGuide          = React.lazy(() => import('./components/WebhookGuide'));
 import { useFetch } from './hooks/useFetch';
 import { GuideModeContext, useGuideModeState } from './lib/guideMode';
 import { useRegimeSocket } from './hooks/useRegimeSocket';
@@ -151,6 +152,7 @@ export default function App() {
                 <ForecastCard />
                 <CommentaryCard tier={tier} />
                 <AlertSettings tier={tier} />
+                <WebhookGuide tier={tier} />
               </div>
             )}
 
