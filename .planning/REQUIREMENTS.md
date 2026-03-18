@@ -27,7 +27,7 @@ Requirements for v1.0 Ship-Ready milestone.
 ### API Docs
 
 - [x] **DOCS-01**: Single unified API docs page merging the detailed /api-docs content with the dashboard API reference sidebar
-- [ ] **DOCS-02**: Unified API docs page matches the dark visual style of macropulse.live
+- [x] **DOCS-02**: Unified API docs page matches the dark visual style of macropulse.live
 
 ### Security
 
@@ -93,7 +93,7 @@ Deferred — next milestone (monetization).
 | SITE-03 | Phase 3 | Complete |
 | SITE-04 | Phase 3 | Complete |
 | DOCS-01 | Phase 4 | Complete |
-| DOCS-02 | Phase 4 | Pending |
+| DOCS-02 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total

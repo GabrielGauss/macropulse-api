@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Security & Backend Bugs** - Eliminate hardcoded credentials, race conditions, and data correctness bugs (completed 2026-03-18)
 - [x] **Phase 2: Dashboard UX** - Fix all user-facing dashboard issues and missing UI elements (completed 2026-03-18)
 - [x] **Phase 3: Marketing Site** - Polish the public-facing site for conversion readiness (completed 2026-03-18)
-- [ ] **Phase 4: API Docs** - Consolidate and unify the API reference into one authoritative page
+- [x] **Phase 4: API Docs** - Consolidate and unify the API reference into one authoritative page (completed 2026-03-18)
 
 ## Phase Details
 
@@ -94,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
 | 3. Marketing Site | 2/3 | Complete    | 2026-03-18 |
-| 4. API Docs | 1/2 | In Progress|  |
+| 4. API Docs | 2/2 | Complete   | 2026-03-18 |
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
