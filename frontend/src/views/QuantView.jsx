@@ -34,7 +34,7 @@ function TransitionMatrix({ data }) {
     <div className="card p-5">
       <div className="flex items-center justify-between mb-1">
         <div className="label">HMM Transition Matrix</div>
-        <span className="text-[10px] text-white/20 font-mono">daily P(from → to)</span>
+        <span className="text-[10px] text-white/45 font-mono">daily P(from → to)</span>
       </div>
       {guideMode && (
         <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono', marginBottom: 8, lineHeight: 1.5 }}>
@@ -46,7 +46,7 @@ function TransitionMatrix({ data }) {
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 4 }}>
           <thead>
             <tr>
-              <th style={{ width: 90, textAlign: 'left', fontSize: 9, color: 'rgba(255,255,255,0.2)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingBottom: 4 }}>from \ to</th>
+              <th style={{ width: 90, textAlign: 'left', fontSize: 10, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingBottom: 4 }}>from \ to</th>
               {regimes.map(r => (
                 <th key={r} style={{ fontSize: 9, fontFamily: 'JetBrains Mono', fontWeight: 500, color: cfgMap(r).color, textAlign: 'center', paddingBottom: 4 }}>
                   {r.replace('_', '-')}
@@ -106,7 +106,7 @@ function FeatureLoadings({ data }) {
     <div className="card p-5">
       <div className="flex items-center justify-between mb-1">
         <div className="label">PCA Feature Loadings</div>
-        <span className="text-[10px] text-white/20 font-mono">
+        <span className="text-[10px] text-white/45 font-mono">
           {(total_variance_explained * 100).toFixed(0)}% variance explained
         </span>
       </div>
@@ -120,13 +120,13 @@ function FeatureLoadings({ data }) {
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 3 }}>
           <thead>
             <tr>
-              <th style={{ width: 40, textAlign: 'left', fontSize: 9, color: 'rgba(255,255,255,0.2)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingBottom: 4 }}>factor</th>
+              <th style={{ width: 40, textAlign: 'left', fontSize: 10, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingBottom: 4 }}>factor</th>
               {feature_names.map(f => (
-                <th key={f} style={{ fontSize: 8, fontFamily: 'JetBrains Mono', fontWeight: 400, color: 'rgba(255,255,255,0.3)', textAlign: 'center', paddingBottom: 4, transform: 'none' }}>
+                <th key={f} style={{ fontSize: 9, fontFamily: 'JetBrains Mono', fontWeight: 400, color: 'rgba(255,255,255,0.50)', textAlign: 'center', paddingBottom: 4, transform: 'none' }}>
                   {f.replace('d_', '')}
                 </th>
               ))}
-              <th style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingLeft: 8 }}>var%</th>
+              <th style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono', fontWeight: 400, paddingLeft: 8 }}>var%</th>
             </tr>
           </thead>
           <tbody>
@@ -183,7 +183,7 @@ function ProbabilityTimeline({ data }) {
     <div className="card p-5">
       <div className="flex items-center justify-between mb-1">
         <div className="label">Soft State Probabilities</div>
-        <span className="text-[10px] text-white/20 font-mono">stacked · last 180d</span>
+        <span className="text-[10px] text-white/45 font-mono">stacked · last 180d</span>
       </div>
       {guideMode && (
         <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono', marginBottom: 8, lineHeight: 1.5 }}>
@@ -221,7 +221,7 @@ function ProbabilityTimeline({ data }) {
         {Object.entries(REGIME_CONFIG).map(([key, cfg]) => (
           <div key={key} className="flex items-center gap-1.5">
             <div style={{ width: 8, height: 8, borderRadius: 2, background: cfg.color }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>{cfg.label}</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>{cfg.label}</span>
           </div>
         ))}
       </div>
@@ -243,7 +243,7 @@ export default function QuantView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">Quant HUD</h2>
-        <span className="text-[10px] text-white/25 font-mono">model internals · HMM · PCA</span>
+        <span className="text-[10px] text-white/50 font-mono">model internals · HMM · PCA</span>
       </div>
 
       {matrix.loading || loadings.loading || probs.loading ? (

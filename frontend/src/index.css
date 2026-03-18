@@ -39,7 +39,7 @@
 
   /* Compact section label */
   .label {
-    @apply text-[10px] font-medium uppercase tracking-[0.1em] text-white/30;
+    @apply text-[11px] font-medium uppercase tracking-[0.1em] text-white/50;
   }
 
   /* Status pill */

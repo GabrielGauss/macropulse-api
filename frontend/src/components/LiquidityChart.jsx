@@ -44,7 +44,7 @@ export default function LiquidityChart({ data }) {
   if (!data?.data?.length) {
     return (
       <div className="card flex h-64 items-center justify-center">
-        <p className="text-[11px] text-white/25 font-mono">No liquidity data</p>
+        <p className="text-[11px] text-white/45 font-mono">No liquidity data</p>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function LiquidityChart({ data }) {
             >
               {zscore > 0 ? '+' : ''}{zscore.toFixed(2)}
             </div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
               {Math.abs(zscore) > 1 ? (zscore > 0 ? 'elevated' : 'depressed') : 'normal range'}
             </div>
           </div>

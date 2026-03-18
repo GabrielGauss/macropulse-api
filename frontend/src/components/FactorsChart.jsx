@@ -65,7 +65,7 @@ export default function FactorsChart({ data }) {
   if (!data?.data?.length) {
     return (
       <div className="card flex h-64 items-center justify-center">
-        <p className="text-[11px] text-white/25 font-mono">No factor data</p>
+        <p className="text-[11px] text-white/45 font-mono">No factor data</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function FactorsChart({ data }) {
           {FACTORS.map((f) => (
             <div key={f.key} className="flex items-center gap-1.5">
               <div className="h-2 w-3 rounded-sm flex-shrink-0" style={{ background: f.color, opacity: 0.8 }} />
-              <span className="text-[9px] text-white/30 font-mono">{f.short}</span>
+              <span className="text-[10px] text-white/50 font-mono">{f.short}</span>
             </div>
           ))}
         </div>
@@ -101,7 +101,7 @@ export default function FactorsChart({ data }) {
           </div>
         </div>
       ) : (
-        <div className="text-[9px] text-white/20 font-mono mb-3">
+        <div className="text-[10px] text-white/45 font-mono mb-3">
           4 orthogonal axes from PCA · cross-zero = directional shift
         </div>
       )}

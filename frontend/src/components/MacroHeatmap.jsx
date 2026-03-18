@@ -107,7 +107,7 @@ export default function MacroHeatmap({ regime }) {
         <div className="label">Asset × Regime Heatmap</div>
         {currentRegime && (
           <span
-            className="text-[9px] font-mono uppercase tracking-wide"
+            className="text-[10px] font-mono uppercase tracking-wide"
             style={{ color: REGIME_CONFIG[currentRegime]?.color }}
           >
             Active: {REGIME_CONFIG[currentRegime]?.label}
@@ -143,7 +143,7 @@ export default function MacroHeatmap({ regime }) {
                       fontWeight: 600,
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      color: isActive ? cfg.color : 'rgba(255,255,255,0.2)',
+                      color: isActive ? cfg.color : 'rgba(255,255,255,0.45)',
                       borderBottom: isActive
                         ? `1px solid ${cfg.color}55`
                         : '1px solid transparent',
@@ -218,10 +218,10 @@ export default function MacroHeatmap({ regime }) {
           { label: '−− Strong Bear', color: '#ef4444' },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-1">
-            <span className="font-mono text-[9px] font-semibold" style={{ color: l.color }}>
+            <span className="font-mono text-[10px] font-semibold" style={{ color: l.color }}>
               {l.label.split(' ')[0]}
             </span>
-            <span className="text-[8px] text-white/15 font-mono">{l.label.split(' ').slice(1).join(' ')}</span>
+            <span className="text-[10px] text-white/45 font-mono">{l.label.split(' ').slice(1).join(' ')}</span>
           </div>
         ))}
       </div>

@@ -83,7 +83,7 @@ export default function GrowthView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">Growth Signals</h2>
-        <span className="text-[10px] text-white/25 font-mono">Equity momentum · yield curve · liquidity support</span>
+        <span className="text-[10px] text-white/50 font-mono">Equity momentum · yield curve · liquidity support</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -111,7 +111,7 @@ export default function GrowthView() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
           <div>
             <div className="label">Growth Indicators</div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>S&P 500 rebased to 100 · yield curve in bps</div>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>S&P 500 rebased to 100 · yield curve in bps</div>
           </div>
           <RangePicker value={rangeDays} onChange={setRangeDays} />
         </div>
@@ -134,7 +134,7 @@ export default function GrowthView() {
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#22c55e', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>S&P 500</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>S&P 500</span>
           </div>
         </div>
       </div>

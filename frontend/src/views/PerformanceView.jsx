@@ -112,9 +112,9 @@ function StatPill({ label, value, color, sub }) {
       padding: '10px 16px', background: '#0f0f0f',
       border: '1px solid #1f1f1f', borderRadius: 8, flex: '1 1 100px',
     }}>
-      <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.50)', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono', color: color || '#f0f0f0', lineHeight: 1.2 }}>{value}</div>
-      {sub && <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 3 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>{sub}</div>}
     </div>
   );
 }
@@ -134,7 +134,7 @@ function CopySnippet() {
       fontSize: 9, fontFamily: 'JetBrains Mono', padding: '3px 9px',
       borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
       background: copied ? 'rgba(34,197,94,0.08)' : 'transparent',
-      color: copied ? '#22c55e' : 'rgba(255,255,255,0.25)',
+      color: copied ? '#22c55e' : 'rgba(255,255,255,0.45)',
       transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: 5,
     }}>
       {copied ? (
@@ -176,7 +176,7 @@ export default function PerformanceView() {
 
   if (loading) return (
     <div className="flex h-64 items-center justify-center">
-      <div className="text-[11px] text-white/20 font-mono animate-pulse">Loading performance data…</div>
+      <div className="text-[11px] text-white/45 font-mono animate-pulse">Loading performance data…</div>
     </div>
   );
   if (error) return (
@@ -220,7 +220,7 @@ export default function PerformanceView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold tracking-tight">Strategy Performance</h2>
-        <span className="text-[10px] text-white/25 font-mono">Regime-weighted equity allocation vs buy &amp; hold</span>
+        <span className="text-[10px] text-white/50 font-mono">Regime-weighted equity allocation vs buy &amp; hold</span>
       </div>
 
       {/* ── Stats row ── */}
@@ -253,7 +253,7 @@ export default function PerformanceView() {
         <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
           <div>
             <div className="label mb-1">Strategy vs Buy &amp; Hold</div>
-            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.25)' }}>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.50)' }}>
               Rebased to 100 at window start · {transitions.length} transitions · {rangeLabel} window
             </div>
             {guideMode && (
@@ -267,14 +267,14 @@ export default function PerformanceView() {
               fontSize: 9, fontFamily: 'JetBrains Mono', padding: '2px 7px',
               borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
               background: showBands ? '#1f1f1f' : 'transparent',
-              color: showBands ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)',
+              color: showBands ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
               transition: 'all 0.15s',
             }}>regimes</button>
             <button onClick={() => setShowTransitions(t => !t)} style={{
               fontSize: 9, fontFamily: 'JetBrains Mono', padding: '2px 7px',
               borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
               background: showTransitions ? '#1f1f1f' : 'transparent',
-              color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)',
+              color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
               transition: 'all 0.15s',
             }}>transitions</button>
             <CopySnippet />
@@ -285,9 +285,9 @@ export default function PerformanceView() {
                 return (
                   <button key={label} onClick={() => setRangeDays(days)}
                     className="rounded px-2 py-0.5 font-mono text-[10px] font-medium transition-colors duration-100"
-                    style={{ background: active ? '#222' : 'transparent', color: active ? '#f0f0f0' : 'rgba(255,255,255,0.3)', cursor: 'pointer', border: 'none' }}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                    onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
+                    style={{ background: active ? '#222' : 'transparent', color: active ? '#f0f0f0' : 'rgba(255,255,255,0.45)', cursor: 'pointer', border: 'none' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}>
                     {label}
                   </button>
                 );
@@ -355,7 +355,7 @@ export default function PerformanceView() {
               <span className="text-[10px] font-mono text-white/35">Buy &amp; Hold SPX</span>
             </div>
           </div>
-          <span className="text-[9px] font-mono text-white/15">
+          <span className="text-[10px] font-mono text-white/45">
             EXP 100% · REC 75% · TGT 25% · RFO 0%
           </span>
         </div>
@@ -370,9 +370,9 @@ export default function PerformanceView() {
             const pct = ((dist[r] || 0) / total) * 100;
             return (
               <div key={r} className="p-3 rounded" style={{ background: cfg.bg, border: `1px solid ${cfg.color}22` }}>
-                <div className="text-[9px] text-white/30 font-mono uppercase tracking-wide mb-1">{cfg.label}</div>
+                <div className="text-[10px] text-white/50 font-mono uppercase tracking-wide mb-1">{cfg.label}</div>
                 <div className="font-mono text-base font-semibold" style={{ color: cfg.color }}>{pct.toFixed(1)}%</div>
-                <div className="text-[9px] font-mono mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                <div className="text-[10px] font-mono mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
                   {EQ[r] * 100}% equity · {dist[r] || 0}d
                 </div>
                 <div className="h-0.5 rounded-full mt-2" style={{ background: '#1a1a1a' }}>

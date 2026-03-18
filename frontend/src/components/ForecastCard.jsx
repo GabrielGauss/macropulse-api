@@ -122,7 +122,7 @@ export default function ForecastCard() {
         <div className="label">5-Day Forecast</div>
         <span
           className="text-[10px] font-mono"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
         >
           ARIMA · 5d ahead
         </span>
@@ -144,10 +144,10 @@ export default function ForecastCard() {
 
       {/* Column headers */}
       <div className="flex items-center gap-3 pb-1 mb-0.5">
-        <div className="flex-shrink-0 text-[9px] font-mono uppercase tracking-wide" style={{ width: 44, color: 'rgba(255,255,255,0.2)' }}>Date</div>
-        <div className="flex-shrink-0 text-[9px] font-mono uppercase tracking-wide" style={{ width: 96, color: 'rgba(255,255,255,0.2)' }}>Regime</div>
-        <div className="flex-1 text-[9px] font-mono uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.2)' }}>Probability mix</div>
-        <div className="flex-shrink-0 text-[9px] font-mono uppercase tracking-wide text-right" style={{ width: 36, color: 'rgba(255,255,255,0.2)' }}>Risk</div>
+        <div className="flex-shrink-0 text-[10px] font-mono uppercase tracking-wide" style={{ width: 44, color: 'rgba(255,255,255,0.45)' }}>Date</div>
+        <div className="flex-shrink-0 text-[10px] font-mono uppercase tracking-wide" style={{ width: 96, color: 'rgba(255,255,255,0.45)' }}>Regime</div>
+        <div className="flex-1 text-[10px] font-mono uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.45)' }}>Probability mix</div>
+        <div className="flex-shrink-0 text-[10px] font-mono uppercase tracking-wide text-right" style={{ width: 36, color: 'rgba(255,255,255,0.45)' }}>Risk</div>
       </div>
 
       {/* Body */}
@@ -162,7 +162,7 @@ export default function ForecastCard() {
       {error && !loading && (
         <p
           className="text-[11px] font-mono py-4 text-center"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
         >
           Forecast unavailable
         </p>
@@ -184,7 +184,7 @@ export default function ForecastCard() {
             return (
               <div key={key} className="flex items-center gap-1">
                 <div className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color }} />
-                <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
                   {cfg.label}
                 </span>
               </div>

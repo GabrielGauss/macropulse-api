@@ -81,7 +81,7 @@ function BlurredUpgradeOverlay() {
         </svg>
       </div>
       <div className="text-[12px] font-semibold text-white/60 mb-1">AI Macro Commentary</div>
-      <div className="text-[10px] text-white/25 font-mono mb-4 text-center px-6">
+      <div className="text-[10px] text-white/50 font-mono mb-4 text-center px-6">
         Available on Starter and Pro
       </div>
       <a
@@ -133,7 +133,7 @@ export default function CommentaryCard({ tier }) {
         <div className="flex items-center gap-2">
           <span
             className="text-[10px] font-mono"
-            style={{ color: 'rgba(255,255,255,0.25)' }}
+            style={{ color: 'rgba(255,255,255,0.50)' }}
           >
             claude-sonnet-4-6
           </span>
@@ -166,7 +166,7 @@ export default function CommentaryCard({ tier }) {
       {!loading && error && !is503(error) && (
         <p
           className="text-[11px] font-mono py-4 text-center"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
         >
           Commentary unavailable
         </p>
@@ -253,7 +253,7 @@ export default function CommentaryCard({ tier }) {
           {data.timestamp && (
             <div
               className="text-right"
-              style={{ fontSize: 9, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.15)' }}
+              style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.45)' }}
             >
               {data.timestamp}
             </div>

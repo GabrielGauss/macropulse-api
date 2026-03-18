@@ -77,7 +77,7 @@ export default function InflationView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">Inflation Dynamics</h2>
-        <span className="text-[10px] text-white/25 font-mono">Rate pressure · yield curve · credit conditions</span>
+        <span className="text-[10px] text-white/50 font-mono">Rate pressure · yield curve · credit conditions</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -105,7 +105,7 @@ export default function InflationView() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
           <div>
             <div className="label">Rate Dynamics</div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>cumulative change from window start · basis points</div>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>cumulative change from window start · basis points</div>
           </div>
           <RangePicker value={rangeDays} onChange={setRangeDays} />
         </div>
@@ -123,11 +123,11 @@ export default function InflationView() {
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#f59e0b', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>10Y Yield</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>10Y Yield</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#3b82f6', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>Yield Curve</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>Yield Curve</span>
           </div>
         </div>
       </div>

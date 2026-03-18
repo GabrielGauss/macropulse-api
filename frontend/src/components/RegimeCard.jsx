@@ -50,8 +50,8 @@ export default function RegimeCard({ regime }) {
             <h2 className="text-2xl font-bold tracking-tight" style={{ color: cfg.color }}>
               {cfg.label}
             </h2>
-            <div className="text-[11px] text-white/30 font-mono mt-0.5">
-              <span className="text-white/15 mr-1">as of</span>{formatDate(regime.timestamp)}
+            <div className="text-[11px] text-white/50 font-mono mt-0.5">
+              <span className="text-white/45 mr-1">as of</span>{formatDate(regime.timestamp)}
             </div>
             {guideMode && (
               <div style={{ fontSize: 10, color: 'rgba(59,130,246,0.7)', fontFamily: 'JetBrains Mono, monospace', marginTop: 5, maxWidth: 280, lineHeight: 1.5 }}>
@@ -72,7 +72,7 @@ export default function RegimeCard({ regime }) {
             </div>
           )}
           {regime.model_version && (
-            <span className="text-[10px] text-white/20 font-mono">{regime.model_version}</span>
+            <span className="text-[10px] text-white/45 font-mono">{regime.model_version}</span>
           )}
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function RegimeCard({ regime }) {
       {/* Risk score gauge */}
       <div className="mb-5">
         <div className="flex items-baseline justify-between mb-1.5">
-          <span className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Risk Score</span>
+          <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Risk Score</span>
           <span className="font-mono text-xl font-semibold" style={{ color: riskColor(score) }}>
             {score > 0 ? '+' : ''}{score.toFixed(1)}
           </span>
@@ -97,7 +97,7 @@ export default function RegimeCard({ regime }) {
             }}
           />
         </div>
-        <div className="flex justify-between mt-1 text-[9px] text-white/20 font-mono">
+        <div className="flex justify-between mt-1 text-[10px] text-white/45 font-mono">
           <span>−100</span>
           <span>0</span>
           <span>+100</span>
@@ -145,7 +145,7 @@ export default function RegimeCard({ regime }) {
         return (
           <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Eq. Exposure</span>
+              <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Eq. Exposure</span>
               <span className="font-mono text-lg font-semibold" style={{ color: expColor }}>{pct}%</span>
             </div>
             <div className="relative h-1.5 rounded-full bg-surface-3 overflow-hidden">
@@ -154,7 +154,7 @@ export default function RegimeCard({ regime }) {
                 style={{ width: `${pct}%`, background: expColor }}
               />
             </div>
-            <div className="flex justify-between mt-1 text-[9px] text-white/20 font-mono">
+            <div className="flex justify-between mt-1 text-[10px] text-white/45 font-mono">
               <span>0% Risk-Off</span>
               <span>100% Expansion</span>
             </div>
@@ -166,10 +166,10 @@ export default function RegimeCard({ regime }) {
       {conviction != null && (
         <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] text-white/30 uppercase tracking-wider font-medium">Signal Conviction</span>
+            <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Signal Conviction</span>
             <div className="flex items-center gap-2">
               <span
-                className="text-[9px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
+                className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
                 style={{ color: convictionColor, border: `1px solid ${convictionColor}44`, background: `${convictionColor}10` }}
               >
                 {convictionLabel}
@@ -196,12 +196,12 @@ export default function RegimeCard({ regime }) {
       {/* Persistence */}
       {regime.persistence_days != null && (
         <div className="mt-3 pt-3 border-t border-[#1f1f1f] flex gap-4 text-[11px]">
-          <span className="text-white/25">
-            Persistent for <span className="text-white/50 font-mono">{regime.persistence_days}d</span>
+          <span className="text-white/50">
+            Persistent for <span className="text-white/70 font-mono">{regime.persistence_days}d</span>
           </span>
           {regime.volatility_state && (
-            <span className="text-white/25">
-              Vol: <span className="text-white/50">{regime.volatility_state}</span>
+            <span className="text-white/50">
+              Vol: <span className="text-white/70">{regime.volatility_state}</span>
             </span>
           )}
         </div>

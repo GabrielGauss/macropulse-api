@@ -89,7 +89,7 @@ export default function FXView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">FX & Dollar</h2>
-        <span className="text-[10px] text-white/25 font-mono">Dollar index · rate differential · risk sentiment</span>
+        <span className="text-[10px] text-white/50 font-mono">Dollar index · rate differential · risk sentiment</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -117,7 +117,7 @@ export default function FXView() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
           <div>
             <div className="label">US Dollar Dynamics</div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>DXY cumulative change from window start</div>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>DXY cumulative change from window start</div>
           </div>
           <RangePicker value={rangeDays} onChange={setRangeDays} />
         </div>
@@ -134,7 +134,7 @@ export default function FXView() {
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#f59e0b', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>DXY</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>DXY</span>
           </div>
         </div>
       </div>

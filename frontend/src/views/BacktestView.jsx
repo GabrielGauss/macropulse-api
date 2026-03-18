@@ -138,13 +138,13 @@ export default function BacktestView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold tracking-tight">Backtest</h2>
-        <span className="text-[10px] text-white/25 font-mono">Historical regime replay</span>
+        <span className="text-[10px] text-white/50 font-mono">Historical regime replay</span>
       </div>
 
       {/* How it works */}
       <div className="card p-5">
         <div className="label mb-3">How Backtests Work</div>
-        <p style={{fontSize:11, fontFamily:'JetBrains Mono', color:'rgba(255,255,255,0.4)', lineHeight:1.7, marginBottom:12}}>
+        <p style={{fontSize:11, fontFamily:'JetBrains Mono', color:'rgba(255,255,255,0.60)', lineHeight:1.7, marginBottom:12}}>
           The backtest engine replays the MacroPulse regime signal over any historical window.
           For each day, it applies the regime-weighted equity allocation to the S&P 500 and records
           the resulting risk score and regime classification.
@@ -153,7 +153,7 @@ export default function BacktestView() {
           {[['Expansion','100%','#22c55e'],['Recovery','75%','#3b82f6'],['Tightening','25%','#f59e0b'],['Risk-Off','0%','#ef4444']].map(([r,eq,c]) => (
             <div key={r} style={{padding:'6px 12px', borderRadius:6, background:'rgba(255,255,255,0.03)', border:`1px solid ${c}22`, fontFamily:'JetBrains Mono', fontSize:10}}>
               <span style={{color:c, fontWeight:600}}>{r}</span>
-              <span style={{color:'rgba(255,255,255,0.3)', marginLeft:6}}>{eq} equity</span>
+              <span style={{color:'rgba(255,255,255,0.50)', marginLeft:6}}>{eq} equity</span>
             </div>
           ))}
         </div>
@@ -184,7 +184,7 @@ export default function BacktestView() {
 
         <div className="grid gap-4 lg:grid-cols-3 items-end">
           <div>
-            <label className="text-[10px] text-white/30 font-mono uppercase tracking-wide block mb-1.5">Start Date</label>
+            <label className="text-[10px] text-white/50 font-mono uppercase tracking-wide block mb-1.5">Start Date</label>
             <input
               type="date"
               value={start}
@@ -199,7 +199,7 @@ export default function BacktestView() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-white/30 font-mono uppercase tracking-wide block mb-1.5">End Date</label>
+            <label className="text-[10px] text-white/50 font-mono uppercase tracking-wide block mb-1.5">End Date</label>
             <input
               type="date"
               value={end}
@@ -231,7 +231,7 @@ export default function BacktestView() {
         </div>
 
         {!api.hasKey() && (
-          <div className="mt-3 text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          <div className="mt-3 text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
             Enter your API key in the header to use the backtest engine.
           </div>
         )}
@@ -260,7 +260,7 @@ export default function BacktestView() {
           {/* Interpretation */}
           <div className="card p-4" style={{borderColor:'rgba(255,255,255,0.06)'}}>
             <div className="label mb-2">Interpreting Results</div>
-            <p style={{fontSize:10, fontFamily:'JetBrains Mono', color:'rgba(255,255,255,0.3)', lineHeight:1.7, margin:0}}>
+            <p style={{fontSize:10, fontFamily:'JetBrains Mono', color:'rgba(255,255,255,0.50)', lineHeight:1.7, margin:0}}>
               {summary.transitions} regime transitions over {summary.total_days} days · avg persistence {summary.avg_persistence_days?.toFixed(1)}d per regime.
               {summary.mean_risk_score > 20
                 ? ' Risk score strongly positive — model was predominantly bullish.'
@@ -278,7 +278,7 @@ export default function BacktestView() {
                 const cfg = REGIME_CONFIG[regime] || {};
                 return (
                   <div key={regime} className="p-3 rounded" style={{ background: cfg.bg || '#111', border: `1px solid ${cfg.color || '#1f1f1f'}22` }}>
-                    <div className="text-[10px] text-white/30 font-mono uppercase tracking-wide mb-1">{cfg.label || regime}</div>
+                    <div className="text-[10px] text-white/50 font-mono uppercase tracking-wide mb-1">{cfg.label || regime}</div>
                     <div className="font-mono text-base font-semibold" style={{ color: cfg.color || '#f0f0f0' }}>
                       {(pct * 100).toFixed(1)}%
                     </div>
@@ -296,7 +296,7 @@ export default function BacktestView() {
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="label">Risk Score Timeline</div>
-                <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.25)' }}>
+                <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.50)' }}>
                   {summary.transitions} regime transitions
                 </div>
               </div>
@@ -345,8 +345,8 @@ export default function BacktestView() {
       {/* Empty state */}
       {!summary && !loading && (
         <div className="card flex flex-col items-center justify-center py-16 text-center">
-          <div className="text-[11px] text-white/20 font-mono mb-2">No results yet</div>
-          <div className="text-[10px] text-white/10 font-mono">Select a date range above and run the backtest</div>
+          <div className="text-[11px] text-white/45 font-mono mb-2">No results yet</div>
+          <div className="text-[10px] text-white/45 font-mono">Select a date range above and run the backtest</div>
         </div>
       )}
     </div>

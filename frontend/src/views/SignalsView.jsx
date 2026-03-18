@@ -64,11 +64,11 @@ function SignalDocRow({ doc, value }) {
           {value == null ? '—' : (value >= 0 ? '+' : '') + value.toFixed(2)}
         </span>
       </div>
-      <div className="text-[10px] font-mono text-white/25 mb-2">{doc.formula}</div>
-      <p className="text-[11px] text-white/40 leading-relaxed mb-2">{doc.interpretation}</p>
+      <div className="text-[10px] font-mono text-white/50 mb-2">{doc.formula}</div>
+      <p className="text-[11px] text-white/60 leading-relaxed mb-2">{doc.interpretation}</p>
       <div className="flex gap-4 text-[10px] font-mono">
-        <span><span style={{ color: '#22c55e' }}>↑ </span><span className="text-white/25">{doc.bullish}</span></span>
-        <span><span style={{ color: '#ef4444' }}>↓ </span><span className="text-white/25">{doc.bearish}</span></span>
+        <span><span style={{ color: '#22c55e' }}>↑ </span><span className="text-white/50">{doc.bullish}</span></span>
+        <span><span style={{ color: '#ef4444' }}>↓ </span><span className="text-white/50">{doc.bearish}</span></span>
       </div>
     </div>
   );
@@ -80,7 +80,7 @@ function SignalMetaCard({ label, value, unit }) {
       <div className="label mb-1">{label}</div>
       <div className="font-mono text-[13px] font-semibold text-white/80">
         {value != null ? value : '—'}
-        {unit && <span className="text-[10px] text-white/25 ml-1">{unit}</span>}
+        {unit && <span className="text-[10px] text-white/50 ml-1">{unit}</span>}
       </div>
     </div>
   );
@@ -100,7 +100,7 @@ export default function SignalsView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold tracking-tight">Macro Signals</h2>
-        <span className="text-[10px] text-white/25 font-mono">z-score · 252d normalization</span>
+        <span className="text-[10px] text-white/50 font-mono">z-score · 252d normalization</span>
       </div>
 
       {/* Full signal package — shown when key is present */}

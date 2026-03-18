@@ -77,7 +77,7 @@ export default function RatesView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">Rates & Credit</h2>
-        <span className="text-[10px] text-white/25 font-mono">Treasury yields · yield curve · HY spreads</span>
+        <span className="text-[10px] text-white/50 font-mono">Treasury yields · yield curve · HY spreads</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -105,7 +105,7 @@ export default function RatesView() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
           <div>
             <div className="label">Fixed Income Dynamics</div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>cumulative yield / spread change · basis points</div>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>cumulative yield / spread change · basis points</div>
           </div>
           <RangePicker value={rangeDays} onChange={setRangeDays} />
         </div>
@@ -124,15 +124,15 @@ export default function RatesView() {
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#f59e0b', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>10Y</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>10Y</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#3b82f6', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>2Y</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>2Y</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#ef4444', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>HY Spread</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>HY Spread</span>
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ export default function AssetBias({ regime }) {
         <table className="w-full text-[10px] font-mono border-collapse">
           <thead>
             <tr>
-              <th className="text-left text-white/25 font-normal pb-2 pr-3">Asset</th>
+              <th className="text-left text-white/50 font-normal pb-2 pr-3">Asset</th>
               {regimes.map((r) => {
                 const cfg = REGIME_CONFIG[r];
                 const isActive = r === currentRegime;
@@ -75,7 +75,7 @@ export default function AssetBias({ regime }) {
                     key={r}
                     className="text-center pb-2 px-1 font-medium"
                     style={{
-                      color: isActive ? cfg.color : 'rgba(255,255,255,0.15)',
+                      color: isActive ? cfg.color : 'rgba(255,255,255,0.45)',
                     }}
                   >
                     {cfg.short}
@@ -110,7 +110,7 @@ export default function AssetBias({ regime }) {
             <span className="font-mono text-[10px]" style={{ color: meta.color }}>
               {meta.arrow}
             </span>
-            <span className="text-[9px] text-white/20 font-mono">{meta.label}</span>
+            <span className="text-[10px] text-white/45 font-mono">{meta.label}</span>
           </div>
         ))}
       </div>

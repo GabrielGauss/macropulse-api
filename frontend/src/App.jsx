@@ -40,7 +40,7 @@ function UpgradeGate({ feature }) {
         </svg>
       </div>
       <div className="text-[13px] font-semibold text-white/60 mb-1">{feature}</div>
-      <div className="text-[11px] text-white/25 font-mono mb-5">Available on Starter and Pro plans</div>
+      <div className="text-[11px] text-white/50 font-mono mb-5">Available on Starter and Pro plans</div>
       <a
         href="https://macropulse.live/#pricing"
         target="_blank"
@@ -180,7 +180,7 @@ export default function App() {
             {activeSection === 'crypto'      && (isFree ? <UpgradeGate feature="Crypto Analysis" />     : <CryptoView />)}
             {activeSection === 'quant'       && (isFree ? <UpgradeGate feature="Quant HUD" />           : <QuantView />)}
 
-            <footer className="pt-4 mt-4 text-center text-[10px] text-white/10 font-mono border-t border-[#111]">
+            <footer className="pt-4 mt-4 text-center text-[10px] text-white/35 font-mono border-t border-[#111]">
               MacroPulse · Probabilistic macro regime intelligence
             </footer>
           </div>

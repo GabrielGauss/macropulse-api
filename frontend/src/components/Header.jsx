@@ -79,12 +79,12 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
     >
       {/* Data timestamp + pipeline freshness */}
       <div className="flex items-center gap-3">
-        <span className="text-[11px] text-white/25 font-mono">
-          <span className="text-white/15 mr-1">data</span>{dataDate}
+        <span className="text-[11px] text-white/50 font-mono">
+          <span className="text-white/45 mr-1">data</span>{dataDate}
         </span>
         {ps && (
           <span
-            className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
             style={{
               color: ps.status === 'success' && !ps.data_lag ? '#22c55e' : ps.data_lag ? '#f59e0b' : '#ef4444',
               border: `1px solid ${ps.status === 'success' && !ps.data_lag ? 'rgba(34,197,94,0.3)' : ps.data_lag ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`,
@@ -125,9 +125,9 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
               <button
                 onClick={clearKey}
                 className="text-[10px] font-mono transition-colors"
-                style={{ color: 'rgba(255,255,255,0.15)' }}
-                onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.5)'}
-                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.15)'}
+                style={{ color: 'rgba(255,255,255,0.45)' }}
+                onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.7)'}
+                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.45)'}
                 title="Clear API key"
               >
                 ×
@@ -137,9 +137,9 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
             <button
               onClick={() => setShowKeyInput(v => !v)}
               className="text-[10px] font-mono transition-colors"
-              style={{ color: 'rgba(255,255,255,0.2)' }}
-              onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.5)'}
-              onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.2)'}
+              style={{ color: 'rgba(255,255,255,0.45)' }}
+              onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.7)'}
+              onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.45)'}
             >
               + Enter API key
             </button>
@@ -155,7 +155,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
                 <span className="text-[11px] font-semibold text-white/60">API Key</span>
                 <button
                   onClick={() => { setShowKeyInput(false); setKeyDraft(''); }}
-                  className="text-[12px] font-mono text-white/20 hover:text-white/50 transition-colors"
+                  className="text-[12px] font-mono text-white/45 hover:text-white/70 transition-colors"
                 >×</button>
               </div>
               <input
@@ -165,10 +165,10 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
                 onChange={e => setKeyDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveKey(); if (e.key === 'Escape') { setShowKeyInput(false); setKeyDraft(''); } }}
                 placeholder="mp_xxxxxxxxxxxx..."
-                className="w-full rounded-md border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 font-mono text-[11px] text-green-400 outline-none focus:border-[#3a3a3a] placeholder:text-white/15"
+                className="w-full rounded-md border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 font-mono text-[11px] text-green-400 outline-none focus:border-[#3a3a3a] placeholder:text-white/35"
               />
               <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] text-white/20">Stored in browser only</span>
+                <span className="text-[10px] text-white/45">Stored in browser only</span>
                 <button
                   onClick={saveKey}
                   disabled={!keyDraft.trim()}
@@ -185,11 +185,11 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
         {/* Email + tier */}
         {meInfo && (
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
               {meInfo.email}
             </span>
             <span
-              className="text-[9px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
+              className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
               style={{
                 color: TIER_COLOR[meInfo.tier] || TIER_COLOR.free,
                 border: `1px solid ${TIER_COLOR[meInfo.tier] || TIER_COLOR.free}`,
@@ -210,12 +210,12 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
             padding: '3px 8px', borderRadius: 4,
             border: `1px solid ${guideMode ? 'rgba(59,130,246,0.4)' : '#2a2a2a'}`,
             background: guideMode ? 'rgba(59,130,246,0.08)' : 'transparent',
-            color: guideMode ? '#3b82f6' : 'rgba(255,255,255,0.2)',
+            color: guideMode ? '#3b82f6' : 'rgba(255,255,255,0.45)',
             cursor: 'pointer', transition: 'all 0.2s',
             display: 'flex', alignItems: 'center', gap: 5,
           }}
-          onMouseEnter={e => { if (!guideMode) { e.currentTarget.style.borderColor = '#3a3a3a'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; } }}
-          onMouseLeave={e => { if (!guideMode) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; } }}
+          onMouseEnter={e => { if (!guideMode) { e.currentTarget.style.borderColor = '#3a3a3a'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; } }}
+          onMouseLeave={e => { if (!guideMode) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; } }}
         >
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
@@ -231,7 +231,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
           />
           <span
             className="text-[11px] font-mono"
-            style={{ color: connected ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)' }}
+            style={{ color: connected ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.45)' }}
           >
             {connected ? 'Live' : 'Polling'}
           </span>

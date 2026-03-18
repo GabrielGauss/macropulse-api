@@ -132,13 +132,13 @@ function SignalRow({ signal, value, rank }) {
             }}
           />
           <span className="text-[11px] text-white/60 font-mono">{signal.label}</span>
-          <span className="text-[9px] text-white/20 font-mono hidden sm:inline">{signal.desc}</span>
+          <span className="text-[10px] text-white/45 font-mono hidden sm:inline">{signal.desc}</span>
         </div>
         <div className="flex items-center gap-2.5">
           <span
-            className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
             style={{
-              color: v !== null && abs >= 0.15 ? color : 'rgba(255,255,255,0.2)',
+              color: v !== null && abs >= 0.15 ? color : 'rgba(255,255,255,0.45)',
               background: v !== null && abs >= 0.15 ? (v > 0 ? 'rgba(34,197,94,0.07)' : 'rgba(239,68,68,0.07)') : 'transparent',
             }}
           >
@@ -168,7 +168,7 @@ export default function SignalGauges({ data }) {
   if (!data) {
     return (
       <div className="card flex h-40 items-center justify-center">
-        <p className="text-[11px] text-white/25 font-mono">Loading signals…</p>
+        <p className="text-[11px] text-white/45 font-mono">Loading signals…</p>
       </div>
     );
   }
@@ -195,7 +195,7 @@ export default function SignalGauges({ data }) {
           >
             {composite >= 0 ? '+' : ''}{composite.toFixed(2)} composite
           </span>
-          <span className="text-[9px] text-white/15 font-mono">z-score · 252d</span>
+          <span className="text-[10px] text-white/45 font-mono">z-score · 252d</span>
         </div>
       </div>
       {guideMode && (
@@ -204,7 +204,7 @@ export default function SignalGauges({ data }) {
         </div>
       )}
       {!guideMode && (
-        <div className="text-[9px] text-white/20 font-mono mb-3">
+        <div className="text-[10px] text-white/45 font-mono mb-3">
           sorted by signal strength · 20d momentum
         </div>
       )}
@@ -215,7 +215,7 @@ export default function SignalGauges({ data }) {
       </div>
 
       {/* Scale labels */}
-      <div className="flex justify-between mt-3 text-[8px] font-mono text-white/10">
+      <div className="flex justify-between mt-3 text-[10px] font-mono text-white/45">
         <span>← Bearish −1.0</span>
         <span>·</span>
         <span>Neutral</span>

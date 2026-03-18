@@ -73,8 +73,8 @@ function CompositeScoreBar({ score }) {
     <div className="mt-3 mb-1">
       <div className="flex items-center justify-between mb-1">
         <span
-          className="text-[9px] font-mono uppercase tracking-wide"
-          style={{ color: 'rgba(255,255,255,0.2)' }}
+          className="text-[10px] font-mono uppercase tracking-wide"
+          style={{ color: 'rgba(255,255,255,0.45)' }}
         >
           Composite score
         </span>
@@ -117,9 +117,9 @@ function CompositeScoreBar({ score }) {
         />
       </div>
       <div className="flex justify-between mt-0.5">
-        <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>−100</span>
-        <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>0</span>
-        <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>+100</span>
+        <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>−100</span>
+        <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>0</span>
+        <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>+100</span>
       </div>
     </div>
   );
@@ -175,8 +175,8 @@ function DomainRow({ domainKey, domain }) {
 
       {/* Rationale — truncated, full text on hover */}
       <div
-        className="flex-1 text-[9px] font-mono overflow-hidden text-ellipsis whitespace-nowrap min-w-0"
-        style={{ color: 'rgba(255,255,255,0.28)' }}
+        className="flex-1 text-[10px] font-mono overflow-hidden text-ellipsis whitespace-nowrap min-w-0"
+        style={{ color: 'rgba(255,255,255,0.45)' }}
         title={domain.rationale || ''}
       >
         {domain.rationale || '—'}
@@ -197,7 +197,7 @@ export default function CompositeAnalysisCard() {
         <div className="label">Composite Analysis</div>
         <span
           className="text-[10px] font-mono"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
         >
           rule-based · 4 domains
         </span>
@@ -230,7 +230,7 @@ export default function CompositeAnalysisCard() {
       {!loading && error && (
         <p
           className="text-[11px] font-mono py-4 text-center"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
+          style={{ color: 'rgba(255,255,255,0.50)' }}
         >
           Analysis unavailable
         </p>
@@ -280,7 +280,7 @@ export default function CompositeAnalysisCard() {
           {/* Domain rows */}
           {data.domain_signals && (
             <div className="mt-2">
-              <div className="text-[9px] font-mono uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              <div className="text-[10px] font-mono uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
                 Domain breakdown
               </div>
               {Object.entries(data.domain_signals).map(([key, domain]) => (

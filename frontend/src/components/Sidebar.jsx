@@ -108,7 +108,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
                   ? '#f0f0f0'
                   : item.available
                   ? 'rgba(255,255,255,0.35)'
-                  : 'rgba(255,255,255,0.15)',
+                  : 'rgba(255,255,255,0.35)',
                 cursor: item.available ? 'pointer' : 'default',
                 justifyContent: collapsed ? 'center' : 'flex-start',
               }}
@@ -123,7 +123,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
                   e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.color = item.available
                     ? 'rgba(255,255,255,0.35)'
-                    : 'rgba(255,255,255,0.15)';
+                    : 'rgba(255,255,255,0.25)';
                 }
               }}
             >
@@ -138,8 +138,8 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
               )}
               {!collapsed && !item.available && !isLocked && (
                 <span
-                  className="ml-auto text-[8px] font-mono uppercase tracking-wide"
-                  style={{ color: 'rgba(255,255,255,0.15)' }}
+                  className="ml-auto text-[10px] font-mono uppercase tracking-wide"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
                 >
                   soon
                 </span>
@@ -156,8 +156,8 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
             className="rounded px-2.5 py-2"
             style={{ background: cfg.bg, border: `1px solid ${cfg.color}22` }}
           >
-            <div className="text-[9px] uppercase tracking-widest font-medium mb-0.5"
-              style={{ color: 'rgba(255,255,255,0.25)' }}>
+            <div className="text-[10px] uppercase tracking-widest font-medium mb-0.5"
+              style={{ color: 'rgba(255,255,255,0.50)' }}>
               Regime
             </div>
             <div className="flex items-center gap-1.5">
@@ -167,7 +167,7 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
               </span>
             </div>
             {regime.persistence_days != null && (
-              <div className="text-[9px] font-mono mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              <div className="text-[10px] font-mono mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
                 {regime.persistence_days}d persistent
               </div>
             )}
@@ -185,12 +185,12 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           style={{
             gap: 10,
             padding: collapsed ? '6px 12px' : '6px 10px',
-            color: 'rgba(255,255,255,0.2)',
+            color: 'rgba(255,255,255,0.45)',
             justifyContent: collapsed ? 'center' : 'flex-start',
             textDecoration: 'none',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
           title="macropulse.live"
         >
           <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -209,12 +209,12 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           style={{
             gap: 10,
             padding: collapsed ? '6px 12px' : '6px 10px',
-            color: 'rgba(255,255,255,0.2)',
+            color: 'rgba(255,255,255,0.45)',
             justifyContent: collapsed ? 'center' : 'flex-start',
             textDecoration: 'none',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
           title="API Docs"
         >
           <svg width={15} height={15} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -232,12 +232,12 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
           style={{
             gap: 10,
             padding: collapsed ? '6px 12px' : '6px 10px',
-            color: 'rgba(255,255,255,0.2)',
+            color: 'rgba(255,255,255,0.45)',
             justifyContent: collapsed ? 'center' : 'flex-start',
             textDecoration: 'none',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
           title="Join Discord"
         >
           <svg width={15} height={15} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -255,11 +255,11 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
         className="flex items-center justify-center border-t border-[#1f1f1f] transition-colors duration-100"
         style={{
           height: 40,
-          color: 'rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.45)',
           background: 'transparent',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
         title={collapsed ? 'Expand' : 'Collapse'}
       >
         <Icon d={collapsed ? ICONS.expand : ICONS.collapse} size={14} />

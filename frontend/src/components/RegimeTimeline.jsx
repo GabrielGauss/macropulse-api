@@ -143,7 +143,7 @@ export default function RegimeTimeline({
   if (!history || history.length === 0) {
     return (
       <div className="card flex h-72 items-center justify-center">
-        <p className="text-[11px] text-white/25 font-mono">No history data</p>
+        <p className="text-[11px] text-white/45 font-mono">No history data</p>
       </div>
     );
   }
@@ -191,10 +191,10 @@ export default function RegimeTimeline({
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}>
               <div style={{ width: 6, height: 6, borderRadius: 2, background: currentRegimeCfg.color, flexShrink: 0 }} />
               <span style={{ color: currentRegimeCfg.color }}>In {currentRegimeCfg.label || last.regime}</span>
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>{streakDays}d streak</span>
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>{transitions.length} transitions</span>
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>·</span>
+              <span style={{ color: 'rgba(255,255,255,0.50)' }}>{streakDays}d streak</span>
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>·</span>
+              <span style={{ color: 'rgba(255,255,255,0.50)' }}>{transitions.length} transitions</span>
             </div>
           )}
         </div>
@@ -205,7 +205,7 @@ export default function RegimeTimeline({
             {Object.entries(REGIME_CONFIG).map(([key, cfg]) => (
               <div key={key} className="flex items-center gap-1">
                 <div className="h-1.5 w-1.5 rounded-sm flex-shrink-0" style={{ background: cfg.color }} />
-                <span className="text-[9px] text-white/25 font-mono uppercase">{cfg.short}</span>
+                <span className="text-[10px] text-white/50 font-mono uppercase">{cfg.short}</span>
               </div>
             ))}
           </div>
@@ -218,7 +218,7 @@ export default function RegimeTimeline({
                 fontSize: 9, fontFamily: 'JetBrains Mono, monospace', padding: '2px 7px',
                 borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
                 background: showTransitions ? '#1f1f1f' : 'transparent',
-                color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)',
+                color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
                 transition: 'all 0.15s',
               }}
             >
@@ -231,10 +231,10 @@ export default function RegimeTimeline({
             <a
               href="https://macropulse.live/#pricing"
               target="_blank" rel="noopener noreferrer"
-              className="text-[9px] font-mono transition-colors"
-              style={{ color: 'rgba(255,255,255,0.2)', textDecoration: 'none' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+              className="text-[10px] font-mono transition-colors"
+              style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
               title="Upgrade for full 2-year history"
             >
               30d · <span style={{ textDecoration: 'underline' }}>upgrade for 2Y →</span>
@@ -254,11 +254,11 @@ export default function RegimeTimeline({
                     className="rounded px-2 py-0.5 font-mono text-[10px] font-medium transition-colors duration-100"
                     style={{
                       background: active ? '#222' : 'transparent',
-                      color: active ? '#f0f0f0' : 'rgba(255,255,255,0.3)',
+                      color: active ? '#f0f0f0' : 'rgba(255,255,255,0.45)',
                       cursor: 'pointer', border: 'none',
                     }}
-                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
                   >
                     {label}
                   </button>

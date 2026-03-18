@@ -39,7 +39,7 @@ function MetricRow({ label, value, threshold, fmt, guide, warnText, showGuide })
         </div>
         <div className="flex items-center gap-2">
           {warn && (
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>
               alert
             </span>
           )}
@@ -61,7 +61,7 @@ function MetricRow({ label, value, threshold, fmt, guide, warnText, showGuide })
           }}
         />
       </div>
-      <div className="flex justify-between mt-0.5 text-[9px] font-mono text-white/15">
+      <div className="flex justify-between mt-0.5 text-[10px] font-mono text-white/45">
         <span>0</span>
         <span>threshold {threshold}</span>
       </div>
@@ -80,7 +80,7 @@ export default function DriftPanel({ data }) {
   if (!data?.data?.length) {
     return (
       <div className="card flex h-48 items-center justify-center">
-        <p className="text-[11px] text-white/25 font-mono">No drift data</p>
+        <p className="text-[11px] text-white/45 font-mono">No drift data</p>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function DriftPanel({ data }) {
       )}
 
       {latest.model_version && (
-        <div className="text-[10px] text-white/20 font-mono mb-3">{latest.model_version}</div>
+        <div className="text-[10px] text-white/45 font-mono mb-3">{latest.model_version}</div>
       )}
 
       <div>

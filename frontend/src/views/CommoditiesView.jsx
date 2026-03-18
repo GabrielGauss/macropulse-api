@@ -80,7 +80,7 @@ export default function CommoditiesView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold">Commodities</h2>
-        <span className="text-[10px] text-white/25 font-mono">Oil · Gold · Dollar headwind</span>
+        <span className="text-[10px] text-white/50 font-mono">Oil · Gold · Dollar headwind</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -108,7 +108,7 @@ export default function CommoditiesView() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
           <div>
             <div className="label">Commodities</div>
-            <div style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>rebased to 100 at window start</div>
+            <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>rebased to 100 at window start</div>
           </div>
           <RangePicker value={rangeDays} onChange={setRangeDays} />
         </div>
@@ -132,11 +132,11 @@ export default function CommoditiesView() {
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#f59e0b', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>Gold</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>Gold</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 16, height: 2, background: '#22c55e', borderRadius: 1 }} />
-            <span style={{ fontSize: 9, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.3)' }}>Oil</span>
+            <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono', color: 'rgba(255,255,255,0.50)' }}>Oil</span>
           </div>
         </div>
       </div>

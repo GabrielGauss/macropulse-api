@@ -46,7 +46,7 @@ export default function RegimeCalendar({ isFree = false }) {
       <div className="card p-5">
         <div className="label mb-4">Regime Calendar</div>
         <div className="h-32 flex items-center justify-center">
-          <span className="text-[11px] text-white/25 font-mono">Loading…</span>
+          <span className="text-[11px] text-white/45 font-mono">Loading…</span>
         </div>
       </div>
     );
@@ -57,7 +57,7 @@ export default function RegimeCalendar({ isFree = false }) {
       <div className="card p-5">
         <div className="label mb-4">Regime Calendar</div>
         <div className="h-32 flex items-center justify-center">
-          <span className="text-[11px] text-white/25 font-mono">No data</span>
+          <span className="text-[11px] text-white/45 font-mono">No data</span>
         </div>
       </div>
     );
@@ -120,7 +120,7 @@ export default function RegimeCalendar({ isFree = false }) {
           {Object.entries(REGIME_CONFIG).map(([key, cfg]) => (
             <div key={key} className="flex items-center gap-1">
               <div className="rounded-sm flex-shrink-0" style={{ width: 8, height: 8, background: cfg.color }} />
-              <span className="text-[9px] text-white/25 font-mono uppercase">{cfg.short}</span>
+              <span className="text-[10px] text-white/50 font-mono uppercase">{cfg.short}</span>
             </div>
           ))}
         </div>
@@ -137,7 +137,7 @@ export default function RegimeCalendar({ isFree = false }) {
           {/* Day labels */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: GAP, paddingTop: 18, flexShrink: 0 }}>
             {['M', '', 'W', '', 'F', '', 'S'].map((l, i) => (
-              <div key={i} style={{ width: 10, height: CELL, lineHeight: `${CELL}px`, fontSize: 9, color: 'rgba(255,255,255,0.2)', fontFamily: 'JetBrains Mono, monospace', textAlign: 'right' }}>
+              <div key={i} style={{ width: 10, height: CELL, lineHeight: `${CELL}px`, fontSize: 10, color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace', textAlign: 'right' }}>
                 {l}
               </div>
             ))}
@@ -147,7 +147,7 @@ export default function RegimeCalendar({ isFree = false }) {
           <div>
             <div style={{ display: 'flex', gap: GAP, marginBottom: 4 }}>
               {weeks.map((_, i) => (
-                <div key={i} style={{ width: CELL, fontSize: 9, color: 'rgba(255,255,255,0.25)', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'nowrap', overflow: 'visible' }}>
+                <div key={i} style={{ width: CELL, fontSize: 10, color: 'rgba(255,255,255,0.50)', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'nowrap', overflow: 'visible' }}>
                   {monthLabels[i]}
                 </div>
               ))}
@@ -239,19 +239,19 @@ export default function RegimeCalendar({ isFree = false }) {
                   <span style={{ color: '#3b82f6', fontWeight: 600 }}>{tooltip.exposure}</span>
                 </div>
               )}
-              <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9, marginTop: 5, lineHeight: 1.5 }}>
+              <div style={{ color: 'rgba(255,255,255,0.50)', fontSize: 10, marginTop: 5, lineHeight: 1.5 }}>
                 {REGIME_DESC[tooltip.regime]}
               </div>
             </>
           ) : (
-            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{tooltip.label}</div>
+            <div style={{ color: 'rgba(255,255,255,0.50)', fontSize: 10 }}>{tooltip.label}</div>
           )}
         </div>,
         document.body
       )}
 
       {isFree && (
-        <p className="text-[9px] text-white/20 font-mono mt-3">
+        <p className="text-[10px] text-white/45 font-mono mt-3">
           30-day window ·{' '}
           <a href="https://macropulse.live/#pricing" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', color: 'inherit' }}>
             upgrade for 2Y history →

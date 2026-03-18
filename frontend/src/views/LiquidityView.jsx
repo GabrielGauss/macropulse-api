@@ -11,7 +11,7 @@ function StatCard({ label, value, sub, color }) {
       <div className="font-mono text-xl font-semibold" style={{ color: color || '#f0f0f0' }}>
         {value}
       </div>
-      {sub && <div className="text-[10px] text-white/25 font-mono mt-1">{sub}</div>}
+      {sub && <div className="text-[10px] text-white/50 font-mono mt-1">{sub}</div>}
     </div>
   );
 }
@@ -31,7 +31,7 @@ export default function LiquidityView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-semibold tracking-tight">Liquidity</h2>
-        <span className="text-[10px] text-white/25 font-mono">Fed balance sheet proxy</span>
+        <span className="text-[10px] text-white/50 font-mono">Fed balance sheet proxy</span>
       </div>
 
       {/* Stat row */}
@@ -73,7 +73,7 @@ export default function LiquidityView() {
         <SignalGauges data={sc} />
         <div className="card p-5">
           <div className="label mb-3">About This View</div>
-          <div className="space-y-3 text-[11px] text-white/40 font-mono leading-relaxed">
+          <div className="space-y-3 text-[11px] text-white/60 font-mono leading-relaxed">
             <p>Net Liquidity = Fed Total Assets (WALCL) minus Reverse Repo (RRPONTSYD) minus Treasury General Account (WTREGEN).</p>
             <p>When net liquidity expands, risk assets typically benefit — more dollars are available to flow into markets.</p>
             <p>The 2-year z-score normalizes the current level against historical context. Values above +1 indicate historically elevated liquidity.</p>
