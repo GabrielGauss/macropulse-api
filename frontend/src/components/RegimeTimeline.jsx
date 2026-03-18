@@ -124,9 +124,6 @@ function buildTransitions(data) {
 }
 
 const TIME_OPTIONS = [
-  { label: '1M', days: 30  },
-  { label: '3M', days: 90  },
-  { label: '6M', days: 180 },
   { label: '1Y', days: 365 },
   { label: '2Y', days: 730 },
 ];

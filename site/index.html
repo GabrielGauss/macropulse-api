@@ -1096,6 +1096,82 @@
       .nl-strip-form { width: 100%; }
       .nl-strip-input { flex: 1; width: auto; }
     }
+    /* ── Signal section ──────────────────────────────────────────── */
+    .signal-section { padding: 5rem 0; border-top: 1px solid var(--border); }
+    .signal-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+      margin-top: 3rem; align-items: start;
+    }
+    @media (max-width: 820px) { .signal-grid { grid-template-columns: 1fr; gap: 2rem; } }
+    .signal-formula {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.75rem;
+    }
+    .signal-formula-title {
+      font-size: 0.72rem; font-weight: 500; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;
+    }
+    .formula-line {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border);
+    }
+    .formula-line:last-child { border-bottom: none; }
+    .formula-ticker {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      font-weight: 600; color: var(--blue); min-width: 90px;
+    }
+    .formula-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+    .formula-result {
+      margin-top: 1.25rem; padding: 0.875rem 1rem;
+      background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--green);
+      text-align: center;
+    }
+    .signal-bullets { display: flex; flex-direction: column; gap: 1.5rem; }
+    .signal-bullet {
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .signal-bullet-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700;
+    }
+    .signal-bullet h4 {
+      font-size: 0.9rem; font-weight: 600; margin: 0 0 0.3rem;
+    }
+    .signal-bullet p { font-size: 0.82rem; color: var(--muted); margin: 0; line-height: 1.6; }
+
+    /* ── FAQ ──────────────────────────────────────────────────────── */
+    .faq-section { padding: 5rem 0; border-top: 1px solid var(--border); background: var(--s1); }
+    .faq-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0 3rem;
+      margin-top: 3rem;
+    }
+    @media (max-width: 820px) { .faq-grid { grid-template-columns: 1fr; } }
+    .faq-item {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      font-size: 0.9rem; font-weight: 600; color: var(--text);
+      cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 0.75rem; user-select: none;
+    }
+    .faq-q:hover { color: rgba(255,255,255,0.95); }
+    .faq-chevron {
+      flex-shrink: 0; margin-top: 2px; transition: transform 0.2s;
+      color: var(--dim);
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      font-size: 0.83rem; color: var(--muted); line-height: 1.7;
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s;
+    }
+    .faq-item.open .faq-a { max-height: 400px; padding-top: 0.75rem; }
+    .faq-a code { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--blue); background: rgba(59,130,246,0.08); padding: 0.1em 0.4em; border-radius: 3px; }
+
   </style>
 </head>
 <body>
@@ -1130,9 +1206,10 @@
   </div>
   <div class="nav-links">
     <a href="#pipeline">How it works</a>
-    <a href="#regimes">Regimes</a>
+    <a href="#signal">The Signal</a>
     <a href="#pricing">Pricing</a>
-    <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
+    <a href="#faq">FAQ</a>
+    <a href="/api-docs.html">API Docs</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--muted);">Dashboard</a>
     <a href="https://discord.gg/YxTH5hPaeN" target="_blank" rel="noopener" title="Join Discord" style="display:inline-flex;align-items:center;gap:0.35rem;color:var(--muted);">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
@@ -1146,9 +1223,10 @@
 </nav>
 <div class="nav-mobile-menu" id="mobile-menu">
   <a href="#pipeline">How it works</a>
-  <a href="#regimes">Regimes</a>
+  <a href="#signal">The Signal</a>
   <a href="#pricing">Pricing</a>
-  <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
+  <a href="#faq">FAQ</a>
+  <a href="/api-docs.html">API Docs</a>
   <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
   <a href="https://discord.gg/YxTH5hPaeN" target="_blank">Discord</a>
 </div>
@@ -1485,10 +1563,8 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.75rem;">
         <div class="chart-filters">
-          <button class="chart-filter" data-cal-range="90"  onclick="setCalRange(90)">3M</button>
+          <button class="chart-filter active" data-cal-range="90"  onclick="setCalRange(90)">3M</button>
           <button class="chart-filter" data-cal-range="180" onclick="setCalRange(180)">6M</button>
-          <button class="chart-filter active" data-cal-range="365" onclick="setCalRange(365)">1Y</button>
-          <button class="chart-filter" data-cal-range="730" onclick="setCalRange(730)">2Y</button>
         </div>
         <div class="cal-legend">
           <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e"></div> Expansion</div>
@@ -1580,6 +1656,76 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 </div>
 
 <!-- PRICING -->
+<!-- THE SIGNAL -->
+<div id="signal" style="border-top:1px solid var(--border);">
+  <div class="signal-section">
+    <div class="container">
+      <div class="section-eyebrow">The Data Edge</div>
+      <h2 class="section-title">Why our signal is different</h2>
+      <p class="section-sub">Most macro tools track what the Fed says. MacroPulse tracks what the Fed <em>does</em> — in real time.</p>
+
+      <div class="signal-grid">
+
+        <!-- Left: formula -->
+        <div class="signal-formula reveal">
+          <div class="signal-formula-title">Net Liquidity Proxy — the core input</div>
+          <div class="formula-line">
+            <span class="formula-ticker">WALCL</span>
+            <span class="formula-desc">Federal Reserve total assets — money the Fed has injected into the system</span>
+          </div>
+          <div class="formula-line">
+            <span class="formula-ticker" style="color:var(--red);">− WTREGEN</span>
+            <span class="formula-desc">Treasury General Account balance — government cash that drains reserves</span>
+          </div>
+          <div class="formula-line">
+            <span class="formula-ticker" style="color:var(--red);">− RRPONTSYD</span>
+            <span class="formula-desc">Overnight Reverse Repo — idle cash parked at the Fed, not in markets</span>
+          </div>
+          <div class="formula-result">
+            Net Liquidity = WALCL − WTREGEN − RRPONTSYD
+          </div>
+          <p style="font-size:0.75rem;color:var(--dim);margin-top:0.875rem;line-height:1.6;">
+            All three series are published daily by FRED. Combined, they measure the true flow of liquidity available to risk assets — not the headline rate, not the balance sheet headline, but the actual net number that moves markets.
+          </p>
+        </div>
+
+        <!-- Right: bullets -->
+        <div class="signal-bullets">
+          <div class="signal-bullet reveal reveal-delay-1">
+            <div class="signal-bullet-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">PCA</div>
+            <div>
+              <h4>10 inputs → 4 latent factors</h4>
+              <p>Principal Component Analysis reduces yields, spreads, equity, volatility, dollar, commodities, and net liquidity into 4 uncorrelated factors. Noise removed. Signal preserved.</p>
+            </div>
+          </div>
+          <div class="signal-bullet reveal reveal-delay-2">
+            <div class="signal-bullet-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;">HMM</div>
+            <div>
+              <h4>Hidden Markov Model, not a rule</h4>
+              <p>The regime isn't assigned by a threshold or editorial view. A probabilistic Gaussian HMM trained on 20+ years of data finds the 4 latent states and computes transition probabilities between them.</p>
+            </div>
+          </div>
+          <div class="signal-bullet reveal reveal-delay-3">
+            <div class="signal-bullet-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">σ</div>
+            <div>
+              <h4>GARCH volatility state</h4>
+              <p>A GARCH(1,1) model estimates conditional volatility on daily equity returns. This feeds a separate volatility state (normal / elevated / crisis) that overlays the regime signal.</p>
+            </div>
+          </div>
+          <div class="signal-bullet reveal reveal-delay-4">
+            <div class="signal-bullet-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">→</div>
+            <div>
+              <h4>Frozen models, deterministic inference</h4>
+              <p>Models are trained once, serialized, and used for daily inference. No retraining on live data means no look-ahead bias and full reproducibility. Yesterday's classification will never change.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="pricing">
   <div class="pricing-section">
     <div class="container">
@@ -1659,6 +1805,126 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
 
       </div>
       <p class="pricing-note">14-day money-back guarantee · Cancel anytime · Regime alerts live within 24h of upgrade</p>
+      <p class="pricing-note" style="margin-top:0.75rem;font-size:0.72rem;color:var(--dim);max-width:640px;margin-left:auto;margin-right:auto;">
+        MacroPulse provides a quantitative data signal, not financial advice. Past performance of the backtest strategy does not guarantee future results. All trading involves risk of loss.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div id="faq">
+  <div class="faq-section">
+    <div class="container">
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Common questions</h2>
+      <div class="faq-grid" id="faq-grid">
+
+        <div>
+          <div class="faq-item open">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              What is a macro regime?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              A macro regime is a persistent state of the economy defined by the combination of liquidity conditions, credit spreads, growth momentum, and volatility. MacroPulse classifies the current moment into one of four states — Expansion, Recovery, Tightening, or Risk-Off — each with historically distinct asset return profiles.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              How accurate is the model?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Over the 2-year backtest window, a simple regime-weighted equity allocation (100% / 75% / 25% / 0% per regime) produces a Sharpe ratio of 2.29 with a maximum drawdown of −5.9%, versus −19.4% for buy-and-hold. The model does not predict the future — it classifies the present. Regime persistence averages ~44 days, giving sufficient time to act on a signal.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              When is the signal updated?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              The pipeline runs automatically every trading day at 18:30 UTC (after US market close). FRED data (WALCL, WTREGEN, RRPONTSYD) and Yahoo Finance data (yields, spreads, equity, vol, FX, commodities) are fetched, validated, and fed into the frozen PCA + HMM model. The regime signal is live on the API within minutes of the pipeline completing.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              What data sources are used?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              10 daily inputs: <code>WALCL</code> (Fed assets), <code>WTREGEN</code> (Treasury cash), <code>RRPONTSYD</code> (Reverse Repo), S&amp;P 500 returns, VIX, 10Y Treasury yield, 2Y Treasury yield, HY credit spread, DXY dollar index, and net liquidity derived from the first three. All from FRED and Yahoo Finance — no proprietary data vendors.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Is there a risk of look-ahead bias?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              No. Models are trained once on historical data, serialized to disk, and frozen. Daily inference uses only data available at inference time. Historical regime classifications are immutable — yesterday's signal will never be retroactively changed. PCA components and HMM transition matrices are fixed from training time forward.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Can I use this in automated trading?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Yes. The REST API is designed for programmatic consumption. Starter users can poll <code>GET /v1/regime/current</code> daily. Pro users can subscribe to regime changes via webhook POST or WebSocket stream, eliminating the need to poll. A typical integration fetches the signal once after 18:30 UTC and routes allocation accordingly.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              What is the Net Liquidity Proxy?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Net Liquidity = WALCL − WTREGEN − RRPONTSYD. This single number captures true Fed liquidity provision: the Fed's total assets minus government cash (fiscal drain) minus idle reverse repo (not circulating in markets). It moves ahead of risk assets and is a core input to the PCA transformation.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              What's the difference between Starter and Pro?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Starter ($49/mo) gives you the full signal package with 500 daily API requests, email alerts on regime changes, and access to all domain views and backtest engine. Pro ($199/mo) adds unlimited requests, webhook delivery for real-time integration, and WebSocket stream for live dashboard builds. Both include the full 2+ year history.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              How do I get my API key?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Enter your email in the registration form above. You'll receive a 6-digit verification code. After verification, your API key is displayed immediately — no credit card required for the free tier. Keys follow the format <code>mp_free_...</code>, <code>mp_starter_...</code>, or <code>mp_pro_...</code> based on your plan.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Is historical data available via the API?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a">
+              Free tier: 30-day history window via <code>GET /v1/regime/history</code>. Starter and Pro: full 2+ year history (796+ daily records) plus CSV export via <code>GET /v1/regime/export</code>. The export includes date, regime, risk score, equity exposure, and all 4 regime probabilities.
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </div>
@@ -1783,7 +2049,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       <a href="/terms.html">Terms</a>
       <a href="/privacy.html">Privacy</a>
       <a href="/refund.html">Refund Policy</a>
-      <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
+      <a href="/api-docs.html">API Docs</a>
     </div>
   </div>
 </footer>
@@ -2094,7 +2360,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       }
 
       renderRegimeChart(_chartData, 730);
-      renderRegimeCalendar(_chartData, 365);
+      renderRegimeCalendar(_chartData, 90);
 
       // Populate performance comparison (full 2Y window)
       if (_chartData.length >= 2) {
@@ -2485,6 +2751,16 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     }, { threshold: 0.5 });
     obs.observe(statsBar);
   })();
+
+  // ── FAQ accordion ──────────────────────────────────────────────
+  function toggleFaq(el) {
+    const item = el.closest('.faq-item');
+    const wasOpen = item.classList.contains('open');
+    // Close all in same column
+    const col = item.closest('div');
+    col.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
 </script>
 </body>
 </html>

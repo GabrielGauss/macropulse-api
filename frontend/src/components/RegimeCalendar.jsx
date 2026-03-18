@@ -124,10 +124,18 @@ export default function RegimeCalendar({ isFree = false }) {
   const today = new Date().toISOString().slice(0, 10);
 
 
+  const firstDateLabel = sorted[0].timestamp.slice(0, 7); // e.g. "2024-02"
+  const lastDateLabel  = sorted[sorted.length - 1].timestamp.slice(0, 7);
+
   return (
     <div className="card p-5 animate-in">
       <div className="flex items-center justify-between mb-1">
-        <div className="label">Regime Calendar</div>
+        <div className="flex items-center gap-3">
+          <div className="label">Regime Calendar</div>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {firstDateLabel} → {lastDateLabel} · {sorted.length}d · ← scroll
+          </span>
+        </div>
         <div className="flex items-center gap-3">
           {Object.entries(REGIME_CONFIG).map(([key, cfg]) => (
             <div key={key} className="flex items-center gap-1">

@@ -290,22 +290,8 @@ def run_daily_pipeline(
 
     logger.info("═══ Pipeline complete in %.1fs ═══  %s", duration, output)
 
-    # ── 14. Daily brief: narrative + Discord + email digest ───────
-    try:
-        from services.scorecard import build_scorecard
-        from services.narrative import generate_narrative
-        from services.discord import post_daily_signal
-        from services.digest import send_daily_digest
-        from services.twitter import post_daily_tweet
-
-        current_regime = queries.fetch_current_regime() or regime_row
-        scorecard = build_scorecard()
-        narrative = generate_narrative(current_regime, scorecard)
-
-        post_daily_signal(current_regime, scorecard, narrative)
-        send_daily_digest(current_regime, scorecard, narrative)
-        post_daily_tweet(current_regime, scorecard)
-    except Exception:
-        logger.error("Daily brief dispatch failed (non-fatal)", exc_info=True)
+    # ── 14. Daily brief (future: Discord / email digest / X post) ──
+    # Placeholder — services not yet implemented. Add here when ready.
+    pass
 
     return output

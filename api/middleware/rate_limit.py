@@ -122,10 +122,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         raw_key = request.headers.get("X-MacroPulse-Key")
-        # Resolve client IP (for anonymous fallback) — take only first IP to avoid spoofing
-        forwarded_for = request.headers.get("X-Forwarded-For", "")
-        first_ip = forwarded_for.split(",")[0].strip()
-        client_ip = first_ip if first_ip else (request.client.host if request.client else "unknown")
+        # Resolve client IP — only trust X-Forwarded-For when the direct connection
+        # comes from the nginx reverse proxy (172.18.0.0/16 Docker bridge network).
+        # Any other source spoofing this header is ignored.
+        direct_host = request.client.host if request.client else ""
+        _trusted_proxy = direct_host.startswith("172.18.")
+        if _trusted_proxy:
+            forwarded_for = request.headers.get("X-Forwarded-For", "")
+            first_ip = forwarded_for.split(",")[0].strip()
+            client_ip = first_ip if first_ip else direct_host
+        else:
+            client_ip = direct_host or "unknown"
 
         # Resolve tier limit
         limit, key_hash = _resolve_limit(raw_key, self.default_limit)

@@ -59,7 +59,7 @@ export default function App() {
   const { connected, lastMessage } = useRegimeSocket();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [guideMode, toggleGuideMode] = useGuideModeState();
-  const [historyDays, setHistoryDays] = useState(90);
+  const [historyDays, setHistoryDays] = useState(365);
   const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'|'owner'
   const [meInfo, setMeInfo] = useState(null); // { email, tier }
 

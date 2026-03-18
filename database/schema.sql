@@ -134,9 +134,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS usage_date     DATE;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS daily_requests INTEGER NOT NULL DEFAULT 0;
 
-CREATE INDEX IF NOT EXISTS idx_api_keys_hash   ON api_keys(key_hash);
-CREATE INDEX IF NOT EXISTS idx_api_keys_user   ON api_keys(user_id);
-CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_api_keys_hash        ON api_keys(key_hash);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user        ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_active      ON api_keys(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_active ON api_keys(user_id, is_active) WHERE is_active = TRUE;
 
 -- ── TimescaleDB retention + compression ──────────────────────────
 -- Keeps 3 years of data; compresses chunks older than 7 days.

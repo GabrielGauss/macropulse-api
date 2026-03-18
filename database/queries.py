@@ -425,7 +425,7 @@ def get_daily_usage(key_hash: str) -> int:
 
 
 def get_alert_recipients() -> list[dict]:
-    """Return all active users on starter/pro/owner tier for regime change alerts."""
+    """Return all active users on starter/pro tier for regime change alerts (owner excluded)."""
     with get_sync_cursor() as cur:
         cur.execute("""
             SELECT DISTINCT ON (u.id)
@@ -433,7 +433,7 @@ def get_alert_recipients() -> list[dict]:
             FROM users u
             JOIN api_keys k ON k.user_id = u.id
             WHERE k.is_active = TRUE
-              AND k.tier IN ('starter', 'pro', 'owner')
+              AND k.tier IN ('starter', 'pro')
               AND u.alerts_enabled = TRUE
             ORDER BY u.id, k.created_at DESC
         """)
