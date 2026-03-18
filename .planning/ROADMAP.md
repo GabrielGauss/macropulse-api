@@ -89,7 +89,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Security & Backend Bugs | 4/4 | Complete    | 2026-03-18 |
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
-| 3. Marketing Site | 0/3 | Not started | - |
+| 3. Marketing Site | 2/3 | In Progress|  |
 | 4. API Docs | 0/TBD | Not started | - |
 
 ---

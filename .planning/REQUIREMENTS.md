@@ -19,7 +19,7 @@ Requirements for v1.0 Ship-Ready milestone.
 
 ### Marketing Site
 
-- [ ] **SITE-01**: Hero section uses the most compelling hook (code snippet evaluated and replaced if weaker than narrative alternative)
+- [x] **SITE-01**: Hero section uses the most compelling hook (code snippet evaluated and replaced if weaker than narrative alternative)
 - [ ] **SITE-02**: FAQ accordion items toggle closed when clicked a second time
 - [ ] **SITE-03**: "The Data Edge" section content is accurate and complete
 - [x] **SITE-04**: Macro regime calendar on marketing site defaults to 6-month centered view
@@ -88,7 +88,7 @@ Deferred — next milestone (monetization).
 | DASH-05 | Phase 2 | Complete |
 | DASH-06 | Phase 2 | Complete |
 | DASH-07 | Phase 2 | Complete |
-| SITE-01 | Phase 3 | Pending |
+| SITE-01 | Phase 3 | Complete |
 | SITE-02 | Phase 3 | Pending |
 | SITE-03 | Phase 3 | Pending |
 | SITE-04 | Phase 3 | Complete |
