@@ -23,6 +23,7 @@ Response headers (RFC 6585 / de-facto standard):
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import hashlib
 import logging
@@ -55,6 +56,8 @@ TIER_LIMITS: dict[str, int] = {
 # In-memory store for anonymous (unauthenticated) IP-based counters only.
 # Authenticated counters live in the DB and survive restarts.
 _anon_counters: dict[str, tuple[str, int]] = defaultdict(lambda: ("", 0))
+# Per-IP async locks — serialize the read-check-increment-write block.
+_anon_locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 # Per-key tier cache: key_hash → (date_string, daily_limit)
 # Refreshed once per day so tier upgrades take effect within 24h.
