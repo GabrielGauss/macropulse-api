@@ -10,7 +10,7 @@
   <link rel="canonical" href="https://macropulse.live" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="MacroPulse — Know the Regime. Allocate Accordingly." />
+  <meta property="og:title" content="MacroPulse — Stop Predicting. Start Allocating." />
   <meta property="og:description" content="Daily macro regime classification powered by PCA + HMM. 4 states, 10 variables, updated at 18:30 UTC. REST API for algo traders." />
   <meta property="og:image" content="https://macropulse.live/og-image.svg" />
   <meta property="og:url" content="https://macropulse.live" />
@@ -19,7 +19,7 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="MacroPulse — Know the Regime. Allocate Accordingly." />
+  <meta name="twitter:title" content="MacroPulse — Stop Predicting. Start Allocating." />
   <meta name="twitter:description" content="Daily macro regime classification. Expansion → 100% equity. Risk-Off → 0%. Sharpe 2.29. REST API." />
   <meta name="twitter:image" content="https://macropulse.live/og-image.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1237,7 +1237,7 @@
     <!-- Left: copy -->
     <div>
       <div class="hero-eyebrow">Macro regime intelligence · Updated daily at 18:30 UTC</div>
-      <h1>Know the regime.<br/>Allocate<br/><em>accordingly.</em></h1>
+      <h1>Stop predicting.<br/>Start <em>allocating.</em></h1>
       <p class="hero-sub">
         MacroPulse classifies the macro environment daily — Expansion, Recovery, Tightening, or Risk-Off — and tells your system exactly how much equity to hold. 100% when conditions are right. 0% when they're not. Backed by data, never by opinion.
       </p>
@@ -1563,8 +1563,8 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.75rem;">
         <div class="chart-filters">
-          <button class="chart-filter active" data-cal-range="90"  onclick="setCalRange(90)">3M</button>
-          <button class="chart-filter" data-cal-range="180" onclick="setCalRange(180)">6M</button>
+          <button class="chart-filter" data-cal-range="90"  onclick="setCalRange(90)">3M</button>
+          <button class="chart-filter active" data-cal-range="180" onclick="setCalRange(180)">6M</button>
         </div>
         <div class="cal-legend">
           <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e"></div> Expansion</div>
@@ -2360,7 +2360,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       }
 
       renderRegimeChart(_chartData, 730);
-      renderRegimeCalendar(_chartData, 90);
+      renderRegimeCalendar(_chartData, 180);
 
       // Populate performance comparison (full 2Y window)
       if (_chartData.length >= 2) {
