@@ -1153,17 +1153,17 @@
     <!-- Left: copy -->
     <div>
       <div class="hero-eyebrow">The Macro Middleware · Updated daily</div>
-      <h1>Macro regime<br/>intelligence.<br/><em>Systematic.</em></h1>
+      <h1>Know the regime.<br/>Allocate<br/><em>accordingly.</em></h1>
       <p class="hero-sub">
-        A PCA + Hidden Markov Model pipeline that converts 10 macro variables into daily regime classification — Expansion, Recovery, Tightening, or Risk-Off. Not a forecast. A probability distribution.
+        MacroPulse classifies the macro environment daily — Expansion, Recovery, Tightening, or Risk-Off — and tells your system exactly how much equity to hold. 100% when conditions are right. 0% when they're not. Backed by data, never by opinion.
       </p>
       <div class="hero-metrics">
         <div class="metric-item">
-          <div class="metric-val pos">1.69</div>
+          <div class="metric-val pos" id="hero-sharpe">1.69</div>
           <div class="metric-lbl">Sharpe ratio (2yr)</div>
         </div>
         <div class="metric-item">
-          <div class="metric-val neg">−5.9%</div>
+          <div class="metric-val neg" id="hero-dd">−5.9%</div>
           <div class="metric-lbl">Max drawdown</div>
         </div>
         <div class="metric-item">
@@ -1302,7 +1302,9 @@
           </div>
         </div>
         <p style="font-size:0.72rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:0.875rem;line-height:1.6;">
-          Strategy max drawdown: <span id="explainer-dd" style="color:var(--red);">−5.9%</span> ·
+          Strategy CAGR: <span id="explainer-strat-ret" style="color:var(--green);">—</span> ·
+          B&H CAGR: <span id="explainer-bh-ret" style="color:rgba(255,255,255,0.4);">—</span> ·
+          Max DD: <span id="explainer-dd" style="color:var(--red);">−5.9%</span> ·
           Sharpe: <span id="explainer-sharpe" style="color:var(--green);">1.69</span>
         </p>
       </div>
@@ -1342,7 +1344,7 @@
         <span class="sb-lbl">Days classified</span>
       </div>
       <div class="sb-item" style="border-right:none;">
-        <span class="sb-val">~44d</span>
+        <span class="sb-val" id="stat-persist">~44d</span>
         <span class="sb-lbl">Avg regime persistence</span>
       </div>
     </div>
@@ -2033,8 +2035,24 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
       // Update stats bar from live API data
       const statsEl = document.getElementById('stat-sharpe');
       const ddEl    = document.getElementById('stat-dd');
-      if (statsEl && payload.stats?.sharpe_proxy) statsEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
-      if (ddEl    && payload.stats?.max_drawdown)  ddEl.textContent  = payload.stats.max_drawdown.toFixed(1) + '%';
+      const persistEl = document.getElementById('stat-persist');
+      if (statsEl && payload.stats?.sharpe_proxy != null) statsEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
+      if (ddEl    && payload.stats?.max_drawdown  != null) ddEl.textContent  = payload.stats.max_drawdown.toFixed(1) + '%';
+      if (persistEl && payload.stats?.avg_persistence_days != null) persistEl.textContent = '~' + Math.round(payload.stats.avg_persistence_days) + 'd';
+
+      // Mirror values to hero metrics + explainer
+      const heroSharpeEl = document.getElementById('hero-sharpe');
+      const heroDdEl     = document.getElementById('hero-dd');
+      const exSharpeEl   = document.getElementById('explainer-sharpe');
+      const exDdEl       = document.getElementById('explainer-dd');
+      const exStratRetEl = document.getElementById('explainer-strat-ret');
+      const exBhRetEl    = document.getElementById('explainer-bh-ret');
+      if (heroSharpeEl && payload.stats?.sharpe_proxy != null) heroSharpeEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
+      if (heroDdEl    && payload.stats?.max_drawdown  != null) heroDdEl.textContent  = '−' + Math.abs(payload.stats.max_drawdown).toFixed(1) + '%';
+      if (exSharpeEl  && payload.stats?.sharpe_proxy  != null) exSharpeEl.textContent = payload.stats.sharpe_proxy.toFixed(2);
+      if (exDdEl      && payload.stats?.max_drawdown  != null) exDdEl.textContent  = '−' + Math.abs(payload.stats.max_drawdown).toFixed(1) + '%';
+      if (exStratRetEl && payload.stats?.strategy_annual_return != null) exStratRetEl.textContent = (payload.stats.strategy_annual_return >= 0 ? '+' : '') + payload.stats.strategy_annual_return.toFixed(1) + '%/yr';
+      if (exBhRetEl    && payload.stats?.bh_annual_return       != null) exBhRetEl.textContent    = (payload.stats.bh_annual_return >= 0 ? '+' : '') + payload.stats.bh_annual_return.toFixed(1) + '%/yr';
 
       // Update current state bar above chart
       if (_chartData.length) {
@@ -2268,7 +2286,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
         datasets: [
           {
             label: 'MacroPulse Strategy',
-            data: data.map(d => d.strategy ?? null),
+            data: strategy,
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59,130,246,0.08)',
             borderWidth: 2,
@@ -2280,7 +2298,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           },
           {
             label: 'Buy & Hold',
-            data: data.map(d => d.sp500 ?? null),
+            data: sp500,
             borderColor: 'rgba(255,255,255,0.25)',
             backgroundColor: 'transparent',
             borderWidth: 1.5,
@@ -2316,11 +2334,11 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           },
           yAsset: {
             position: 'right',
-            title: { display: true, text: 'indexed (base 100)', color: 'rgba(255,255,255,0.15)', font: { family: "'JetBrains Mono', monospace", size: 9 } },
+            title: { display: true, text: 'return %', color: 'rgba(255,255,255,0.15)', font: { family: "'JetBrains Mono', monospace", size: 9 } },
             ticks: {
               color: 'rgba(255,255,255,0.2)',
               font: { family: "'JetBrains Mono', monospace", size: 10 },
-              callback: v => v.toFixed(0),
+              callback: v => (v >= 100 ? '+' : '') + (v - 100).toFixed(0) + '%',
             },
             grid: { color: 'rgba(255,255,255,0.04)' },
             border: { color: 'rgba(255,255,255,0.08)' },
@@ -2341,8 +2359,10 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
               label(item) {
                 const d = data[item.dataIndex];
                 const regime = REGIME_LABELS[d.regime] || d.regime;
-                if (item.datasetIndex === 0) return `Strategy  ${item.formattedValue}  ·  ${regime}`;
-                if (item.datasetIndex === 1) return `Buy&Hold  ${item.formattedValue}`;
+                const v = item.raw;
+                const pct = (v >= 100 ? '+' : '') + (v - 100).toFixed(1) + '%';
+                if (item.datasetIndex === 0) return `Strategy  ${pct}  ·  ${regime}`;
+                if (item.datasetIndex === 1) return `Buy&Hold  ${pct}`;
                 return '';
               },
             },
