@@ -33,7 +33,7 @@ Requirements for v1.0 Ship-Ready milestone.
 
 - [x] **SEC-01**: Owner API key sourced exclusively from environment variable, removed from source code
 - [x] **SEC-02**: Duplicate alerting system consolidated — only one module fires alerts
-- [ ] **SEC-03**: Rate limit IP counter uses async-safe atomic operations (no TOCTOU race)
+- [x] **SEC-03**: Rate limit IP counter uses async-safe atomic operations (no TOCTOU race)
 
 ### Backend Bugs
 
@@ -78,7 +78,7 @@ Deferred — next milestone (monetization).
 |-------------|-------|--------|
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
-| SEC-03 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Complete |
 | BUG-01 | Phase 1 | Complete |
 | BUG-02 | Phase 1 | Complete |
 | DASH-01 | Phase 2 | Pending |

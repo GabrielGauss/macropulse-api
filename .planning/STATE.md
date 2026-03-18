@@ -77,7 +77,6 @@ None yet.
 ### Blockers/Concerns
 
 - Phase 1: Owner API key hardcoded at `api/auth.py:86` — must be removed before any public exposure
-- Phase 1: Rate limit counter TOCTOU race — concurrent traffic could bypass limits
 - Phase 2: Calendar viewDays initializes to 30 before tier resolves async — affects owner/paid UX on every load
 
 ## Session Continuity
