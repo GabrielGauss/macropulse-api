@@ -40,6 +40,14 @@ Requirements for v1.0 Ship-Ready milestone.
 - [x] **BUG-01**: Data lag guard threshold corrected to >3 days stale (was incorrectly >2 days)
 - [x] **BUG-02**: WebSocket broadcast continues to all healthy clients when one client connection fails
 
+### Pipeline Quality
+
+- [ ] **PIPE-01**: Pipeline halts and returns stale_data:true when any critical FRED series (WALCL, DGS10, DGS2) is missing or all-NaN; optional commodity columns excluded (not zero-filled) when unavailable
+- [ ] **PIPE-02**: Pipeline halts and returns stale_data:true when VIX data is missing or all-NaN
+- [ ] **PIPE-03**: HMM inference halts with RuntimeError when the loaded model's monitor_.converged is False
+- [ ] **PIPE-04**: GARCH forecast_vol() uses the stored ARCHModelResult.forecast() instead of re-fitting on every inference call
+- [ ] **PIPE-05**: All 20+ magic number thresholds across daily_pipeline.py, orchestrator.py, signals.py, garch_model.py, and regime_classifier.py are defined in settings.py with env-var overrides
+
 ## v2 Requirements
 
 Deferred — next milestone (monetization).
@@ -94,12 +102,17 @@ Deferred — next milestone (monetization).
 | SITE-04 | Phase 3 | Complete |
 | DOCS-01 | Phase 4 | Complete |
 | DOCS-02 | Phase 4 | Complete |
+| PIPE-01 | Phase 5 | Planned |
+| PIPE-02 | Phase 5 | Planned |
+| PIPE-03 | Phase 5 | Planned |
+| PIPE-04 | Phase 5 | Planned |
+| PIPE-05 | Phase 5 | Planned |
 
 **Coverage:**
-- v1 requirements: 18 total
-- Mapped to phases: 18
+- v1 requirements: 23 total
+- Mapped to phases: 23
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 — traceability updated after roadmap creation*
+*Last updated: 2026-03-19 — Phase 5 Pipeline Quality requirements added (PIPE-01 through PIPE-05)*

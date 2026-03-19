@@ -87,7 +87,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -95,16 +95,20 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
 | 3. Marketing Site | 2/3 | Complete    | 2026-03-18 |
 | 4. API Docs | 2/2 | Complete    | 2026-03-18 |
+| 5. Pipeline Quality and Noise Reduction | 0/4 | Planned | — |
 
 ### Phase 5: Pipeline Quality and Noise Reduction
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Fix internal pipeline reliability — silent data failures, missing HMM convergence guards, scattered magic number thresholds. No user-facing API changes.
+**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04, PIPE-05
 **Depends on:** Phase 4
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 5 to break down)
+- [ ] 05-00-PLAN.md — Install pytest, create test stubs and fixtures for all PIPE requirements (PIPE-01 through PIPE-05)
+- [ ] 05-01-PLAN.md — Critical data halt (FRED/VIX), commodity column exclusion from PCA (PIPE-01, PIPE-02)
+- [ ] 05-02-PLAN.md — HMM convergence guard, GARCH no-refit fix, narrow WebSocket except (PIPE-03, PIPE-04)
+- [ ] 05-03-PLAN.md — Migrate 27 magic number thresholds to settings.py with env-var overrides (PIPE-05)
 
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
@@ -112,3 +116,4 @@ Plans:
 *Updated: 2026-03-18 — Phase 2 planned (2 plans)*
 *Updated: 2026-03-18 — Phase 3 planned (3 plans)*
 *Updated: 2026-03-18 — Phase 4 planned (2 plans)*
+*Updated: 2026-03-19 — Phase 5 planned (4 plans)*
