@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-pipeline-quality-and-noise-reduction/05-01-PLAN.md
-last_updated: "2026-03-19T23:08:39.158Z"
+stopped_at: Completed 05-pipeline-quality-and-noise-reduction/05-03-PLAN.md
+last_updated: "2026-03-19T23:16:15.985Z"
 last_activity: "2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 75
 ---
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 75%
 | Phase 05-pipeline-quality-and-noise-reduction P00 | 15min | 3 tasks | 4 files |
 | Phase 05-pipeline-quality-and-noise-reduction P02 | 20min | 3 tasks | 4 files |
 | Phase 05-pipeline-quality-and-noise-reduction P01 | 5min | 3 tasks | 3 files |
+| Phase 05-pipeline-quality-and-noise-reduction P03 | 15min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,8 @@ Recent decisions affecting current work:
 - [Phase 05-pipeline-quality-and-noise-reduction]: broadcast_regime() catches (WebSocketDisconnect, RuntimeError) not bare Exception — stale connection cleanup preserved, unexpected errors now surface
 - [Phase 05-pipeline-quality-and-noise-reduction]: Pipeline halts loudly (status=halted, stale_data=True) when critical series WALCL/DGS10/DGS2/VIX is missing or all-NaN — no silent degradation on non-negotiable inputs (PIPE-01)
 - [Phase 05-pipeline-quality-and-noise-reduction]: Optional commodity columns (d_gold, d_oil, d_btc, d_eth) excluded from build_features() output when unavailable — not zero-filled — zero-fill corrupts signal with false stability (PIPE-02)
+- [Phase 05-pipeline-quality-and-noise-reduction]: All 27 threshold fields use Field(validation_alias) so env vars override at runtime without code changes or redeployment
+- [Phase 05-pipeline-quality-and-noise-reduction]: Function-local settings pattern: call get_settings() once at top of each function body — no module-level threshold constants — so env-var overrides in tests work correctly via cache_clear()
 
 ### Pending Todos
 
@@ -110,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T23:08:39.148Z
-Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-01-PLAN.md
+Last session: 2026-03-19T23:16:15.976Z
+Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-03-PLAN.md
 Resume file: None

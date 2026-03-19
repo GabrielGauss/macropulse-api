@@ -95,14 +95,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Dashboard UX | 1/2 | Complete    | 2026-03-18 |
 | 3. Marketing Site | 2/3 | Complete    | 2026-03-18 |
 | 4. API Docs | 2/2 | Complete    | 2026-03-18 |
-| 5. Pipeline Quality and Noise Reduction | 3/4 | In Progress|  |
+| 5. Pipeline Quality and Noise Reduction | 4/4 | Complete   | 2026-03-19 |
 
 ### Phase 5: Pipeline Quality and Noise Reduction
 
 **Goal:** Fix internal pipeline reliability — silent data failures, missing HMM convergence guards, scattered magic number thresholds. No user-facing API changes.
 **Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04, PIPE-05
 **Depends on:** Phase 4
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 05-00-PLAN.md — Install pytest, create test stubs and fixtures for all PIPE requirements (PIPE-01 through PIPE-05)
