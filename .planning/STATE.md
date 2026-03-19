@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-pipeline-quality-and-noise-reduction/05-02-PLAN.md
-last_updated: "2026-03-19T23:07:25.762Z"
+stopped_at: Completed 05-pipeline-quality-and-noise-reduction/05-01-PLAN.md
+last_updated: "2026-03-19T23:08:39.158Z"
 last_activity: "2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)"
 progress:
   total_phases: 5
@@ -62,6 +62,7 @@ Progress: [████████░░] 75%
 | Phase 04-api-docs P02 | <1min | 1 tasks | 1 files |
 | Phase 05-pipeline-quality-and-noise-reduction P00 | 15min | 3 tasks | 4 files |
 | Phase 05-pipeline-quality-and-noise-reduction P02 | 20min | 3 tasks | 4 files |
+| Phase 05-pipeline-quality-and-noise-reduction P01 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,8 @@ Recent decisions affecting current work:
 - [Phase 05-pipeline-quality-and-noise-reduction]: HMM convergence guard uses hasattr() to handle legacy artifacts; raises RuntimeError on non-convergence before any inference output
 - [Phase 05-pipeline-quality-and-noise-reduction]: GARCH forecast_vol uses stored _arch_result.forecast() — no re-fit on inference; keeps returns_series parameter and len(clean)<30 fallback (no API break)
 - [Phase 05-pipeline-quality-and-noise-reduction]: broadcast_regime() catches (WebSocketDisconnect, RuntimeError) not bare Exception — stale connection cleanup preserved, unexpected errors now surface
+- [Phase 05-pipeline-quality-and-noise-reduction]: Pipeline halts loudly (status=halted, stale_data=True) when critical series WALCL/DGS10/DGS2/VIX is missing or all-NaN — no silent degradation on non-negotiable inputs (PIPE-01)
+- [Phase 05-pipeline-quality-and-noise-reduction]: Optional commodity columns (d_gold, d_oil, d_btc, d_eth) excluded from build_features() output when unavailable — not zero-filled — zero-fill corrupts signal with false stability (PIPE-02)
 
 ### Pending Todos
 
@@ -107,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T23:07:25.753Z
-Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-02-PLAN.md
+Last session: 2026-03-19T23:08:39.148Z
+Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-01-PLAN.md
 Resume file: None
