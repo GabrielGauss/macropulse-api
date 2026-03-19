@@ -163,7 +163,7 @@
       <div class="plan-badge">Most popular</div>
       <div class="plan-name">Starter</div>
       <div class="plan-price"><sup>$</sup>49</div>
-      <div class="plan-period">per month</div>
+      <div class="plan-period">per month, USD · auto-renews monthly</div>
       <div class="plan-divider"></div>
       <div class="plan-features">
         <div class="plan-feature"><span class="pf-check">✓</span> <span>500 API requests / day</span></div>
@@ -179,7 +179,7 @@
     <div class="pricing-card" id="pricing-pro">
       <div class="plan-name">Pro</div>
       <div class="plan-price"><sup>$</sup>199</div>
-      <div class="plan-period">per month</div>
+      <div class="plan-period">per month, USD · auto-renews monthly</div>
       <div class="plan-divider"></div>
       <div class="plan-features">
         <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited requests</span></div>
@@ -279,10 +279,8 @@
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
   /* ── Paddle ── */
-  const PADDLE_ENV = 'sandbox';
   const PADDLE_CLIENT_TOKEN = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
   const PRICE_IDS = { starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER', pro: 'PADDLE_PRO_PRICE_ID_PLACEHOLDER' };
-  if (PADDLE_ENV === 'sandbox') Paddle.Environment.set('sandbox');
   Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
   function openCheckout(tier) {
     Paddle.Checkout.open({ items: [{ priceId: PRICE_IDS[tier], quantity: 1 }], customData: { tier } });
