@@ -115,13 +115,43 @@ def test_garch_no_refit_on_inference():
 
 # ── PIPE-05: Thresholds in settings ──────────────────────────────────
 
-@pytest.mark.xfail(strict=False, reason="stub — implementation pending")
+
 def test_thresholds_in_settings():
-    """All phase-5 threshold fields exist on Settings with correct defaults."""
-    pytest.fail("not implemented")
+    """All Phase 5 threshold fields exist on Settings with correct defaults."""
+    from config.settings import get_settings
+    s = get_settings()
+
+    # PIPE-05 threshold fields — spot check representative values from each domain
+    assert s.pipeline_drift_variance_warn == 0.10
+    assert s.pipeline_drift_persistence_warn == 0.97
+    assert s.pipeline_drift_feature_shift_warn == 1.5
+    assert s.signal_confidence_high_threshold == 0.70
+    assert s.signal_confidence_moderate_threshold == 0.50
+    assert s.signal_liquidity_trend_min_pos == 12
+    assert s.orchestrator_dominant_prob == 0.50
+    assert s.orchestrator_equity_growth_prob_high == 0.60
+    assert s.orchestrator_conviction_high_std == 20.0
+    assert s.garch_vol_low == 0.5
+    assert s.garch_vol_normal == 1.5
+    assert s.garch_vol_elevated == 2.5
+    assert s.vix_diff_elevated == 2.0
+    assert s.vix_diff_compressed == -2.0
 
 
-@pytest.mark.xfail(strict=False, reason="stub — implementation pending")
 def test_settings_env_override():
-    """GARCH_VOL_LOW env var overrides the garch_vol_low setting value."""
-    pytest.fail("not implemented")
+    """GARCH_VOL_LOW env var overrides the garch_vol_low setting value at runtime."""
+    import os
+    from config.settings import get_settings
+
+    # Must clear lru_cache before setting env var so Settings re-initialises
+    get_settings.cache_clear()
+    os.environ["GARCH_VOL_LOW"] = "0.3"
+    try:
+        s = get_settings()
+        assert s.garch_vol_low == pytest.approx(0.3), (
+            f"Expected garch_vol_low=0.3 from env, got {s.garch_vol_low}"
+        )
+    finally:
+        # Restore: remove env var and clear cache so subsequent tests see defaults
+        del os.environ["GARCH_VOL_LOW"]
+        get_settings.cache_clear()
