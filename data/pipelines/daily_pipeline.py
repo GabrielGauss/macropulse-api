@@ -55,6 +55,19 @@ _DRIFT_VARIANCE_WARN = 0.10
 _DRIFT_PERSISTENCE_WARN = 0.97
 _DRIFT_FEATURE_SHIFT_WARN = 1.5
 
+# Critical series — pipeline halts if any are missing or all-NaN.
+_CRITICAL_FRED_COLS: frozenset[str] = frozenset({"WALCL", "DGS10", "DGS2"})
+_CRITICAL_MARKET_COLS: frozenset[str] = frozenset({"vix"})
+
+
+def _missing_or_all_nan(df: pd.DataFrame, cols: frozenset[str]) -> set[str]:
+    """Return the subset of cols that are absent from df or contain only NaN values."""
+    missing: set[str] = set(cols) - set(df.columns)
+    for col in cols - missing:
+        if df[col].isna().all():
+            missing.add(col)
+    return missing
+
 
 def _log_run(
     status: str,
@@ -122,6 +135,21 @@ def run_daily_pipeline(
         _log_run("failed", data_lag=False, duration=duration, error=msg, model_version=version)
         raise RuntimeError(msg)
 
+    # ── 2b. Critical series guard ────────────────────────────────
+    missing_fred = _missing_or_all_nan(fred_df, _CRITICAL_FRED_COLS)
+    missing_market = _missing_or_all_nan(market_df, _CRITICAL_MARKET_COLS)
+
+    if missing_fred or missing_market:
+        duration = time.monotonic() - t0
+        msg = (
+            f"Critical series missing or all-NaN: "
+            f"FRED={missing_fred or 'none'} market={missing_market or 'none'}"
+        )
+        logger.error("PIPELINE HALT — %s", msg)
+        _log_run("halted", data_lag=False, duration=duration, error=msg, model_version=version)
+        alert_drift_warning("pipeline_halt_critical_data", 1.0, 0.0, today.isoformat())
+        return {"status": "halted", "stale_data": True, "reason": msg, "timestamp": today.isoformat()}
+
     # ── 3. Feature engineering ───────────────────────────────────
     features = build_features(fred_df, market_df)
 
@@ -158,7 +186,15 @@ def run_daily_pipeline(
 
     # v1 artifacts were trained on 8 features; v2 uses all 10.
     feature_cols = MODEL_FEATURE_COLS_V1 if version == "v1" else MODEL_FEATURE_COLS
-    X = features[feature_cols].values
+    # Filter to columns actually present — optional commodity columns may be excluded
+    # when data was unavailable. For v1, this is a no-op (no commodity cols in V1 set).
+    # For v2, a missing commodity column will cause PCA ValueError — intentional (surfaces
+    # incompatibility loudly; fix requires model retrain, tracked as tech debt).
+    available_cols = [c for c in feature_cols if c in features.columns]
+    if len(available_cols) < len(feature_cols):
+        excluded = set(feature_cols) - set(available_cols)
+        logger.warning("Optional feature columns excluded from PCA input: %s", excluded)
+    X = features[available_cols].values
     factors = pca_model.transform(X)
 
     # ── 7a. GARCH volatility state (replaces simple VIX threshold) ────
