@@ -50,11 +50,6 @@ from services.validation import validate_features, validate_market_data, validat
 
 logger = logging.getLogger(__name__)
 
-# Drift thresholds
-_DRIFT_VARIANCE_WARN = 0.10
-_DRIFT_PERSISTENCE_WARN = 0.97
-_DRIFT_FEATURE_SHIFT_WARN = 1.5
-
 # Critical series — pipeline halts if any are missing or all-NaN.
 _CRITICAL_FRED_COLS: frozenset[str] = frozenset({"WALCL", "DGS10", "DGS2"})
 _CRITICAL_MARKET_COLS: frozenset[str] = frozenset({"vix"})
@@ -286,12 +281,12 @@ def run_daily_pipeline(
     )
 
     # Fire drift alerts if thresholds exceeded
-    if pca_drift > _DRIFT_VARIANCE_WARN:
-        alert_drift_warning("pca_variance_drift", pca_drift, _DRIFT_VARIANCE_WARN, ts_iso)
-    if persistence > _DRIFT_PERSISTENCE_WARN:
-        alert_drift_warning("regime_persistence", persistence, _DRIFT_PERSISTENCE_WARN, ts_iso)
-    if mean_shift > _DRIFT_FEATURE_SHIFT_WARN:
-        alert_drift_warning("feature_mean_shift", mean_shift, _DRIFT_FEATURE_SHIFT_WARN, ts_iso)
+    if pca_drift > settings.pipeline_drift_variance_warn:
+        alert_drift_warning("pca_variance_drift", pca_drift, settings.pipeline_drift_variance_warn, ts_iso)
+    if persistence > settings.pipeline_drift_persistence_warn:
+        alert_drift_warning("regime_persistence", persistence, settings.pipeline_drift_persistence_warn, ts_iso)
+    if mean_shift > settings.pipeline_drift_feature_shift_warn:
+        alert_drift_warning("feature_mean_shift", mean_shift, settings.pipeline_drift_feature_shift_warn, ts_iso)
 
     # ── 12. WebSocket broadcast ──────────────────────────────────
     output = {

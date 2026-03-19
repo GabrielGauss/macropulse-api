@@ -22,15 +22,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from config.settings import get_settings
+
 logger = logging.getLogger(__name__)
-
-# ── Domain thresholds ─────────────────────────────────────────────────
-
-# Minimum rows needed for a rolling trend computation.
-_MIN_ROWS = 5
-
-# Regime probability threshold below which a regime is "dominant".
-_DOMINANT_PROB = 0.50
 
 # Score range: each analyst returns a float in [-100, +100].
 _SCORE_MAX = 100.0
@@ -87,6 +81,7 @@ def analyse_equity(
     -------
     dict with keys: signal ("bullish"|"neutral"|"bearish"), score (float), rationale (str).
     """
+    settings = get_settings()
     # Convert history to DataFrame (chronological).
     hist_df = pd.DataFrame(list(reversed(history))) if history else pd.DataFrame()
 
@@ -95,10 +90,10 @@ def analyse_equity(
 
     # ── Risk-off probability ──────────────────────────────────────────
     risk_off_prob = float(regime_row.get("prob_risk_off", 0))
-    if risk_off_prob > _DOMINANT_PROB:
+    if risk_off_prob > settings.orchestrator_dominant_prob:
         score -= 50.0
         rationale_parts.append(f"risk-off probability elevated ({risk_off_prob:.0%})")
-    elif risk_off_prob < 0.20:
+    elif risk_off_prob < 0.20:  # risk_off suppressed threshold — tunable via orchestrator_dominant_prob
         score += 20.0
         rationale_parts.append(f"risk-off probability suppressed ({risk_off_prob:.0%})")
 
@@ -106,22 +101,22 @@ def analyse_equity(
     exp_prob = float(regime_row.get("prob_expansion", 0))
     rec_prob = float(regime_row.get("prob_recovery", 0))
     growth_prob = exp_prob + rec_prob
-    if growth_prob > 0.6:
+    if growth_prob > settings.orchestrator_equity_growth_prob_high:
         score += 40.0
         rationale_parts.append(f"growth regime probability high ({growth_prob:.0%})")
-    elif growth_prob < 0.3:
+    elif growth_prob < settings.orchestrator_equity_growth_prob_low:
         score -= 20.0
         rationale_parts.append(f"growth regime probability low ({growth_prob:.0%})")
 
     # ── Probability trend over recent history ────────────────────────
-    if len(hist_df) >= _MIN_ROWS and "prob_recovery" in hist_df.columns:
+    if len(hist_df) >= settings.orchestrator_min_rows and "prob_recovery" in hist_df.columns:
         growth_trend = _safe_slope(
             hist_df["prob_expansion"].fillna(0) + hist_df["prob_recovery"].fillna(0)
         )
-        if growth_trend > 0.002:
+        if growth_trend > settings.orchestrator_equity_growth_trend:
             score += 20.0
             rationale_parts.append("growth probabilities trending up")
-        elif growth_trend < -0.002:
+        elif growth_trend < -settings.orchestrator_equity_growth_trend:
             score -= 20.0
             rationale_parts.append("growth probabilities trending down")
 
@@ -139,9 +134,9 @@ def analyse_equity(
 
     score = _clip_score(score)
 
-    if score >= 25:
+    if score >= settings.orchestrator_domain_signal_threshold:
         signal = "bullish"
-    elif score <= -25:
+    elif score <= -settings.orchestrator_domain_signal_threshold:
         signal = "bearish"
     else:
         signal = "neutral"
@@ -173,12 +168,13 @@ def analyse_rates(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
     -------
     dict with keys: signal, score, rationale.
     """
+    settings = get_settings()
     feat_df = pd.DataFrame(list(reversed(features_rows))) if features_rows else pd.DataFrame()
 
     score = 0.0
     rationale_parts: list[str] = []
 
-    if feat_df.empty or len(feat_df) < _MIN_ROWS:
+    if feat_df.empty or len(feat_df) < settings.orchestrator_min_rows:
         return {
             "signal": "neutral",
             "score": 0.0,
@@ -190,10 +186,10 @@ def analyse_rates(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
         curve_slope = _safe_slope(feat_df["d_yield_curve"].fillna(0))
         # Cumulative yield curve level (sum of differences) as proxy for level
         curve_level = float(feat_df["d_yield_curve"].fillna(0).sum())
-        if curve_slope > 0.0005:
+        if curve_slope > settings.orchestrator_rates_curve_slope:
             score += 25.0
             rationale_parts.append("yield curve steepening (trend)")
-        elif curve_slope < -0.0005:
+        elif curve_slope < -settings.orchestrator_rates_curve_slope:
             score -= 25.0
             rationale_parts.append("yield curve flattening / inverting (trend)")
 
@@ -207,21 +203,21 @@ def analyse_rates(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
     # ── 10-year yield direction ───────────────────────────────────────
     if "d_10y" in feat_df.columns:
         ten_yr_slope = _safe_slope(feat_df["d_10y"].fillna(0))
-        if ten_yr_slope < -0.001:
+        if ten_yr_slope < -settings.orchestrator_rates_10y_fall:
             score += 20.0
             rationale_parts.append("10Y yield falling (accommodative)")
-        elif ten_yr_slope > 0.002:
+        elif ten_yr_slope > settings.orchestrator_rates_10y_rise_sharp:
             score -= 30.0
             rationale_parts.append("10Y yield rising sharply (restrictive)")
-        elif ten_yr_slope > 0.001:
+        elif ten_yr_slope > settings.orchestrator_rates_10y_fall:
             score -= 10.0
             rationale_parts.append("10Y yield rising modestly")
 
     score = _clip_score(score)
 
-    if score >= 25:
+    if score >= settings.orchestrator_domain_signal_threshold:
         signal = "bullish"
-    elif score <= -25:
+    elif score <= -settings.orchestrator_domain_signal_threshold:
         signal = "bearish"
     else:
         signal = "neutral"
@@ -251,12 +247,13 @@ def analyse_credit(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
     -------
     dict with keys: signal, score, rationale.
     """
+    settings = get_settings()
     feat_df = pd.DataFrame(list(reversed(features_rows))) if features_rows else pd.DataFrame()
 
     score = 0.0
     rationale_parts: list[str] = []
 
-    if feat_df.empty or len(feat_df) < _MIN_ROWS or "d_hy_spread" not in feat_df.columns:
+    if feat_df.empty or len(feat_df) < settings.orchestrator_min_rows or "d_hy_spread" not in feat_df.columns:
         return {
             "signal": "neutral",
             "score": 0.0,
@@ -272,13 +269,13 @@ def analyse_credit(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
 
     # ── Trend direction ───────────────────────────────────────────────
     normalised_slope = spread_slope / max(spread_std, 1e-6)
-    if normalised_slope < -0.1:
+    if normalised_slope < -settings.orchestrator_credit_slope_strong:
         score += 40.0
         rationale_parts.append("HY spreads tightening (trend)")
     elif normalised_slope < 0:
         score += 15.0
         rationale_parts.append("HY spreads mildly tightening")
-    elif normalised_slope > 0.1:
+    elif normalised_slope > settings.orchestrator_credit_slope_strong:
         score -= 40.0
         rationale_parts.append("HY spreads widening (trend)")
     elif normalised_slope > 0:
@@ -286,18 +283,18 @@ def analyse_credit(features_rows: list[dict[str, Any]]) -> dict[str, Any]:
         rationale_parts.append("HY spreads mildly widening")
 
     # ── Net level over window ─────────────────────────────────────────
-    if spread_net < -0.2:
+    if spread_net < -settings.orchestrator_credit_net_threshold:
         score += 20.0
         rationale_parts.append("net spread compression over window")
-    elif spread_net > 0.2:
+    elif spread_net > settings.orchestrator_credit_net_threshold:
         score -= 20.0
         rationale_parts.append("net spread expansion over window")
 
     score = _clip_score(score)
 
-    if score >= 25:
+    if score >= settings.orchestrator_domain_signal_threshold:
         signal = "bullish"
-    elif score <= -25:
+    elif score <= -settings.orchestrator_domain_signal_threshold:
         signal = "bearish"
     else:
         signal = "neutral"
@@ -328,6 +325,7 @@ def analyse_liquidity(liquidity_rows: list[dict[str, Any]]) -> dict[str, Any]:
     -------
     dict with keys: signal ("risk_on"|"neutral"|"risk_off"), score, rationale.
     """
+    settings = get_settings()
     liq_df = pd.DataFrame(list(reversed(liquidity_rows))) if liquidity_rows else pd.DataFrame()
 
     score = 0.0
@@ -343,7 +341,7 @@ def analyse_liquidity(liquidity_rows: list[dict[str, Any]]) -> dict[str, Any]:
     # Use last 30 rows (≈30 trading days).
     liq_series = liq_df["net_liquidity"].dropna().tail(30)
 
-    if len(liq_series) < _MIN_ROWS:
+    if len(liq_series) < settings.orchestrator_min_rows:
         return {
             "signal": "neutral",
             "score": 0.0,
@@ -359,20 +357,20 @@ def analyse_liquidity(liquidity_rows: list[dict[str, Any]]) -> dict[str, Any]:
     # Normalise slope as fraction of the starting level.
     normalised_slope = slope / abs(start_level) * 1_000  # per-thousand per day
 
-    if normalised_slope > 0.5:
+    if normalised_slope > settings.orchestrator_liquidity_slope_strong:
         score += 60.0
         rationale_parts.append(
             f"net liquidity expanding strongly (slope={slope:+.0f}M/day)"
         )
-    elif normalised_slope > 0.1:
+    elif normalised_slope > settings.orchestrator_liquidity_slope_mild:
         score += 30.0
         rationale_parts.append("net liquidity expanding")
-    elif normalised_slope < -0.5:
+    elif normalised_slope < -settings.orchestrator_liquidity_slope_strong:
         score -= 60.0
         rationale_parts.append(
             f"net liquidity contracting strongly (slope={slope:+.0f}M/day)"
         )
-    elif normalised_slope < -0.1:
+    elif normalised_slope < -settings.orchestrator_liquidity_slope_mild:
         score -= 30.0
         rationale_parts.append("net liquidity contracting")
     else:
@@ -392,9 +390,9 @@ def analyse_liquidity(liquidity_rows: list[dict[str, Any]]) -> dict[str, Any]:
 
     score = _clip_score(score)
 
-    if score >= 25:
+    if score >= settings.orchestrator_domain_signal_threshold:
         signal = "risk_on"
-    elif score <= -25:
+    elif score <= -settings.orchestrator_domain_signal_threshold:
         signal = "risk_off"
     else:
         signal = "neutral"
@@ -456,6 +454,7 @@ def composite_analysis(
         "liquidity": liquidity_out,
     }
 
+    settings = get_settings()
     scores = np.array(
         [equity_out["score"], rates_out["score"], credit_out["score"], liquidity_out["score"]],
         dtype=float,
@@ -465,17 +464,17 @@ def composite_analysis(
     # ── Conviction from analyst agreement ────────────────────────────
     score_std = float(np.std(scores))
     # Low std → analysts agree → high conviction.
-    if score_std < 20.0:
+    if score_std < settings.orchestrator_conviction_high_std:
         conviction = "high"
-    elif score_std < 45.0:
+    elif score_std < settings.orchestrator_conviction_medium_std:
         conviction = "medium"
     else:
         conviction = "low"
 
     # ── Composite signal ──────────────────────────────────────────────
-    if composite_score >= 20:
+    if composite_score >= settings.orchestrator_composite_signal_threshold:
         composite_signal = "risk_on"
-    elif composite_score <= -20:
+    elif composite_score <= -settings.orchestrator_composite_signal_threshold:
         composite_signal = "risk_off"
     else:
         composite_signal = "neutral"

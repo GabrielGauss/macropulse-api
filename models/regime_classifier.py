@@ -109,9 +109,10 @@ def classify_volatility(vix_diff: float | None) -> str:
     """Simple volatility-state label from VIX change."""
     if vix_diff is None:
         return "unknown"
-    if vix_diff > 2.0:
+    settings = get_settings()
+    if vix_diff > settings.vix_diff_elevated:
         return "elevated"
-    if vix_diff < -2.0:
+    if vix_diff < settings.vix_diff_compressed:
         return "compressed"
     return "normal"
 

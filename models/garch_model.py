@@ -24,11 +24,6 @@ logger = logging.getLogger(__name__)
 
 VolState = Literal["low", "normal", "elevated", "crisis"]
 
-# Standard-deviation thresholds for volatility bucket classification.
-_VOL_LOW = 0.5
-_VOL_NORMAL = 1.5
-_VOL_ELEVATED = 2.5
-
 
 class GARCHModel:
     """
@@ -183,13 +178,14 @@ class GARCHModel:
             )
             return "normal"
 
+        settings = get_settings()
         normalised = conditional_vol / self._long_run_vol
 
-        if normalised < _VOL_LOW:
+        if normalised < settings.garch_vol_low:
             state: VolState = "low"
-        elif normalised < _VOL_NORMAL:
+        elif normalised < settings.garch_vol_normal:
             state = "normal"
-        elif normalised < _VOL_ELEVATED:
+        elif normalised < settings.garch_vol_elevated:
             state = "elevated"
         else:
             state = "crisis"

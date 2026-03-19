@@ -47,6 +47,7 @@ def _persistence_and_confidence(
       persistence_days – how many consecutive trailing days share the same regime label
       confidence       – HIGH / MODERATE / LOW from max_prob
     """
+    settings = get_settings()
     streak = 0
     for row in regime_rows:  # rows ordered DESC (newest first)
         if row.get("regime") == current_regime:
@@ -54,9 +55,9 @@ def _persistence_and_confidence(
         else:
             break
 
-    if max_prob >= 0.70:
+    if max_prob >= settings.signal_confidence_high_threshold:
         confidence = "HIGH"
-    elif max_prob >= 0.50:
+    elif max_prob >= settings.signal_confidence_moderate_threshold:
         confidence = "MODERATE"
     else:
         confidence = "LOW"
@@ -140,11 +141,12 @@ def _net_liquidity_signals(
         if r.get("d_liquidity") is not None
     ]
     if d_liq_recent:
+        settings = get_settings()
         pos = sum(1 for v in d_liq_recent if v > 0)
         neg = sum(1 for v in d_liq_recent if v < 0)
-        if pos >= 12:
+        if pos >= settings.signal_liquidity_trend_min_pos:
             trend = "EXPANDING"
-        elif neg >= 12:
+        elif neg >= settings.signal_liquidity_trend_min_pos:
             trend = "CONTRACTING"
         else:
             trend = "STABLE"
@@ -357,9 +359,10 @@ def build_signal_range(
             else:
                 break
 
-        if max_prob >= 0.70:
+        s = get_settings()
+        if max_prob >= s.signal_confidence_high_threshold:
             confidence = "HIGH"
-        elif max_prob >= 0.50:
+        elif max_prob >= s.signal_confidence_moderate_threshold:
             confidence = "MODERATE"
         else:
             confidence = "LOW"
