@@ -60,10 +60,22 @@ class HMMModel:
 
         Shape: (T, n_regimes)
         """
+        if hasattr(self.hmm, "monitor_") and not self.hmm.monitor_.converged:
+            raise RuntimeError(
+                "HMM model did not converge (monitor_.converged=False). "
+                "Regime probabilities are unreliable. Halting pipeline."
+            )
+        logger.info("HMM convergence check passed (converged=True)")
         return self.hmm.predict_proba(factors)
 
     def predict(self, factors: np.ndarray) -> np.ndarray:
         """Return the most likely state sequence via Viterbi."""
+        if hasattr(self.hmm, "monitor_") and not self.hmm.monitor_.converged:
+            raise RuntimeError(
+                "HMM model did not converge (monitor_.converged=False). "
+                "Regime probabilities are unreliable. Halting pipeline."
+            )
+        logger.info("HMM convergence check passed (converged=True)")
         return self.hmm.predict(factors)
 
     def score(self, factors: np.ndarray) -> float:
