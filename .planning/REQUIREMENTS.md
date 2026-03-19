@@ -42,11 +42,11 @@ Requirements for v1.0 Ship-Ready milestone.
 
 ### Pipeline Quality
 
-- [ ] **PIPE-01**: Pipeline halts and returns stale_data:true when any critical FRED series (WALCL, DGS10, DGS2) is missing or all-NaN; optional commodity columns excluded (not zero-filled) when unavailable
-- [ ] **PIPE-02**: Pipeline halts and returns stale_data:true when VIX data is missing or all-NaN
-- [ ] **PIPE-03**: HMM inference halts with RuntimeError when the loaded model's monitor_.converged is False
-- [ ] **PIPE-04**: GARCH forecast_vol() uses the stored ARCHModelResult.forecast() instead of re-fitting on every inference call
-- [ ] **PIPE-05**: All 20+ magic number thresholds across daily_pipeline.py, orchestrator.py, signals.py, garch_model.py, and regime_classifier.py are defined in settings.py with env-var overrides
+- [x] **PIPE-01**: Pipeline halts and returns stale_data:true when any critical FRED series (WALCL, DGS10, DGS2) is missing or all-NaN; optional commodity columns excluded (not zero-filled) when unavailable
+- [x] **PIPE-02**: Pipeline halts and returns stale_data:true when VIX data is missing or all-NaN
+- [x] **PIPE-03**: HMM inference halts with RuntimeError when the loaded model's monitor_.converged is False
+- [x] **PIPE-04**: GARCH forecast_vol() uses the stored ARCHModelResult.forecast() instead of re-fitting on every inference call
+- [x] **PIPE-05**: All 20+ magic number thresholds across daily_pipeline.py, orchestrator.py, signals.py, garch_model.py, and regime_classifier.py are defined in settings.py with env-var overrides
 
 ## v2 Requirements
 

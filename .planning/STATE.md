@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-api-docs/04-02-PLAN.md
-last_updated: "2026-03-18T22:38:52.972Z"
+stopped_at: Completed 05-pipeline-quality-and-noise-reduction/05-00-PLAN.md
+last_updated: "2026-03-19T23:07:21.888Z"
 last_activity: "2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 15
+  completed_plans: 14
   percent: 75
 ---
 
@@ -60,6 +60,8 @@ Progress: [████████░░] 75%
 | Phase 03-marketing-site P03 | <1min | 1 tasks | 0 files |
 | Phase 04-api-docs P01 | <1min | 1 tasks | 1 files |
 | Phase 04-api-docs P02 | <1min | 1 tasks | 1 files |
+| Phase 05-pipeline-quality-and-noise-reduction P00 | 15min | 3 tasks | 4 files |
+| Phase 05-pipeline-quality-and-noise-reduction P02 | 20min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -88,6 +90,11 @@ Recent decisions affecting current work:
 - [Phase 03-marketing-site]: No code changes in plan 03-03 — human-verify checkpoint confirmed all 4 SITE requirements visually in browser before phase close
 - [Phase 04-api-docs]: API Docs sidebar link points to macropulse.live/api-docs.html — the hosted reference page replaces the raw GitHub repo URL (DOCS-01)
 - [Phase 04-api-docs]: CSS tokens in api-docs.html now match index.html exactly — single source of truth for MacroPulse dark theme (DOCS-02)
+- [Phase 05-pipeline-quality-and-noise-reduction]: pytest 9.0.2 installed as test runner; xfail stubs with pytest.fail('not implemented') keep suite green while implementation pending
+- [Phase 05-pipeline-quality-and-noise-reduction]: conftest.py fixtures use MagicMock not real models — avoids DB/network dependencies at scaffold stage
+- [Phase 05-pipeline-quality-and-noise-reduction]: HMM convergence guard uses hasattr() to handle legacy artifacts; raises RuntimeError on non-convergence before any inference output
+- [Phase 05-pipeline-quality-and-noise-reduction]: GARCH forecast_vol uses stored _arch_result.forecast() — no re-fit on inference; keeps returns_series parameter and len(clean)<30 fallback (no API break)
+- [Phase 05-pipeline-quality-and-noise-reduction]: broadcast_regime() catches (WebSocketDisconnect, RuntimeError) not bare Exception — stale connection cleanup preserved, unexpected errors now surface
 
 ### Pending Todos
 
@@ -100,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T22:33:40.347Z
-Stopped at: Completed 04-api-docs/04-02-PLAN.md
+Last session: 2026-03-19T23:07:06.048Z
+Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-00-PLAN.md
 Resume file: None
