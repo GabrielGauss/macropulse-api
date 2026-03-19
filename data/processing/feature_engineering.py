@@ -4,9 +4,12 @@ Feature engineering for MacroPulse.
 Transforms raw macro and market series into stationary features
 suitable for PCA / HMM consumption.
 
-Feature set (10 total):
+Core feature set (8 columns, always present when data is valid):
     d_liquidity, d_sp500, d_vix, d_dxy, d_hy_spread,
-    d_yield_curve, d_10y, d_2y, d_gold, d_oil
+    d_yield_curve, d_10y, d_2y
+
+Optional commodity features (absent from output when data is unavailable):
+    d_gold, d_oil, d_btc, d_eth
 """
 
 from __future__ import annotations
@@ -44,13 +47,13 @@ def build_features(
     """
     Combine FRED and market data, then produce stationary features.
 
-    Returns a DataFrame with columns:
+    Returns a DataFrame with core columns:
         net_liquidity, d_liquidity, d_sp500, d_vix, d_dxy,
-        d_hy_spread, d_yield_curve, d_10y, d_2y, d_gold, d_oil
+        d_hy_spread, d_yield_curve, d_10y, d_2y
 
-    Gold and oil are optional — missing columns are silently filled
-    with zeros so that downstream code operates unchanged on v1
-    model pipelines that were trained without these features.
+    Optional commodity columns (d_gold, d_oil, d_btc, d_eth) are included
+    only when source data is available. When unavailable, the column is
+    absent from the output entirely — not zero-filled.
     """
     # ── Normalise both indices to tz-naive date-only DatetimeIndex ───
     fred_df = fred_df.copy()
@@ -88,37 +91,27 @@ def build_features(
     features["d_10y"] = combined["DGS10"].diff()
     features["d_2y"] = combined["DGS2"].diff()
 
-    # Optional commodity features — graceful fallback when tickers are absent.
+    # Optional commodity features — column is absent from output when data is unavailable.
+    # Do NOT zero-fill: a missing column is preferable to a signal-corrupting zero series.
     if "gold" in combined.columns and combined["gold"].notna().any():
         features["d_gold"] = np.log(combined["gold"].replace(0, np.nan)).diff()
     else:
-        logger.warning("Gold data unavailable; d_gold set to 0.")
-        features["d_gold"] = pd.Series(0.0, index=combined.index)
+        logger.warning("Gold data unavailable; d_gold excluded from features.")
 
     if "oil" in combined.columns and combined["oil"].notna().any():
         features["d_oil"] = np.log(combined["oil"].replace(0, np.nan)).diff()
     else:
-        logger.warning("Oil data unavailable; d_oil set to 0.")
-        features["d_oil"] = pd.Series(0.0, index=combined.index)
+        logger.warning("Oil data unavailable; d_oil excluded from features.")
 
     if "btc" in combined.columns and combined["btc"].notna().any():
         features["d_btc"] = np.log(combined["btc"].replace(0, np.nan)).diff()
     else:
-        logger.warning("BTC data unavailable; d_btc set to 0.")
-        features["d_btc"] = pd.Series(0.0, index=combined.index)
+        logger.warning("BTC data unavailable; d_btc excluded from features.")
 
     if "eth" in combined.columns and combined["eth"].notna().any():
         features["d_eth"] = np.log(combined["eth"].replace(0, np.nan)).diff()
     else:
-        logger.warning("ETH data unavailable; d_eth set to 0.")
-        features["d_eth"] = pd.Series(0.0, index=combined.index)
-
-    # Fill any remaining NaNs in optional columns with 0 before dropna
-    # so that gaps in commodity/crypto data do not purge otherwise-complete rows.
-    features["d_gold"] = features["d_gold"].fillna(0.0)
-    features["d_oil"] = features["d_oil"].fillna(0.0)
-    features["d_btc"] = features["d_btc"].fillna(0.0)
-    features["d_eth"] = features["d_eth"].fillna(0.0)
+        logger.warning("ETH data unavailable; d_eth excluded from features.")
 
     features = features.dropna()
     logger.info("Built feature matrix: %s", features.shape)
