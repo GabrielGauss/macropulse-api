@@ -63,6 +63,9 @@ Progress: [████████░░] 75%
 
 ## Accumulated Context
 
+### Roadmap Evolution
+- Phase 5 added: Pipeline Quality and Noise Reduction — fix silent data failures, HMM convergence gaps, consolidate magic number thresholds into config
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.

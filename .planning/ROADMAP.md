@@ -96,6 +96,16 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 3. Marketing Site | 2/3 | Complete    | 2026-03-18 |
 | 4. API Docs | 2/2 | Complete    | 2026-03-18 |
 
+### Phase 5: Pipeline Quality and Noise Reduction
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 5 to break down)
+
 ---
 *Roadmap created: 2026-03-18 — v1.0 Ship-Ready milestone*
 *Updated: 2026-03-18 — Phase 1 planned (4 plans)*
