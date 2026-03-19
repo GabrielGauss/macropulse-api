@@ -52,7 +52,8 @@ async def broadcast_regime(payload: dict[str, Any]) -> None:
     for ws in list(_connections):
         try:
             await ws.send_text(message)
-        except Exception:
+        except (WebSocketDisconnect, RuntimeError):
+            # Stale or closed connection — cleanup is handled by the disconnect handler.
             stale.append(ws)
     for ws in stale:
         _connections.discard(ws)

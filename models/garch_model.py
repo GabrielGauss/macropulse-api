@@ -139,16 +139,10 @@ class GARCHModel:
             )
             return self._long_run_vol or 1.0
 
-        model = arch_model(
-            clean * 100,
-            vol="Garch",
-            p=1,
-            q=1,
-            dist="normal",
-            rescale=False,
-        )
-        result = model.fit(disp="off", show_warning=False)
-        forecast = result.forecast(horizon=1, reindex=False)
+        # Use the stored fitted result — no re-fit required.
+        # ARCHModelResult.forecast() uses stored parameters and last observed residuals;
+        # the original data series is not needed.
+        forecast = self._arch_result.forecast(horizon=1, reindex=False)
         cond_var = float(forecast.variance.iloc[-1, 0])
         cond_vol = float(np.sqrt(max(cond_var, 0.0)))
         logger.info(
