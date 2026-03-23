@@ -279,10 +279,10 @@
     <div class="hero-eyebrow">MacroPulse Research · Early Access</div>
     <h1>Immutable Reasoning Log<br><span>for Autonomous Agents</span></h1>
     <p class="hero-sub">
-      IRL is a pre-execution compliance gateway that cryptographically seals an autonomous agent's
-      epistemic state — its regime knowledge, model identity, and authorised intent — before any
-      order reaches the exchange. The result is a tamper-evident audit chain that proves not just
-      what happened, but why.
+      IRL puts a cryptographic seal on every autonomous trading decision — regardless of which
+      regime signal your agents run on. Bring your own model, your own signal provider, or use
+      MacroPulse as a turnkey Market Truth Anchor. The seal, the audit chain, and the compliance
+      guarantees are identical either way.
     </p>
     <div class="hero-actions">
       <a href="mailto:research@macropulse.live" class="btn-primary">Request Early Access</a>
@@ -420,28 +420,30 @@
 <!-- MTA CONNECTION -->
 <div class="container">
   <div class="section">
-    <div class="section-label">MacroPulse Integration</div>
-    <h2>MTA as Ground Truth</h2>
+    <div class="section-label">Market Truth Anchor</div>
+    <h2>Bring Your Own Signal — or Use Ours</h2>
     <p class="section-sub">
-      IRL is built on top of the MacroPulse Market Truth Anchor. The MTA's signed regime broadcast
-      is the external reference frame that makes policy enforcement objective and independently verifiable.
+      IRL depends on an abstract MTA interface, not on any specific operator.
+      Any cryptographically signed regime source can serve as the MTA for your deployment.
     </p>
     <div class="mta-box">
       <div>
-        <h3>MacroPulse MTA</h3>
+        <h3>MacroPulse MTA — turnkey</h3>
         <p>
-          A Hidden Markov Model / PCA pipeline that classifies macro market conditions into
-          four discrete regimes daily. Each output is Ed25519-signed and broadcast with a
-          version hash — so any change to the pipeline is detectable in the audit trail.
+          Zero additional infrastructure. MacroPulse's HMM/PCA pipeline produces
+          Ed25519-signed regime broadcasts with version hashes. Plug in your URL and
+          public key — IRL verifies signatures and caches state automatically.
+          Recommended for firms without a proprietary regime model.
         </p>
       </div>
       <hr class="mta-divider" />
       <div>
-        <h3>What IRL adds</h3>
+        <h3>Custom MTA — one implementation</h3>
         <p>
-          Every IRL trace embeds the <span class="mono" style="color:var(--green);font-size:0.82rem;">mta_hash</span> of the specific signed broadcast the agent
-          observed. An auditor holding the MacroPulse public key can independently verify the
-          regime signature — no access to IRL infrastructure required.
+          Quant firms running their own regime pipelines implement a single Rust trait
+          (<span class="mono" style="color:var(--green);font-size:0.82rem;">MtaClient</span>)
+          and pass it at startup. IRL seals against your signal with the same
+          cryptographic guarantees. Your model stays private. Your compliance chain is identical.
         </p>
       </div>
     </div>
