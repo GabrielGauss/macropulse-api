@@ -224,7 +224,32 @@
       .hero { padding: 7rem 0 4rem; }
       footer { flex-direction: column; align-items: flex-start; }
     }
+
+    /* ── Content protection ── */
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    /* Confidential watermark — diagonal, low opacity, non-interactive */
+    body::after {
+      content: 'CONFIDENTIAL · MacroPulse Research · NOT FOR DISTRIBUTION';
+      position: fixed;
+      bottom: 3rem; right: -4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: rgba(34,197,94,0.08);
+      letter-spacing: 0.12em;
+      transform: rotate(-30deg);
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+    }
   </style>
+
+  <!-- No-index: keep this page out of search engines -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
 </head>
 <body>
 
@@ -474,6 +499,39 @@
     <a href="/privacy.html">Privacy</a>
   </div>
 </footer>
+
+<script>
+  // Disable right-click
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // Disable drag
+  document.addEventListener('dragstart', e => e.preventDefault());
+
+  // Block keyboard shortcuts: Ctrl+C, Ctrl+A, Ctrl+S, Ctrl+P, Ctrl+U, F12, PrintScreen
+  document.addEventListener('keydown', e => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (
+      (ctrl && ['c','a','s','p','u'].includes(e.key.toLowerCase())) ||
+      e.key === 'F12' ||
+      e.key === 'PrintScreen'
+    ) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Blank the page on PrintScreen (Windows fires keyup for PrtScn)
+  document.addEventListener('keyup', e => {
+    if (e.key === 'PrintScreen') {
+      navigator.clipboard.writeText('').catch(() => {});
+    }
+  });
+
+  // Disable devtools shortcut on Mac (Cmd+Opt+I)
+  document.addEventListener('keydown', e => {
+    if (e.metaKey && e.altKey && e.key === 'i') e.preventDefault();
+  });
+</script>
 
 </body>
 </html>
