@@ -10,8 +10,8 @@ from pathlib import Path
 import httpx
 
 TOKEN = os.environ["VERCEL_TOKEN"]
-TEAM_OR_USER = os.environ.get("VERCEL_USER_ID", "")
-PROJECT_NAME = "macropulse"
+TEAM_ID = "team_rgtPxZB3KxK2BXtWrbySSLh4"
+PROJECT_NAME = "site"
 SITE_DIR = Path(__file__).parent.parent / "site"
 
 HEADERS = {
@@ -45,7 +45,7 @@ def deploy(files):
     }
     print(f"Deploying {len(files)} files to project '{PROJECT_NAME}'...")
     resp = httpx.post(
-        "https://api.vercel.com/v13/deployments",
+        f"https://api.vercel.com/v13/deployments?teamId={TEAM_ID}",
         headers=HEADERS,
         json=payload,
         timeout=60,
@@ -56,7 +56,7 @@ def deploy(files):
 def add_domain(project_id):
     for domain in ["macropulse.live", "www.macropulse.live"]:
         resp = httpx.post(
-            f"https://api.vercel.com/v10/projects/{project_id}/domains",
+            f"https://api.vercel.com/v10/projects/{project_id}/domains?teamId={TEAM_ID}",
             headers=HEADERS,
             json={"name": domain},
             timeout=30,
