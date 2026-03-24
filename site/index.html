@@ -1236,7 +1236,7 @@
   <div class="hero">
     <!-- Left: copy -->
     <div>
-      <div class="hero-eyebrow">Macro regime intelligence · Updated daily at 18:30 UTC</div>
+      <div class="hero-eyebrow">REST API Subscription · SaaS · Plans from $49/mo</div>
       <h1>Stop predicting.<br/>Start <em>allocating.</em></h1>
       <p class="hero-sub">
         MacroPulse classifies the macro environment daily — Expansion, Recovery, Tightening, or Risk-Off — and tells your system exactly how much equity to hold. 100% when conditions are right. 0% when they're not. Backed by data, never by opinion.
@@ -1257,7 +1257,7 @@
       </div>
       <div class="hero-actions">
         <button class="btn-fill" onclick="document.getElementById('reg-email').focus(); document.querySelector('#register').scrollIntoView({behavior:'smooth'})">Get Free API Key</button>
-        <a href="https://api.macropulse.live" target="_blank"><button class="btn-ghost">Live Dashboard →</button></a>
+        <button class="btn-ghost" onclick="document.querySelector('#pricing').scrollIntoView({behavior:'smooth'})">View paid plans →</button>
       </div>
       <div class="hero-regime-status" id="hero-status" style="display:none;">
         <div class="regime-status-dot" id="hero-status-dot"></div>
@@ -1777,7 +1777,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-no">✗</span> <span>Webhook delivery</span></div>
             <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
           </div>
-          <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Starter" class="plan-btn solid" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
+          <button class="plan-btn solid" style="width:100%;" onclick="openSubscribeModal('Starter','49')">Subscribe →</button>
         </div>
 
         <!-- Pro -->
@@ -1800,7 +1800,7 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>Webhook delivery</span></div>
             <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
           </div>
-          <a href="mailto:support@macropulse.live?subject=Subscribe%20to%20Pro" class="plan-btn blue" style="display:block;text-align:center;text-decoration:none;">Subscribe →</a>
+          <button class="plan-btn blue" style="width:100%;" onclick="openSubscribeModal('Pro','199')">Subscribe →</button>
         </div>
 
       </div>
@@ -2028,6 +2028,35 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
           <div class="newsletter-success" id="nl-success">You're in. Check your inbox.</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBSCRIBE MODAL -->
+<div class="modal-backdrop" id="subscribe-modal" onclick="if(event.target===this)closeSubscribeModal()">
+  <div class="modal" style="max-width:460px;">
+    <div id="sub-form-view">
+      <h3 id="sub-title">Subscribe to Starter</h3>
+      <p id="sub-desc" style="margin-bottom:1.25rem;">You'll receive an email within 24h with payment instructions and account activation. Cancel anytime.</p>
+      <div class="form-group">
+        <label>Your email</label>
+        <input type="email" id="sub-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Your name (optional)</label>
+        <input type="text" id="sub-name" placeholder="Jane Smith" autocomplete="name" />
+      </div>
+      <div id="sub-error" class="modal-error"></div>
+      <div class="modal-actions">
+        <button class="modal-submit" id="sub-btn" onclick="submitSubscribe()">Subscribe →</button>
+        <button class="modal-cancel" onclick="closeSubscribeModal()">Cancel</button>
+      </div>
+    </div>
+    <div id="sub-success-view" style="display:none;text-align:center;padding:1rem 0;">
+      <div style="font-size:2rem;margin-bottom:0.75rem;">✓</div>
+      <h3 style="margin-bottom:0.5rem;">You're on the list</h3>
+      <p style="font-size:0.84rem;color:var(--muted);">We'll email you at <strong id="sub-confirm-email"></strong> with payment details and account activation within 24 hours.</p>
+      <button class="modal-submit" style="margin-top:1.5rem;" onclick="closeSubscribeModal()">Done</button>
     </div>
   </div>
 </div>
@@ -2760,6 +2789,56 @@ wt = EXPOSURE[regime]  <span class="c-cm"># → 0.75</span></pre></div>
     const col = item.closest('div');
     col.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
     if (!wasOpen) item.classList.add('open');
+  }
+
+  // ── Subscribe modal ───────────────────────────────────────────
+  let _subPlan = '', _subPrice = '';
+
+  function openSubscribeModal(plan, price) {
+    _subPlan = plan; _subPrice = price;
+    document.getElementById('sub-title').textContent = 'Subscribe to ' + plan + ' — $' + price + '/month';
+    document.getElementById('sub-desc').textContent =
+      'You\'ll receive an email within 24h with payment instructions and account activation. Cancel anytime.';
+    document.getElementById('sub-email').value = '';
+    document.getElementById('sub-name').value = '';
+    document.getElementById('sub-error').style.display = 'none';
+    document.getElementById('sub-form-view').style.display = '';
+    document.getElementById('sub-success-view').style.display = 'none';
+    document.getElementById('subscribe-modal').style.display = 'flex';
+  }
+
+  function closeSubscribeModal() {
+    document.getElementById('subscribe-modal').style.display = 'none';
+  }
+
+  async function submitSubscribe() {
+    const email = document.getElementById('sub-email').value.trim();
+    const name  = document.getElementById('sub-name').value.trim();
+    const errEl = document.getElementById('sub-error');
+    const btn   = document.getElementById('sub-btn');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      await fetch(API + '/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, plan: _subPlan, price: _subPrice })
+      });
+    } catch(_) { /* best-effort — show success regardless */ }
+
+    document.getElementById('sub-confirm-email').textContent = email;
+    document.getElementById('sub-form-view').style.display = 'none';
+    document.getElementById('sub-success-view').style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Subscribe →';
   }
 </script>
 </body>
