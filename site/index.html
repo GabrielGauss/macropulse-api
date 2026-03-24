@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
 /* ── Reset ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -132,18 +133,23 @@ nav{
 .hs-item.current .hs-live{display:block}
 
 /* ── Performance ─────────────────────────────────────────── */
-.perf-layout{display:grid;grid-template-columns:1fr 260px;gap:3rem;align-items:start}
-.perf-toggle{display:flex;border:1px solid var(--ln);width:fit-content;margin-bottom:1.5rem}
+.perf-layout{display:flex;flex-direction:column;gap:2rem}
+.perf-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.perf-toggle{display:flex;border:1px solid var(--ln);width:fit-content}
 .ptog{font-family:var(--mono);font-size:.7rem;padding:.38rem .85rem;background:transparent;border:none;color:var(--mu);transition:background .15s,color .15s}
 .ptog.active{background:var(--bg2);color:var(--tx)}
 .ptog:hover:not(.active){color:var(--tx)}
-.perf-chart-wrap{position:relative;height:300px}
-.perf-stats{display:flex;flex-direction:column;gap:1px}
-.ps{display:flex;justify-content:space-between;align-items:baseline;padding:.85rem 1rem;background:var(--bg1);border:1px solid var(--ln)}
-.ps+.ps{border-top:none}
-.ps-lbl{font-family:var(--mono);font-size:.67rem;color:var(--mu);text-transform:uppercase;letter-spacing:.08em}
-.ps-val{font-family:var(--mono);font-size:.95rem;font-weight:500}
+.perf-stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--ln)}
+.ps{display:flex;flex-direction:column;gap:.25rem;padding:.85rem 1rem;background:var(--bg1)}
+.ps-lbl{font-family:var(--mono);font-size:.6rem;color:var(--mu);text-transform:uppercase;letter-spacing:.08em}
+.ps-val{font-family:var(--mono);font-size:1.05rem;font-weight:500}
 .ps-val.pos{color:var(--green)}.ps-val.neg{color:var(--red)}
+.perf-chart-wrap{position:relative;height:380px;background:var(--bg1);border:1px solid var(--ln)}
+.perf-chart-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.7rem;color:var(--mu)}
+.perf-legend{display:flex;align-items:center;gap:2rem;padding:.75rem 1rem;border:1px solid var(--ln);border-top:none;font-family:var(--mono);font-size:.62rem;color:var(--mu)}
+.pl-item{display:flex;align-items:center;gap:.5rem}
+.pl-line{width:20px;height:2px;flex-shrink:0}
+.pl-dash{width:20px;height:0;border-top:1px dashed rgba(255,255,255,.25);flex-shrink:0}
 
 /* ── Regimes ─────────────────────────────────────────────── */
 .regimes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ln)}
@@ -283,7 +289,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   .nav-links{display:none}.nav-ham{display:block}
   .hero-inner{grid-template-columns:1fr}.hero-term{display:none}
   .hero-strip{grid-template-columns:repeat(2,1fr)}
-  .perf-layout{grid-template-columns:1fr}
+  .perf-stats-row{grid-template-columns:repeat(3,1fr)}
   .regimes-grid{grid-template-columns:repeat(2,1fr)}
   .meth-track{grid-template-columns:repeat(2,1fr)}.meth-track::before{display:none}
   .integ-layout{grid-template-columns:1fr}
@@ -418,28 +424,34 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
 <section id="performance">
   <div class="wrap">
     <div class="s-label" data-n="01">Performance</div>
-    <div class="perf-layout">
-      <div data-reveal>
+    <div class="perf-layout" data-reveal>
+      <div class="perf-header">
+        <div>
+          <h3 style="font-family:var(--mono);font-size:1rem;font-weight:500;margin-bottom:.25rem">Strategy vs Buy &amp; Hold SPX</h3>
+          <p style="font-family:var(--mono);font-size:.65rem;color:var(--mu)">Regime-weighted allocation · rebased to 100 at window start · live data</p>
+        </div>
         <div class="perf-toggle">
-          <button class="ptog active" data-range="3m">3M</button>
+          <button class="ptog" data-range="3m">3M</button>
           <button class="ptog" data-range="1y">1Y</button>
-          <button class="ptog" data-range="2y">2Y</button>
+          <button class="ptog active" data-range="2y">2Y</button>
         </div>
-        <div class="perf-chart-wrap">
-          <canvas id="perf-chart"></canvas>
-        </div>
-        <p style="font-family:var(--mono);font-size:.65rem;color:var(--mu);margin-top:1rem">
-          MacroPulse strategy (regime-weighted) vs SPX buy-and-hold · rebased to 100
-        </p>
+      </div>
+      <div class="perf-stats-row" data-reveal data-d="1">
+        <div class="ps"><span class="ps-lbl">Sharpe ratio · 2yr</span><span class="ps-val pos" id="stat-sharpe" data-counter="1.69" data-dec="2">—</span></div>
+        <div class="ps"><span class="ps-lbl">Max drawdown</span><span class="ps-val neg" id="stat-dd">—</span></div>
+        <div class="ps"><span class="ps-lbl">Strategy return</span><span class="ps-val pos" id="stat-strat-ret">—</span></div>
+        <div class="ps"><span class="ps-lbl">B&amp;H return</span><span class="ps-val" id="stat-bh-ret">—</span></div>
+        <div class="ps"><span class="ps-lbl">Outperformance</span><span class="ps-val" id="stat-outperf">—</span></div>
       </div>
       <div data-reveal data-d="2">
-        <div class="perf-stats">
-          <div class="ps"><span class="ps-lbl">Sharpe ratio</span><span class="ps-val pos" data-counter="1.69" data-dec="2">1.69</span></div>
-          <div class="ps"><span class="ps-lbl">Max drawdown</span><span class="ps-val neg">−5.9%</span></div>
-          <div class="ps"><span class="ps-lbl">Strategy CAGR</span><span class="ps-val pos" id="stat-cagr">—</span></div>
-          <div class="ps"><span class="ps-lbl">B&H CAGR</span><span class="ps-val" id="stat-bh-cagr">—</span></div>
-          <div class="ps"><span class="ps-lbl">Days classified</span><span class="ps-val">845+</span></div>
-          <div class="ps"><span class="ps-lbl">Updated daily</span><span class="ps-val" style="font-size:.75rem;color:var(--mu)">18:30 UTC</span></div>
+        <div class="perf-chart-wrap">
+          <div class="perf-chart-loading" id="perf-loading">loading live data…</div>
+          <canvas id="perf-chart" style="display:none"></canvas>
+        </div>
+        <div class="perf-legend">
+          <div class="pl-item"><div class="pl-line" style="background:#22c55e"></div><span>MacroPulse Strategy</span></div>
+          <div class="pl-item"><div class="pl-dash"></div><span>Buy &amp; Hold SPX</span></div>
+          <span style="margin-left:auto;color:var(--di)">EXP 100% · REC 75% · TGT 25% · RFO 0%</span>
         </div>
       </div>
     </div>
@@ -658,18 +670,20 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
       <tbody>
         <tr class="pt-group"><td colspan="4">API Access</td></tr>
         <tr><td>Requests / day</td><td>50</td><td class="pt-featured">500</td><td>Unlimited</td></tr>
-        <tr><td>History window</td><td>30 days</td><td class="pt-featured">2+ years</td><td>2+ years</td></tr>
-        <tr><td>CSV export</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>History window</td><td>30 days</td><td class="pt-featured">6 months</td><td>2+ years</td></tr>
+        <tr><td>CSV export</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
         <tr class="pt-group"><td colspan="4">Delivery</td></tr>
-        <tr><td>Regime change alerts</td><td><span class="cx">✗</span></td><td class="pt-featured">Email</td><td>Email</td></tr>
+        <tr><td>Regime change alerts</td><td><span class="cx">✗</span></td><td class="pt-featured">Email</td><td>Email + Webhook</td></tr>
         <tr><td>Webhook delivery</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
         <tr><td>WebSocket stream</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
         <tr class="pt-group"><td colspan="4">Analysis</td></tr>
-        <tr><td>Domain views (Rates, FX, Crypto)</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>Signal scorecard &amp; gauges</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
         <tr><td>Liquidity &amp; factor analysis</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
-        <tr><td>Backtest engine</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
-        <tr><td>Quant HUD &amp; model internals</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
         <tr><td>Regime forecast (5-day)</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="ch">✓</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>Domain views (Rates, FX, Crypto, Inflation)</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>Backtest engine</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>Quant HUD &amp; model internals</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
+        <tr><td>Priority support</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
         <tr class="pt-cta-row">
           <th></th>
           <th><button class="btn btn-ghost btn-sm" style="width:100%" onclick="scrollTo('#register')">Get free key</button></th>
@@ -705,7 +719,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Can I use this in automated trading? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">Yes. The REST API is designed for programmatic consumption. Starter users can poll <code>GET /v1/regime/current</code> daily. Pro users get webhook and WebSocket delivery, eliminating polling entirely.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">Yes. The REST API is designed for programmatic consumption. Any paid user can poll <code>GET /v1/regime/current</code> on any cadence up to their rate limit. Pro users get webhook and WebSocket delivery, eliminating polling entirely and enabling event-driven architectures.</div></div>
         </div>
       </div>
       <div>
@@ -715,7 +729,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Starter vs Pro — what's the difference? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">Starter ($49/mo) gives you the full signal package with 500 daily API requests, email alerts, domain views, and the backtest engine. Pro ($199/mo) adds unlimited requests, webhook delivery for real-time integration, and a WebSocket stream for live builds.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">Starter ($49/mo) is for traders who want the signal: 500 API requests/day, 6-month history, email regime alerts, signal scorecard, and liquidity analysis. Pro ($199/mo) is for builders and quant desks: unlimited requests, 2+ year history, CSV export, all domain views (Rates, FX, Crypto, Inflation, Growth), backtest engine, Quant HUD, webhook delivery, and WebSocket stream.</div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">How do I get my API key? <span class="faq-icon">+</span></button>
@@ -723,7 +737,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Is historical data available? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">Free tier: 30-day history window via <code>GET /v1/regime/history</code>. Starter and Pro: full 2+ year history (845+ daily records) plus CSV export including date, regime, risk score, equity exposure, and all four regime probabilities.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">Free tier: 30-day window via <code>GET /v1/regime/history</code>. Starter: 6-month window — enough to validate the signal against your strategy. Pro: full 2+ year history (845+ daily records) plus CSV export with date, regime, risk score, equity exposure, and all four regime probabilities.</div></div>
         </div>
       </div>
     </div>
@@ -967,64 +981,164 @@ function typeTerminal() {
   }, 80);
 }
 
-/* ── Performance chart ──────────────────────────────────── */
+/* ── Performance chart — live data ──────────────────────── */
 let perfChart = null;
-let perfRange = '2y';
+let _chartData = null; // full series from API
 
-function buildPerfData(range) {
-  // Generate synthetic backtest data matching known metrics
-  const days = range === '3m' ? 63 : range === '1y' ? 252 : 504;
-  const labels = [], strat = [], bh = [];
-  let sv = 100, bv = 100;
-  // seed deterministic returns to match Sharpe 1.69, max DD -5.9%
-  const regimeCycle = [0,0,0,0,0,0,1,1,1,2,2,2,2,3,3,1,1,0,0,0,0,0,2,2,1,1,0,0];
-  const expRet = [0.0012,-0.0008,0.0015,0.0009,-0.0003,0.001,0.0008,0.0013,0.0016,-0.0005];
-  let seed = 42, minSv = 100;
-  for (let i = 0; i < days; i++) {
-    seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
-    const rng = (seed / 0x7fffffff) - 0.5;
-    const ri = Math.floor(i / 18) % regimeCycle.length;
-    const regime = regimeCycle[ri];
-    const baseRet = [0.0014, 0.0008, -0.0003, -0.001][regime];
-    const stratMult = [1.0, 0.75, 0.25, 0.0][regime];
-    const bhRet = baseRet + rng * 0.011;
-    sv = sv * (1 + bhRet * stratMult);
-    bv = bv * (1 + bhRet);
-    minSv = Math.min(minSv, sv);
-    const d = new Date(2024, 2, 1);
-    d.setDate(d.getDate() + i);
-    labels.push(d.toISOString().slice(0, 10));
-    strat.push(sv);
-    bh.push(bv);
+const REGIME_COLORS = { expansion:'#22c55e', recovery:'#3b82f6', tightening:'#f59e0b', risk_off:'#ef4444' };
+
+async function loadChartData() {
+  try {
+    const r = await fetch('https://api.macropulse.live/v1/public/chart-data');
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+function sliceSeries(series, range) {
+  const days = range === '3m' ? 90 : range === '1y' ? 365 : series.length;
+  return series.slice(-days);
+}
+
+function rebase(series, key) {
+  const base = series[0][key];
+  if (!base) return series.map(() => null);
+  return series.map(d => d[key] != null ? Math.round((d[key] / base) * 1000) / 10 : null);
+}
+
+function updatePerfStats(slice, allStats) {
+  const first = slice[0], last = slice[slice.length - 1];
+  const stratRet = first.strategy && last.strategy ? ((last.strategy / first.strategy - 1) * 100).toFixed(1) : null;
+  const bhRet    = first.sp500    && last.sp500    ? ((last.sp500    / first.sp500    - 1) * 100).toFixed(1) : null;
+  const outperf  = stratRet != null && bhRet != null ? (parseFloat(stratRet) - parseFloat(bhRet)).toFixed(1) : null;
+
+  const setEl = (id, val, colorClass) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val ?? '—';
+    if (colorClass) { el.classList.remove('pos','neg'); el.classList.add(colorClass); }
+  };
+
+  setEl('stat-sharpe', allStats?.sharpe_proxy != null ? allStats.sharpe_proxy : '1.69');
+  setEl('stat-dd', allStats?.max_drawdown != null ? allStats.max_drawdown + '%' : '−5.9%');
+  if (stratRet != null) setEl('stat-strat-ret', (parseFloat(stratRet) >= 0 ? '+' : '') + stratRet + '%', parseFloat(stratRet) >= 0 ? 'pos' : 'neg');
+  if (bhRet    != null) setEl('stat-bh-ret',    (parseFloat(bhRet)    >= 0 ? '+' : '') + bhRet    + '%');
+  if (outperf  != null) setEl('stat-outperf',   (parseFloat(outperf)  >= 0 ? '+' : '') + outperf  + '%', parseFloat(outperf) >= 0 ? 'pos' : 'neg');
+}
+
+function buildRegimeBands(slice) {
+  const plugins = [];
+  let start = 0;
+  for (let i = 1; i <= slice.length; i++) {
+    if (i === slice.length || slice[i].regime !== slice[start].regime) {
+      plugins.push({ from: slice[start].date, to: slice[i - 1].date, regime: slice[start].regime });
+      start = i;
+    }
   }
-  return { labels, strat, bh };
+  return plugins;
 }
 
 function initChart(range) {
-  const { labels, strat, bh } = buildPerfData(range);
+  if (!_chartData) return;
+  const slice  = sliceSeries(_chartData.series || [], range);
+  if (!slice.length) return;
+
+  const labels = slice.map(d => d.date);
+  const strat  = rebase(slice, 'strategy');
+  const bh     = rebase(slice, 'sp500');
+  const bands  = buildRegimeBands(slice);
+
+  updatePerfStats(slice, _chartData.stats);
+
   const ctx = document.getElementById('perf-chart');
   if (!ctx) return;
   if (perfChart) { perfChart.destroy(); perfChart = null; }
+  ctx.style.display = 'block';
+  document.getElementById('perf-loading').style.display = 'none';
+
   Chart.defaults.color = '#555';
   Chart.defaults.borderColor = '#1c1c1c';
+
+  // Build annotation plugin config for regime bands
+  const annotations = {};
+  bands.forEach((b, i) => {
+    annotations['band' + i] = {
+      type: 'box',
+      xMin: b.from, xMax: b.to,
+      backgroundColor: (REGIME_COLORS[b.regime] || '#fff') + '0d',
+      borderWidth: 0,
+    };
+  });
+
   perfChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [
-        { label: 'MacroPulse Strategy', data: strat, borderColor: '#22c55e', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: { target: 'origin', above: 'rgba(34,197,94,0.04)' } },
-        { label: 'Buy & Hold SPX', data: bh, borderColor: '#333', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, tension: 0.3 },
+        {
+          label: 'MacroPulse Strategy',
+          data: strat,
+          borderColor: '#22c55e',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.2,
+          fill: { target: 'origin', above: 'rgba(34,197,94,0.05)' }
+        },
+        {
+          label: 'Buy & Hold SPX',
+          data: bh,
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          tension: 0.2,
+        },
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0d0d0d', borderColor: '#282828', borderWidth: 1, titleFont: { family: 'JetBrains Mono', size: 11 }, bodyFont: { family: 'JetBrains Mono', size: 11 }, padding: 10, callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) } } },
-      scales: {
-        x: { grid: { color: '#1c1c1c', drawTicks: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { color: '#1c1c1c' } },
-        y: { grid: { color: '#1c1c1c', drawTicks: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, callback: v => v.toFixed(0) }, border: { color: '#1c1c1c' } }
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d0d0d',
+          borderColor: '#282828',
+          borderWidth: 1,
+          titleFont: { family: 'JetBrains Mono', size: 10 },
+          bodyFont: { family: 'JetBrains Mono', size: 10 },
+          padding: 10,
+          callbacks: {
+            title: items => {
+              const idx = items[0].dataIndex;
+              const regime = slice[idx]?.regime || '';
+              return items[0].label + (regime ? ' · ' + regime.replace('_',' ').toUpperCase() : '');
+            },
+            label: c => {
+              const v = c.parsed.y;
+              const pct = (v - 100).toFixed(1);
+              return ' ' + c.dataset.label + ': ' + (v >= 100 ? '+' : '') + pct + '%';
+            }
+          }
+        },
+        annotation: { annotations }
       },
-      animation: { duration: 600, easing: 'easeInOutQuart' }
+      scales: {
+        x: {
+          grid: { color: '#161616', drawTicks: false },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 7, maxRotation: 0 },
+          border: { color: '#1c1c1c' }
+        },
+        y: {
+          grid: { color: '#161616', drawTicks: false },
+          ticks: {
+            font: { family: 'JetBrains Mono', size: 10 },
+            callback: v => (v >= 100 ? '+' : '') + (v - 100).toFixed(0) + '%'
+          },
+          border: { color: '#1c1c1c' }
+        }
+      },
+      animation: { duration: 500, easing: 'easeInOutQuart' }
     }
   });
 }
@@ -1126,8 +1240,18 @@ function copyCode() {
 /* ── Init ───────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   typeTerminal();
-  initChart('2y');
+  // Load live signal + chart data in parallel
   fetchLive().then(applyLive);
+  loadChartData().then(d => {
+    if (d) {
+      _chartData = d;
+      const activeRange = document.querySelector('.ptog.active')?.dataset?.range || '2y';
+      initChart(activeRange);
+    } else {
+      const el = document.getElementById('perf-loading');
+      if (el) el.textContent = 'chart data unavailable';
+    }
+  });
 });
 </script>
 </body>

@@ -25,7 +25,10 @@ const ICONS = {
   expand:      'M6 4l4 4-4 4',
 };
 
-const FREE_LOCKED = new Set(['liquidity', 'signals', 'backtest', 'inflation', 'growth', 'rates', 'commodities', 'fx', 'crypto', 'quant']);
+// Items locked for free tier (need Starter+)
+const STARTER_LOCKED = new Set(['liquidity', 'signals']);
+// Items locked for Starter (need Pro)
+const PRO_LOCKED = new Set(['backtest', 'inflation', 'growth', 'rates', 'commodities', 'fx', 'crypto', 'quant']);
 
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',    icon: 'dashboard',   available: true  },
@@ -45,7 +48,9 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar({ regime, activeSection = 'dashboard', onNavigate, tier }) {
-  const isFree = !tier || tier === 'free';
+  const isFree           = !tier || tier === 'free';
+  const isStarterOrAbove = tier === 'starter' || tier === 'pro' || tier === 'owner';
+  const isProOrAbove     = tier === 'pro' || tier === 'owner';
   const [collapsed, setCollapsed] = useState(false);
   const cfg = regime ? REGIME_CONFIG[regime.macro_regime] : null;
 
@@ -90,7 +95,8 @@ export default function Sidebar({ regime, activeSection = 'dashboard', onNavigat
             );
           }
 
-          const isLocked = isFree && FREE_LOCKED.has(item.id);
+          const isLocked = (!isStarterOrAbove && STARTER_LOCKED.has(item.id)) ||
+                           (!isProOrAbove    && PRO_LOCKED.has(item.id));
           const isActive = item.id === activeSection && item.available;
 
           return (

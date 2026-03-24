@@ -7,7 +7,7 @@
   <meta name="description" content="MacroPulse product changelog — new features, improvements, and fixes." />
   <link rel="canonical" href="https://macropulse.live/changelog.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -17,7 +17,7 @@
       --green: #22c55e; --blue: #3b82f6; --amber: #f59e0b; --red: #ef4444;
     }
     html { scroll-behavior: smooth; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.6; }
+    body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
 
     nav {
@@ -62,7 +62,7 @@
     .entry-version {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.72rem; font-weight: 600;
-      padding: 0.25rem 0.6rem; border-radius: 4px;
+      padding: 0.25rem 0.6rem;
       display: inline-block; margin-bottom: 0.6rem;
     }
     .entry-date {
@@ -88,7 +88,7 @@
       flex-shrink: 0; font-size: 0.62rem; font-weight: 600;
       font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
       letter-spacing: 0.06em; padding: 0.15rem 0.45rem;
-      border-radius: 3px; margin-top: 0.1em;
+      margin-top: 0.1em;
     }
     .tag-new { background: rgba(34,197,94,0.12); color: var(--green); }
     .tag-fix { background: rgba(59,130,246,0.12); color: var(--blue); }
@@ -119,7 +119,7 @@
   </a>
   <div class="nav-right">
     <a href="/">Home</a>
-    <a href="https://github.com/GabrielGauss/macropulse-api" target="_blank" rel="noopener">API Docs</a>
+    <a href="/api-docs.html">API Docs</a>
     <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
   </div>
 </nav>
@@ -132,6 +132,29 @@
   </div>
 
   <div class="changelog-feed">
+
+    <!-- v1.5 -->
+    <div class="entry">
+      <div class="entry-meta">
+        <span class="entry-version" style="background:rgba(34,197,94,0.1);color:var(--green);">v1.5</span>
+        <div class="entry-date">Mar 24, 2026</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-title">Marketing site redesign + pricing restructure</div>
+        <p class="entry-summary">
+          Complete site redesign with terminal brutalist aesthetic. Pricing tiers restructured
+          so Free/Starter/Pro each have a clear analytical upgrade path. Performance chart now
+          shows live data from the API. Dashboard tier gates updated to match.
+        </p>
+        <div class="entry-items">
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Brutalist terminal site design — JetBrains Mono dominant, scanlines, glitch animations, scroll reveals</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Performance chart now pulls live data from <code>/v1/public/chart-data</code> with regime color bands</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Pricing: Starter ($49) = signals + liquidity + 6-month history; Pro ($199) = domain views + backtest + webhooks + 2yr history</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Dashboard upgrade gates now correctly distinguish Starter vs Pro features</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Welcome page rewritten with brutalist style and quick-start code snippet</div>
+        </div>
+      </div>
+    </div>
 
     <!-- v1.4 -->
     <div class="entry">
@@ -147,7 +170,7 @@
           showing 2 years of classified history.
         </p>
         <div class="entry-items">
-          <div class="entry-item"><span class="item-tag tag-new">New</span>Inflation, Growth, Rates, Commodities, FX, Crypto domain views (Starter/Pro)</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Inflation, Growth, Rates, Commodities, FX, Crypto domain views (Pro)</div>
           <div class="entry-item"><span class="item-tag tag-new">New</span>Regime calendar heatmap — GitHub contribution graph style, colored by macro regime</div>
           <div class="entry-item"><span class="item-tag tag-new">New</span><code>/v1/features</code> endpoint exposing macro feature time series</div>
           <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Strategy vs buy-and-hold chart now shows live return comparison and outperformance</div>

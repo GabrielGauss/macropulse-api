@@ -160,33 +160,37 @@
     </div>
 
     <div class="pricing-card featured" id="pricing-starter">
-      <div class="plan-badge">Most popular</div>
+      <div class="plan-badge">For traders</div>
       <div class="plan-name">Starter</div>
       <div class="plan-price"><sup>$</sup>49</div>
       <div class="plan-period">per month, USD · auto-renews monthly</div>
       <div class="plan-divider"></div>
       <div class="plan-features">
         <div class="plan-feature"><span class="pf-check">✓</span> <span>500 API requests / day</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>6-month history window</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Email regime alerts</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Signal scorecard &amp; gauges</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Liquidity &amp; factor analysis</span></div>
         <div class="plan-feature"><span class="pf-check">✓</span> <span>5-day regime forecast</span></div>
-        <div class="plan-feature"><span class="pf-no">✗</span> <span>WebSocket stream</span></div>
+        <div class="plan-feature"><span class="pf-no">✗</span> <span>Domain views &amp; backtest</span></div>
+        <div class="plan-feature"><span class="pf-no">✗</span> <span>Webhooks &amp; WebSocket</span></div>
       </div>
       <button class="plan-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
     </div>
 
     <div class="pricing-card" id="pricing-pro">
+      <div class="plan-badge" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">For builders</div>
       <div class="plan-name">Pro</div>
       <div class="plan-price"><sup>$</sup>199</div>
       <div class="plan-period">per month, USD · auto-renews monthly</div>
       <div class="plan-divider"></div>
       <div class="plan-features">
         <div class="plan-feature"><span class="pf-check">✓</span> <span>Unlimited requests</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Full signal package</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Full 2+ year history</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>Performance attribution</span></div>
-        <div class="plan-feature"><span class="pf-check">✓</span> <span>5-day regime forecast</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>2+ year full history + CSV</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Email + webhook alerts</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>All domain views (Rates, FX, Crypto, Inflation, Growth)</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Backtest engine</span></div>
+        <div class="plan-feature"><span class="pf-check">✓</span> <span>Quant HUD &amp; model internals</span></div>
         <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
         <div class="plan-feature"><span class="pf-check">✓</span> <span>Priority support</span></div>
       </div>
@@ -206,18 +210,23 @@
       <tbody>
         <tr class="group-header"><td colspan="4">Access &amp; Limits</td></tr>
         <tr><td>Daily API requests</td><td>50</td><td>500</td><td>Unlimited</td></tr>
-        <tr><td>Historical data</td><td>30 days</td><td>2+ years</td><td>2+ years</td></tr>
+        <tr><td>Historical data</td><td>30 days</td><td>6 months</td><td>2+ years</td></tr>
+        <tr><td>CSV export</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
         <tr><td>Dashboard access</td><td class="c-yes">✓</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
         <tr class="group-header"><td colspan="4">Signal Endpoints</td></tr>
         <tr><td>GET /v1/signals/latest</td><td class="c-yes">✓</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
-        <tr><td>GET /v1/signals/{date}</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
-        <tr><td>GET /v1/signals/range</td><td>30 days</td><td class="c-yes">Full</td><td class="c-yes">Full</td></tr>
-        <tr><td>GET /v1/regime/history</td><td>30 days</td><td class="c-yes">Full</td><td class="c-yes">Full</td></tr>
-        <tr><td>GET /v1/performance</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
-        <tr><td>POST /v1/backtest</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>GET /v1/regime/history</td><td>30 days</td><td>6 months</td><td class="c-yes">Full</td></tr>
+        <tr><td>GET /v1/scorecard</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>GET /v1/liquidity</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>GET /v1/forecast</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>GET /v1/analysis/* (domain views)</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
+        <tr><td>POST /v1/backtest</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
         <tr><td>WebSocket /ws/regime</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
+        <tr class="group-header"><td colspan="4">Delivery</td></tr>
+        <tr><td>Email regime alerts</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>Webhook delivery</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
         <tr class="group-header"><td colspan="4">Support</td></tr>
-        <tr><td>Community support</td><td class="c-yes">✓</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
+        <tr><td>Community (Discord)</td><td class="c-yes">✓</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
         <tr><td>Email support</td><td class="c-no">—</td><td class="c-yes">✓</td><td class="c-yes">✓</td></tr>
         <tr><td>Priority support</td><td class="c-no">—</td><td class="c-no">—</td><td class="c-yes">✓</td></tr>
       </tbody>
