@@ -136,7 +136,7 @@ export default function FactorsChart({ data }) {
           <Brush
             dataKey="time"
             height={20}
-            stroke="#1f1f1f"
+            stroke="#1a1a1a"
             fill="#0d0d0d"
             travellerWidth={6}
             tickFormatter={() => ''}

@@ -71,8 +71,8 @@ function GaugeBar({ value }) {
   return (
     <div className="relative rounded-full overflow-hidden" style={{ height: 6, background: '#111' }}>
       {/* Track ticks */}
-      <div className="absolute top-0 bottom-0 w-px" style={{ left: '25%', background: '#1f1f1f' }} />
-      <div className="absolute top-0 bottom-0 w-px" style={{ left: '75%', background: '#1f1f1f' }} />
+      <div className="absolute top-0 bottom-0 w-px" style={{ left: '25%', background: '#1a1a1a' }} />
+      <div className="absolute top-0 bottom-0 w-px" style={{ left: '75%', background: '#1a1a1a' }} />
       {/* Center line */}
       <div
         className="absolute top-0 bottom-0"

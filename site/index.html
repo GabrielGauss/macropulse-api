@@ -26,7 +26,7 @@
 :root{
   --bg:#080808;--bg1:#0d0d0d;--bg2:#111;
   --ln:#1c1c1c;--ln2:#282828;
-  --tx:#e8e8e8;--mu:#555;--di:#2d2d2d;
+  --tx:#e8e8e8;--mu:#888;--di:#555;
   --green:#22c55e;--gdim:rgba(34,197,94,.08);--gbrd:rgba(34,197,94,.25);
   --blue:#3b82f6;--amber:#f59e0b;--red:#ef4444;
   --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
@@ -87,7 +87,8 @@ nav{
 #hero::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:52px 52px;pointer-events:none;z-index:0}
 .hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;padding:4rem 0 3rem}
 
-.hero-live{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.68rem;font-weight:500;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.75rem}
+.hero-live{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.75rem}
+#hero-regime-label{transition:color .4s;letter-spacing:.08em}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:livepulse 2s ease-in-out infinite}
 @keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
 #hero-regime-label{transition:color .4s}
@@ -122,15 +123,19 @@ nav{
 
 /* hero strip */
 .hero-strip{position:relative;z-index:2;border-top:1px solid var(--ln);display:grid;grid-template-columns:repeat(4,1fr)}
-.hs-item{padding:1.2rem var(--pad);border-right:1px solid var(--ln);display:flex;align-items:center;gap:.7rem;transition:background .15s}
+.hs-item{padding:1.75rem var(--pad);border-right:1px solid var(--ln);display:flex;flex-direction:column;gap:.3rem;transition:background .15s}
 .hs-item:last-child{border-right:none}
 .hs-item:hover{background:var(--bg1)}
-.hs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.hs-dot.expansion{background:var(--green)}.hs-dot.recovery{background:var(--blue)}.hs-dot.tightening{background:var(--amber)}.hs-dot.risk_off{background:var(--red)}
-.hs-name{font-family:var(--mono);font-size:.68rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em}
-.hs-eq{font-family:var(--mono);font-size:.66rem;color:var(--mu);margin-left:auto}
-.hs-live{font-family:var(--mono);font-size:.58rem;color:var(--green);border:1px solid var(--gbrd);padding:.1rem .35rem;display:none}
-.hs-item.current .hs-live{display:block}
+.hs-top{display:flex;align-items:baseline;gap:.6rem}
+.hs-eq{font-family:var(--mono);font-size:1.9rem;font-weight:600;line-height:1}
+.hs-eq-unit{font-size:.75em;font-weight:400;opacity:.7}
+.hs-item[data-regime=expansion]  .hs-eq{color:var(--green)}
+.hs-item[data-regime=recovery]   .hs-eq{color:var(--blue)}
+.hs-item[data-regime=tightening] .hs-eq{color:var(--amber)}
+.hs-item[data-regime=risk_off]   .hs-eq{color:var(--red)}
+.hs-name{font-family:var(--mono);font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx)}
+.hs-live{font-family:var(--mono);font-size:.58rem;color:var(--green);border:1px solid var(--gbrd);padding:.12rem .4rem;background:var(--gdim);display:none;align-self:center}
+.hs-item.current .hs-live{display:inline-block}
 
 /* ── Performance ─────────────────────────────────────────── */
 .perf-layout{display:flex;flex-direction:column;gap:2rem}
@@ -317,7 +322,6 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
-    <a href="https://discord.gg/YxTH5hPaeN" target="_blank" rel="noopener">Discord</a>
   </div>
   <button class="nav-cta" onclick="scrollTo('#register')">Get Free Key</button>
   <button class="nav-ham" onclick="toggleNav()" aria-label="Menu">
@@ -331,7 +335,6 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   <a href="#pricing" onclick="closeNav()">Pricing</a>
   <a href="#faq" onclick="closeNav()">FAQ</a>
   <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
-  <a href="https://discord.gg/YxTH5hPaeN" target="_blank">Discord</a>
 </div>
 
 <!-- HERO -->
@@ -341,7 +344,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
       <div>
         <div class="hero-live">
           <span class="live-dot"></span>
-          <span id="hero-regime-label">LOADING REGIME…</span>
+          <span id="hero-regime-label">LIVE</span>
         </div>
         <h1 class="hero-h1">
           The macro layer<br>your strategy is<br><em>missing.</em>
@@ -386,36 +389,32 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   </div>
   <div class="hero-strip">
     <div class="hs-item current" data-regime="expansion">
-      <div class="hs-dot expansion"></div>
-      <div>
-        <div class="hs-name">Expansion</div>
-        <div class="hs-eq">100% EQ</div>
+      <div class="hs-top">
+        <div class="hs-eq">100<span class="hs-eq-unit">% EQ</span></div>
+        <span class="hs-live" id="hs-live-expansion">LIVE</span>
       </div>
-      <span class="hs-live" id="hs-live-expansion">LIVE</span>
+      <div class="hs-name">Expansion</div>
     </div>
     <div class="hs-item" data-regime="recovery">
-      <div class="hs-dot recovery"></div>
-      <div>
-        <div class="hs-name">Recovery</div>
-        <div class="hs-eq">75% EQ</div>
+      <div class="hs-top">
+        <div class="hs-eq">75<span class="hs-eq-unit">% EQ</span></div>
+        <span class="hs-live" id="hs-live-recovery">LIVE</span>
       </div>
-      <span class="hs-live" id="hs-live-recovery">LIVE</span>
+      <div class="hs-name">Recovery</div>
     </div>
     <div class="hs-item" data-regime="tightening">
-      <div class="hs-dot tightening"></div>
-      <div>
-        <div class="hs-name">Tightening</div>
-        <div class="hs-eq">25% EQ</div>
+      <div class="hs-top">
+        <div class="hs-eq">25<span class="hs-eq-unit">% EQ</span></div>
+        <span class="hs-live" id="hs-live-tightening">LIVE</span>
       </div>
-      <span class="hs-live" id="hs-live-tightening">LIVE</span>
+      <div class="hs-name">Tightening</div>
     </div>
     <div class="hs-item" data-regime="risk_off">
-      <div class="hs-dot risk_off"></div>
-      <div>
-        <div class="hs-name">Risk-Off</div>
-        <div class="hs-eq">0% EQ</div>
+      <div class="hs-top">
+        <div class="hs-eq">0<span class="hs-eq-unit">% EQ</span></div>
+        <span class="hs-live" id="hs-live-risk_off">LIVE</span>
       </div>
-      <span class="hs-live" id="hs-live-risk_off">LIVE</span>
+      <div class="hs-name">Risk-Off</div>
     </div>
   </div>
 </section>
@@ -432,8 +431,8 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
         </div>
         <div class="perf-toggle">
           <button class="ptog" data-range="3m">3M</button>
-          <button class="ptog" data-range="1y">1Y</button>
-          <button class="ptog active" data-range="2y">2Y</button>
+          <button class="ptog active" data-range="1y">1Y</button>
+          <button class="ptog" data-range="2y">2Y</button>
         </div>
       </div>
       <div class="perf-stats-row" data-reveal data-d="1">
@@ -910,9 +909,14 @@ function applyLive(data) {
 
   // Hero label
   const labelMap = { expansion: 'EXPANSION', recovery: 'RECOVERY', tightening: 'TIGHTENING', risk_off: 'RISK-OFF' };
+  const eqMap = { expansion: '100% EQ', recovery: '75% EQ', tightening: '25% EQ', risk_off: '0% EQ' };
   const label = labelMap[regime] || regime.toUpperCase();
   const lbl = document.getElementById('hero-regime-label');
-  if (lbl) lbl.textContent = label + (conf ? ' · ' + conf : '') + (persist ? ' · ' + persist + 'd' : '');
+  if (lbl) {
+    lbl.textContent = label + ' · ' + (eqMap[regime] || '') + (persist ? ' · ' + persist + 'd' : '');
+    const colorMap = { expansion: 'var(--green)', recovery: 'var(--blue)', tightening: 'var(--amber)', risk_off: 'var(--red)' };
+    lbl.style.color = colorMap[regime] || '';
+  }
 
   // Hero strip
   document.querySelectorAll('.hs-item').forEach(el => el.classList.remove('current'));
@@ -1239,13 +1243,12 @@ function copyCode() {
 
 /* ── Init ───────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  typeTerminal();
-  // Load live signal + chart data in parallel
-  fetchLive().then(applyLive);
+  // Load live signal + chart data in parallel; terminal shows real data only
+  fetchLive().then(d => { if (d) { applyLive(d); } else { typeTerminal(); } });
   loadChartData().then(d => {
     if (d) {
       _chartData = d;
-      const activeRange = document.querySelector('.ptog.active')?.dataset?.range || '2y';
+      const activeRange = document.querySelector('.ptog.active')?.dataset?.range || '1y';
       initChart(activeRange);
     } else {
       const el = document.getElementById('perf-loading');

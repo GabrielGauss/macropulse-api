@@ -20,6 +20,7 @@ const LiquidityView         = React.lazy(() => import('./views/LiquidityView'));
 const SignalsView           = React.lazy(() => import('./views/SignalsView'));
 const BacktestView          = React.lazy(() => import('./views/BacktestView'));
 const PerformanceView       = React.lazy(() => import('./views/PerformanceView'));
+const AccountView           = React.lazy(() => import('./views/AccountView'));
 const ForecastCard          = React.lazy(() => import('./components/ForecastCard'));
 const CommentaryCard        = React.lazy(() => import('./components/CommentaryCard'));
 const CompositeAnalysisCard = React.lazy(() => import('./components/CompositeAnalysisCard'));
@@ -198,6 +199,14 @@ export default function App() {
             {activeSection === 'fx'          && (!isProOrAbove ? <UpgradeGate feature="FX Analysis"          plan="Pro" /> : <FXView />)}
             {activeSection === 'crypto'      && (!isProOrAbove ? <UpgradeGate feature="Crypto Analysis"      plan="Pro" /> : <CryptoView />)}
             {activeSection === 'quant'       && (!isProOrAbove ? <UpgradeGate feature="Quant HUD"            plan="Pro" /> : <QuantView />)}
+
+            {activeSection === 'account' && (
+              <AccountView
+                meInfo={meInfo}
+                tier={tier}
+                onTierChange={setTier}
+              />
+            )}
 
             </React.Suspense>
             <footer className="pt-4 mt-4 text-center text-[10px] text-white/35 font-mono border-t border-[#111]">

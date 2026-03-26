@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080808'/%3E%3Ctext x='3' y='23' font-family='monospace' font-size='18' font-weight='bold' fill='%2322c55e'%3EMP%3C/text%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Changelog — MacroPulse</title>
   <meta name="description" content="MacroPulse product changelog — new features, improvements, and fixes." />
@@ -132,6 +133,31 @@
   </div>
 
   <div class="changelog-feed">
+
+    <!-- v1.6 -->
+    <div class="entry">
+      <div class="entry-meta">
+        <span class="entry-version" style="background:rgba(34,197,94,0.1);color:var(--green);">v1.6</span>
+        <div class="entry-date">Mar 24, 2026</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-title">Self-serve registration + Account dashboard</div>
+        <p class="entry-summary">
+          Users can now register directly from the dashboard — no manual key issuance needed.
+          Two-step email verification (6-digit code) issues a free API key instantly.
+          New Account section in the dashboard shows tier, daily usage, upgrade CTAs,
+          billing portal access, and one-click key rotation.
+          Paddle checkout and billing portal are wired to the backend.
+        </p>
+        <ul class="entry-changes">
+          <li><span class="tag tag-new">new</span> Self-serve registration modal in dashboard (email → verify code → get key)</li>
+          <li><span class="tag tag-new">new</span> Account view: tier badge, usage bar, upgrade buttons, key rotation</li>
+          <li><span class="tag tag-new">new</span> Billing portal link for Starter/Pro subscribers</li>
+          <li><span class="tag tag-new">new</span> IRL Engine v1.1: shadow mode, Prometheus metrics, Python + TypeScript SDKs</li>
+          <li><span class="tag tag-new">new</span> IRL Engine docs: developer guide, operations guide, compliance guide, exchange integration guide</li>
+        </ul>
+      </div>
+    </div>
 
     <!-- v1.5 -->
     <div class="entry">

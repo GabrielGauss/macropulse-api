@@ -42,7 +42,7 @@ export default function RegimeCard({ regime }) {
       <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <div
-            className="w-1 rounded-full self-stretch flex-shrink-0"
+            className="w-1 self-stretch flex-shrink-0"
             style={{ background: cfg.color }}
           />
           <div>
@@ -65,8 +65,8 @@ export default function RegimeCard({ regime }) {
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
           {regime.confidence && (
             <div
-              className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium font-mono uppercase tracking-wide"
-              style={{ background: conf.bg, color: conf.color }}
+              className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium font-mono uppercase tracking-[0.1em]"
+              style={{ color: conf.color, border: `1px solid ${conf.color}44` }}
             >
               {regime.confidence}
             </div>
@@ -105,7 +105,7 @@ export default function RegimeCard({ regime }) {
       </div>
 
       {/* Probability bars — horizontal, compact */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {Object.entries(regime.probabilities || {}).map(([key, val]) => {
           const rc = REGIME_CONFIG[key];
           if (!rc) return null;
@@ -113,22 +113,23 @@ export default function RegimeCard({ regime }) {
           return (
             <div
               key={key}
-              className="rounded px-3 py-2.5"
+              className="px-3 py-2.5"
               style={{
-                background: isActive ? rc.bg : 'rgba(255,255,255,0.02)',
-                border: `1px solid ${isActive ? rc.color + '33' : '#1f1f1f'}`,
+                background: '#0f0f0f',
+                border: `1px solid #1c1c1c`,
+                borderLeft: isActive ? `2px solid ${rc.color}` : '2px solid #1c1c1c',
               }}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-white/40 font-medium">{rc.label}</span>
-                <span className="font-mono text-xs font-semibold" style={{ color: rc.color }}>
+                <span className="text-[10px] font-medium" style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)' }}>{rc.label}</span>
+                <span className="font-mono text-xs font-semibold" style={{ color: isActive ? rc.color : 'rgba(255,255,255,0.4)' }}>
                   {(val * 100).toFixed(0)}%
                 </span>
               </div>
-              <div className="h-0.5 rounded-full bg-surface-3">
+              <div className="h-px bg-surface-3">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${val * 100}%`, background: rc.color }}
+                  className="h-full transition-all duration-500"
+                  style={{ width: `${val * 100}%`, background: rc.color, opacity: isActive ? 1 : 0.4 }}
                 />
               </div>
             </div>
@@ -143,7 +144,7 @@ export default function RegimeCard({ regime }) {
         const pct = Math.round(exposure * 100);
         const expColor = pct >= 75 ? '#22c55e' : pct >= 25 ? '#f59e0b' : '#ef4444';
         return (
-          <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
+          <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Eq. Exposure</span>
               <span className="font-mono text-lg font-semibold" style={{ color: expColor }}>{pct}%</span>
@@ -164,13 +165,13 @@ export default function RegimeCard({ regime }) {
 
       {/* Conviction */}
       {conviction != null && (
-        <div className="mt-3 pt-3 border-t border-[#1f1f1f]">
+        <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Signal Conviction</span>
             <div className="flex items-center gap-2">
               <span
-                className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
-                style={{ color: convictionColor, border: `1px solid ${convictionColor}44`, background: `${convictionColor}10` }}
+                className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5"
+                style={{ color: convictionColor, border: `1px solid ${convictionColor}44` }}
               >
                 {convictionLabel}
               </span>
@@ -195,7 +196,7 @@ export default function RegimeCard({ regime }) {
 
       {/* Persistence */}
       {regime.persistence_days != null && (
-        <div className="mt-3 pt-3 border-t border-[#1f1f1f] flex gap-4 text-[11px]">
+        <div className="mt-3 pt-3 border-t border-[#1a1a1a] flex gap-4 text-[11px]">
           <span className="text-white/50">
             Persistent for <span className="text-white/70 font-mono">{regime.persistence_days}d</span>
           </span>

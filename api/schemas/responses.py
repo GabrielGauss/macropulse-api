@@ -23,6 +23,12 @@ class RegimeResponse(BaseModel):
     probabilities: RegimeProbabilities
     volatility_state: str | None = None
     model_version: str | None = None
+    # IRL Engine fields — broadcast_time anchors the regime to a wall-clock ms
+    # timestamp; signature is an Ed25519 sig over the canonical JSON payload
+    # (all fields above, sorted keys, no whitespace) for MTA authenticity.
+    regime_id: int | None = None        # Numeric regime ID (0=expansion,1=recovery,2=tightening,3=risk_off)
+    broadcast_time: int | None = None   # Unix ms when this response was built
+    signature: str | None = None        # Base64 Ed25519 sig; None in dev mode
 
 
 class LiquidityRow(BaseModel):

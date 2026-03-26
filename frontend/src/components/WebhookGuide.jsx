@@ -48,7 +48,7 @@ export default function WebhookGuide({ tier }) {
           {/* Step 1 */}
           <div>
             <div style={{ ...STEP, marginBottom: 6 }}>01 — Register your webhook URL</div>
-            <div style={{ background: '#0a0a0a', border: '1px solid #1f1f1f', borderRadius: 6, padding: '10px 14px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 6, padding: '10px 14px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>
               <span style={{ color: '#888' }}>POST</span> <span style={{ color: '#3b82f6' }}>https://api.macropulse.live/v1/auth/webhook</span><br/>
               <span style={{ color: '#888' }}>Header:</span> X-MacroPulse-Key: <span style={{ color: '#22c55e' }}>mp_...</span><br/>
               <span style={{ color: '#888' }}>Body: </span>
@@ -59,7 +59,7 @@ export default function WebhookGuide({ tier }) {
           {/* Step 2 */}
           <div>
             <div style={{ ...STEP, marginBottom: 6 }}>02 — Receive regime-change payloads</div>
-            <div style={{ background: '#0a0a0a', border: '1px solid #1f1f1f', borderRadius: 6, padding: '10px 14px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 6, padding: '10px 14px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8 }}>
               <span style={{ color: '#888' }}>// POST to your URL when regime changes:</span><br/>
               {'{'}<br/>
               &nbsp;&nbsp;"event": <span style={{ color: '#f59e0b' }}>"regime_change"</span>,<br/>

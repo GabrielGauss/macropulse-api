@@ -56,9 +56,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start / stop the background scheduler and DB pool with the app lifecycle."""
     from services.scheduler import start_scheduler, stop_scheduler
+    from services.mta_signer import init_signer
     from database.connection import close_pool
 
     logger.info("Starting MacroPulse API v%s", settings.app_version)
+    init_signer(settings.mta_signing_key_hex)
     start_scheduler()
     yield
     stop_scheduler()

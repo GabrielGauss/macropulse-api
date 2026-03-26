@@ -4,21 +4,25 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans:    ['"Inter"', 'system-ui', 'sans-serif'],
-        display: ['"Inter"', 'system-ui', 'sans-serif'],
+        sans:    ['"JetBrains Mono"', 'monospace'],
+        display: ['"JetBrains Mono"', 'monospace'],
         mono:    ['"JetBrains Mono"', 'monospace'],
+      },
+      borderRadius: {
+        none: '0', sm: '0', DEFAULT: '0', md: '0',
+        lg: '0', xl: '0', '2xl': '0', '3xl': '0', full: '0',
       },
       colors: {
         surface: {
-          0: '#0a0a0a',
-          1: '#111111',
-          2: '#191919',
-          3: '#222222',
-          4: '#2a2a2a',
+          0: '#080808',
+          1: '#0f0f0f',
+          2: '#141414',
+          3: '#1e1e1e',
+          4: '#282828',
         },
         border: {
-          DEFAULT: '#1f1f1f',
-          2: '#2a2a2a',
+          DEFAULT: '#1a1a1a',
+          2: '#252525',
         },
         accent: {
           green:  '#22c55e',

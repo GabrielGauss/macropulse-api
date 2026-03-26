@@ -110,7 +110,7 @@ function StatPill({ label, value, color, sub }) {
   return (
     <div style={{
       padding: '10px 16px', background: '#0f0f0f',
-      border: '1px solid #1f1f1f', borderRadius: 8, flex: '1 1 100px',
+      border: '1px solid #1a1a1a', borderRadius: 8, flex: '1 1 100px',
     }}>
       <div style={{ fontSize: 10, fontFamily: 'JetBrains Mono', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.50)', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono', color: color || '#f0f0f0', lineHeight: 1.2 }}>{value}</div>
@@ -266,20 +266,20 @@ export default function PerformanceView() {
             <button onClick={() => setShowBands(b => !b)} style={{
               fontSize: 9, fontFamily: 'JetBrains Mono', padding: '2px 7px',
               borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
-              background: showBands ? '#1f1f1f' : 'transparent',
+              background: showBands ? '#1a1a1a' : 'transparent',
               color: showBands ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
               transition: 'all 0.15s',
             }}>regimes</button>
             <button onClick={() => setShowTransitions(t => !t)} style={{
               fontSize: 9, fontFamily: 'JetBrains Mono', padding: '2px 7px',
               borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
-              background: showTransitions ? '#1f1f1f' : 'transparent',
+              background: showTransitions ? '#1a1a1a' : 'transparent',
               color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
               transition: 'all 0.15s',
             }}>transitions</button>
             <CopySnippet />
             {/* Range picker */}
-            <div className="flex items-center rounded" style={{ background: '#111', border: '1px solid #1f1f1f', padding: 2, gap: 2 }}>
+            <div className="flex items-center rounded" style={{ background: '#111', border: '1px solid #1a1a1a', padding: 2, gap: 2 }}>
               {RANGE_OPTIONS.map(({ label, days }) => {
                 const active = rangeDays === days;
                 return (
@@ -332,7 +332,7 @@ export default function PerformanceView() {
             <Brush
               dataKey="date"
               height={22}
-              stroke="#1f1f1f"
+              stroke="#1a1a1a"
               fill="#0d0d0d"
               travellerWidth={6}
               tickFormatter={() => ''}

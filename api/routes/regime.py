@@ -8,6 +8,7 @@ import csv
 import datetime as dt
 import io
 import logging
+import time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -26,6 +27,7 @@ from api.schemas.responses import (
     RegimeResponse,
 )
 from database import queries
+from services.mta_signer import sign_regime_payload
 from services.scorecard import build_scorecard
 
 logger = logging.getLogger(__name__)
@@ -39,9 +41,21 @@ def get_current_regime() -> RegimeResponse:
     row = queries.fetch_current_regime()
     if row is None:
         raise HTTPException(status_code=404, detail="No regime data available.")
-    return RegimeResponse(
+
+    broadcast_time = int(time.time() * 1000)  # Unix ms
+
+    # Numeric regime ID — stable key for IRL Engine policy enforcement.
+    _REGIME_ID = {"expansion": 0, "recovery": 1, "tightening": 2, "risk_off": 3}
+    regime_str = row["regime"]
+    regime_id = _REGIME_ID.get(regime_str, 3)  # default to risk_off (conservative)
+
+    # Build the response without signature first so we can sign the exact bytes
+    # that will appear in the JSON body.  Using model_dump(mode="json") ensures
+    # Pydantic's serialization rules (float precision, ISO-8601 with Z, etc.)
+    # produce the same values the IRL Engine will see when it verifies the sig.
+    response = RegimeResponse(
         timestamp=row["time"],
-        macro_regime=row["regime"],
+        macro_regime=regime_str,
         risk_score=row["risk_score"],
         probabilities=RegimeProbabilities(
             expansion=row["prob_expansion"],
@@ -51,7 +65,18 @@ def get_current_regime() -> RegimeResponse:
         ),
         volatility_state=row.get("volatility_state"),
         model_version=row.get("model_version"),
+        regime_id=regime_id,
+        broadcast_time=broadcast_time,
+        signature=None,
     )
+    # Sign the Pydantic-serialized dict (no "signature" key) so the canonical
+    # JSON matches the response body byte-for-byte after the sig field is removed.
+    payload = response.model_dump(mode="json")
+    payload.pop("signature", None)
+    signature = sign_regime_payload(payload)
+
+    response.signature = signature
+    return response
 
 
 _FREE_HISTORY_LIMIT = 30

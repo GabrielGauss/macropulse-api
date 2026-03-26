@@ -117,6 +117,12 @@ class Settings(BaseSettings):
     pipeline_cron_hour: int = 18  # 18:00 UTC (after US market close)
     pipeline_cron_minute: int = 30
 
+    # ── IRL Engine integration ───────────────────────────────────────
+    # Ed25519 private key (hex-encoded 32 bytes) used to sign /regime/current
+    # responses so the IRL Engine can verify MTA authenticity.
+    # Generate with: python -c "from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey; k=Ed25519PrivateKey.generate(); print(k.private_bytes_raw().hex())"
+    mta_signing_key_hex: str = ""
+
     # ── Pipeline quality thresholds ──────────────────────────────────
     # Drift warning: PCA explained-variance change fraction that triggers alert.
     pipeline_drift_variance_warn: float = Field(

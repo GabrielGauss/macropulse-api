@@ -21,7 +21,7 @@ const REGIME_CONTEXT = {
 
 function RangePicker({ value, onChange }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', borderRadius: 5, background: '#111', border: '1px solid #1f1f1f', padding: 2, gap: 2 }}>
+    <div style={{ display: 'flex', alignItems: 'center', borderRadius: 5, background: '#111', border: '1px solid #1a1a1a', padding: 2, gap: 2 }}>
       {RANGE_OPTS.map(({ l, v }) => {
         const active = value === v;
         return (

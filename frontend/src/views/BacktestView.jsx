@@ -277,7 +277,7 @@ export default function BacktestView() {
               {Object.entries(summary.regime_distribution || {}).map(([regime, pct]) => {
                 const cfg = REGIME_CONFIG[regime] || {};
                 return (
-                  <div key={regime} className="p-3 rounded" style={{ background: cfg.bg || '#111', border: `1px solid ${cfg.color || '#1f1f1f'}22` }}>
+                  <div key={regime} className="p-3 rounded" style={{ background: cfg.bg || '#111', border: `1px solid ${cfg.color || '#1a1a1a'}22` }}>
                     <div className="text-[10px] text-white/50 font-mono uppercase tracking-wide mb-1">{cfg.label || regime}</div>
                     <div className="font-mono text-base font-semibold" style={{ color: cfg.color || '#f0f0f0' }}>
                       {(pct * 100).toFixed(1)}%

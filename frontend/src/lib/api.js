@@ -13,6 +13,18 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+// Unauthenticated helper for auth endpoints (no key header needed)
+async function publicFetch(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return Promise.reject(data);
+  return data;
+}
+
 export const api = {
   getCurrentRegime:  () => apiFetch('/v1/regime/current'),
   getRegimeHistory:  (limit = 90) => apiFetch(`/v1/regime/history?limit=${limit}`),
@@ -40,6 +52,16 @@ export const api = {
   getWebhookInfo:    () => apiFetch('/v1/webhook/info'),
   setWebhook:        (url) => apiFetch('/v1/webhook/set', { method: 'POST', body: JSON.stringify({ url }) }),
   testWebhook:       () => apiFetch('/v1/webhook/test'),
+  // Auth — registration flow (no key required)
+  register:          (email) => publicFetch('/v1/auth/register', { email }),
+  verify:            (email, code) => publicFetch('/v1/auth/verify', { email, code }),
+  // Auth — key management (key required)
+  rotateKey:         () => apiFetch('/v1/auth/rotate', { method: 'POST' }),
+  getUsage:          () => apiFetch('/v1/auth/usage'),
+  // Billing
+  getCheckout:       (tier) => apiFetch('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ tier }) }),
+  getBillingPortal:  () => apiFetch('/v1/billing/portal', { method: 'POST' }),
+
   setKey:            (key) => { if (key) localStorage.setItem('mp_api_key', key.trim()); else localStorage.removeItem('mp_api_key'); },
   getKey,
   hasKey:            () => !!getKey(),

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -13,8 +13,8 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: #0a0a0a;
+    font-family: 'JetBrains Mono', monospace;
+    background: #080808;
     color: #f0f0f0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -22,19 +22,18 @@
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: #333; }
+  ::-webkit-scrollbar-thumb { background: #1e1e1e; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
 }
 
 @layer components {
   /* Base card */
   .card {
-    @apply bg-surface-1 border border-[#1f1f1f] rounded-lg;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    @apply bg-surface-1 border border-[#1a1a1a];
+    transition: border-color 0.15s ease;
   }
   .card:hover {
-    border-color: #272727;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    border-color: #252525;
   }
 
   /* Compact section label */
@@ -44,12 +43,12 @@
 
   /* Status pill */
   .status-pill {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium;
   }
 
   /* Live indicator dot */
   .live-dot {
-    @apply h-1.5 w-1.5 rounded-full flex-shrink-0;
+    @apply h-1.5 w-1.5 flex-shrink-0;
     animation: pulse-dot 2.5s ease-in-out infinite;
   }
 

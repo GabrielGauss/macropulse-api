@@ -214,7 +214,7 @@ export default function RegimeTimeline({
               style={{
                 fontSize: 9, fontFamily: 'JetBrains Mono, monospace', padding: '2px 7px',
                 borderRadius: 4, border: '1px solid #2a2a2a', cursor: 'pointer',
-                background: showTransitions ? '#1f1f1f' : 'transparent',
+                background: showTransitions ? '#1a1a1a' : 'transparent',
                 color: showTransitions ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.45)',
                 transition: 'all 0.15s',
               }}
@@ -240,7 +240,7 @@ export default function RegimeTimeline({
             /* Time range pills */
             <div
               className="flex items-center rounded"
-              style={{ background: '#111', border: '1px solid #1f1f1f', padding: 2, gap: 2 }}
+              style={{ background: '#111', border: '1px solid #1a1a1a', padding: 2, gap: 2 }}
             >
               {TIME_OPTIONS.map(({ label, days }) => {
                 const active = historyDays === days;
@@ -337,7 +337,7 @@ export default function RegimeTimeline({
           <Brush
             dataKey="timestamp"
             height={22}
-            stroke="#1f1f1f"
+            stroke="#1a1a1a"
             fill="#0d0d0d"
             travellerWidth={6}
             tickFormatter={() => ''}

@@ -28,7 +28,7 @@ function MetricRow({ label, value, threshold, fmt, guide, warnText, showGuide })
   const warn = value > threshold;
   const pct  = Math.min((value / (threshold * 1.5)) * 100, 100);
   return (
-    <div className="py-3 border-b border-[#1f1f1f] last:border-0">
+    <div className="py-3 border-b border-[#1a1a1a] last:border-0">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div

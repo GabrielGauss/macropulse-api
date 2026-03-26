@@ -3,6 +3,7 @@ import { REGIME_CONFIG } from '../lib/utils';
 import { api } from '../lib/api';
 import { useFetch } from '../hooks/useFetch';
 import { useCountdown } from '../hooks/useCountdown';
+import RegisterModal from './RegisterModal';
 
 const TIER_COLOR = {
   free:    'rgba(255,255,255,0.2)',
@@ -27,6 +28,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [keyDraft, setKeyDraft] = useState('');
   const [hasKey, setHasKey] = useState(api.hasKey());
+  const [showRegister, setShowRegister] = useState(false);
   const inputRef = useRef(null);
   const popoverRef = useRef(null);
 
@@ -75,8 +77,9 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   }
 
   return (
+    <>
     <header
-      className="flex items-center justify-between border-b border-[#1f1f1f] bg-surface-0 flex-shrink-0 relative"
+      className="flex items-center justify-between border-b border-[#1a1a1a] bg-surface-0 flex-shrink-0 relative"
       style={{ height: 48, paddingLeft: 16, paddingRight: 16 }}
     >
       {/* MacroPulse logo + data timestamp + pipeline freshness + countdown */}
@@ -102,7 +105,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
         </span>
         {ps && (
           <span
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+            className="text-[10px] font-mono px-1.5 py-0.5"
             style={{
               color: ps.status === 'success' && !ps.data_lag ? '#22c55e' : ps.data_lag ? '#f59e0b' : '#ef4444',
               border: `1px solid ${ps.status === 'success' && !ps.data_lag ? 'rgba(34,197,94,0.3)' : ps.data_lag ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`,
@@ -171,7 +174,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
           {/* Key entry popover */}
           {showKeyInput && (
             <div
-              className="absolute right-0 top-8 z-50 rounded-lg border border-[#2a2a2a] bg-[#111] shadow-2xl"
+              className="absolute right-0 top-8 z-50 border border-[#252525] bg-[#0f0f0f] shadow-2xl"
               style={{ width: 320, padding: '14px 16px' }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -188,17 +191,28 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
                 onChange={e => setKeyDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveKey(); if (e.key === 'Escape') { setShowKeyInput(false); setKeyDraft(''); } }}
                 placeholder="mp_xxxxxxxxxxxx..."
-                className="w-full rounded-md border border-[#2a2a2a] bg-[#0a0a0a] px-3 py-2 font-mono text-[11px] text-green-400 outline-none focus:border-[#3a3a3a] placeholder:text-white/35"
+                className="w-full border border-[#252525] bg-[#080808] px-3 py-2 font-mono text-[11px] text-green-400 outline-none focus:border-[#333] placeholder:text-white/35"
               />
               <div className="flex items-center justify-between mt-3">
                 <span className="text-[10px] text-white/45">Stored in browser only</span>
                 <button
                   onClick={saveKey}
                   disabled={!keyDraft.trim()}
-                  className="rounded px-3 py-1.5 text-[11px] font-semibold transition-opacity disabled:opacity-30"
+                  className="px-3 py-1.5 text-[11px] font-semibold transition-opacity disabled:opacity-30"
                   style={{ background: '#f0f0f0', color: '#000' }}
                 >
                   Save key
+                </button>
+              </div>
+              <div className="mt-3 pt-3 border-t border-[#1a1a1a] text-center">
+                <button
+                  onClick={() => { setShowKeyInput(false); setKeyDraft(''); setShowRegister(true); }}
+                  className="text-[10px] font-mono transition-colors"
+                  style={{ color: '#22c55e' }}
+                  onMouseEnter={e => e.target.style.opacity = '0.7'}
+                  onMouseLeave={e => e.target.style.opacity = '1'}
+                >
+                  Don't have a key? Register for free →
                 </button>
               </div>
             </div>
@@ -212,7 +226,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
               {meInfo.email}
             </span>
             <span
-              className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded"
+              className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5"
               style={{
                 color: TIER_COLOR[meInfo.tier] || TIER_COLOR.free,
                 border: `1px solid ${TIER_COLOR[meInfo.tier] || TIER_COLOR.free}`,
@@ -230,7 +244,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
           title={guideMode ? 'Guide mode on — click to hide annotations' : 'Guide mode off — click to show chart annotations'}
           style={{
             fontSize: 9, fontFamily: 'JetBrains Mono, monospace',
-            padding: '3px 8px', borderRadius: 4,
+            padding: '3px 8px',
             border: `1px solid ${guideMode ? 'rgba(59,130,246,0.4)' : '#2a2a2a'}`,
             background: guideMode ? 'rgba(59,130,246,0.08)' : 'transparent',
             color: guideMode ? '#3b82f6' : 'rgba(255,255,255,0.45)',
@@ -261,5 +275,18 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
         </div>
       </div>
     </header>
+
+    {showRegister && (
+      <RegisterModal
+        onClose={() => setShowRegister(false)}
+        onRegistered={() => {
+          setHasKey(true);
+          setShowRegister(false);
+          // Reload page so App picks up the new key and re-fetches tier
+          window.location.reload();
+        }}
+      />
+    )}
+    </>
   );
 }
