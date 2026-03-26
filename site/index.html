@@ -321,6 +321,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
     <a href="#integration">Docs</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
+    <a href="/irl.html" style="color:var(--green)">IRL</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
   </div>
   <button class="nav-cta" onclick="scrollTo('#register')">Get Free Key</button>
@@ -334,6 +335,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   <a href="#integration" onclick="closeNav()">Docs</a>
   <a href="#pricing" onclick="closeNav()">Pricing</a>
   <a href="#faq" onclick="closeNav()">FAQ</a>
+  <a href="/irl.html" onclick="closeNav()" style="color:var(--green)">IRL</a>
   <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
 </div>
 
@@ -629,6 +631,10 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
           <div style="font-family:var(--mono);font-size:.78rem;color:var(--tx)">X-MacroPulse-Key: mp_free_...</div>
           <div style="font-family:var(--mono);font-size:.7rem;color:var(--mu);margin-top:.35rem">Header-based · no OAuth · instant key</div>
         </div>
+        <div style="margin-top:1rem;padding:1rem;border:1px solid rgba(34,197,94,.15);background:rgba(34,197,94,.03)">
+          <div style="font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:.4rem">Autonomous agents</div>
+          <div style="font-size:.82rem;color:var(--mu);line-height:1.6">Every regime broadcast is <strong style="color:var(--tx)">Ed25519-signed</strong> — verifiable proof of what the market state was at decision time. The perfect foundation for a compliant audit trail. <a href="/irl.html" style="color:var(--green)">Learn about IRL →</a></div>
+        </div>
       </div>
     </div>
   </div>
@@ -737,6 +743,10 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Is historical data available? <span class="faq-icon">+</span></button>
           <div class="faq-a"><div class="faq-a-inner">Free tier: 30-day window via <code>GET /v1/regime/history</code>. Starter: 6-month window — enough to validate the signal against your strategy. Pro: full 2+ year history (845+ daily records) plus CSV export with date, regime, risk score, equity exposure, and all four regime probabilities.</div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">How does MacroPulse support accountable AI trading? <span class="faq-icon">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">Our regime signals are not just data — they are cryptographically signed using Ed25519, making them verifiable by anyone who holds our public key. This transforms MacroPulse into a Market Truth Anchor (MTA) for autonomous agents. When combined with <a href="/irl.html" style="color:var(--green)">IRL</a>, our compliance gateway, the signed regime becomes the foundation of a provable audit trail — linking every agent decision to the exact market state at the moment it was made.</div></div>
         </div>
       </div>
     </div>
