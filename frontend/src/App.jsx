@@ -73,8 +73,9 @@ export default function App() {
   const [tier, setTier] = useState(null); // null = loading, 'free'|'starter'|'pro'|'owner'
   const [meInfo, setMeInfo] = useState(null); // { email, tier }
 
-  // Derive capabilities from tier
-  const isFree            = tier === 'free' || tier === null;
+  // Derive capabilities from tier (null = still loading — don't gate anything yet)
+  const tierLoading       = tier === null;
+  const isFree            = tier === 'free';
   const isStarterOrAbove  = tier === 'starter' || tier === 'pro' || tier === 'owner';
   const isProOrAbove      = tier === 'pro' || tier === 'owner';
   const FREE_HISTORY_LIMIT    = 30;
@@ -173,12 +174,12 @@ export default function App() {
 
             {/* ── Liquidity ── */}
             {activeSection === 'liquidity' && (
-              !isStarterOrAbove ? <UpgradeGate feature="Liquidity Analysis" plan="Starter" /> : <LiquidityView />
+              tierLoading ? null : !isStarterOrAbove ? <UpgradeGate feature="Liquidity Analysis" plan="Starter" /> : <LiquidityView />
             )}
 
             {/* ── Signals ── */}
             {activeSection === 'signals' && (
-              !isStarterOrAbove ? <UpgradeGate feature="Signal Deep-Dive" plan="Starter" /> : <SignalsView />
+              tierLoading ? null : !isStarterOrAbove ? <UpgradeGate feature="Signal Deep-Dive" plan="Starter" /> : <SignalsView />
             )}
 
             {/* ── Performance ── */}
@@ -188,17 +189,17 @@ export default function App() {
 
             {/* ── Backtests ── */}
             {activeSection === 'backtest' && (
-              !isProOrAbove ? <UpgradeGate feature="Backtest Engine" plan="Pro" /> : <BacktestView />
+              tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Backtest Engine" plan="Pro" /> : <BacktestView />
             )}
 
             {/* ── Domain Views ── */}
-            {activeSection === 'inflation'   && (!isProOrAbove ? <UpgradeGate feature="Inflation Analysis"   plan="Pro" /> : <InflationView />)}
-            {activeSection === 'growth'      && (!isProOrAbove ? <UpgradeGate feature="Growth Analysis"      plan="Pro" /> : <GrowthView />)}
-            {activeSection === 'rates'       && (!isProOrAbove ? <UpgradeGate feature="Rates Analysis"       plan="Pro" /> : <RatesView />)}
-            {activeSection === 'commodities' && (!isProOrAbove ? <UpgradeGate feature="Commodities Analysis" plan="Pro" /> : <CommoditiesView />)}
-            {activeSection === 'fx'          && (!isProOrAbove ? <UpgradeGate feature="FX Analysis"          plan="Pro" /> : <FXView />)}
-            {activeSection === 'crypto'      && (!isProOrAbove ? <UpgradeGate feature="Crypto Analysis"      plan="Pro" /> : <CryptoView />)}
-            {activeSection === 'quant'       && (!isProOrAbove ? <UpgradeGate feature="Quant HUD"            plan="Pro" /> : <QuantView />)}
+            {activeSection === 'inflation'   && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Inflation Analysis"   plan="Pro" /> : <InflationView />)}
+            {activeSection === 'growth'      && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Growth Analysis"      plan="Pro" /> : <GrowthView />)}
+            {activeSection === 'rates'       && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Rates Analysis"       plan="Pro" /> : <RatesView />)}
+            {activeSection === 'commodities' && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Commodities Analysis" plan="Pro" /> : <CommoditiesView />)}
+            {activeSection === 'fx'          && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="FX Analysis"          plan="Pro" /> : <FXView />)}
+            {activeSection === 'crypto'      && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Crypto Analysis"      plan="Pro" /> : <CryptoView />)}
+            {activeSection === 'quant'       && (tierLoading ? null : !isProOrAbove ? <UpgradeGate feature="Quant HUD"            plan="Pro" /> : <QuantView />)}
 
             {activeSection === 'account' && (
               <AccountView

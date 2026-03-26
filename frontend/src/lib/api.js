@@ -9,7 +9,10 @@ async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (key) headers['X-MacroPulse-Key'] = key;
   const res = await fetch(`${BASE}${path}`, { headers, ...options });
-  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    return Promise.reject(data);
+  }
   return res.json();
 }
 

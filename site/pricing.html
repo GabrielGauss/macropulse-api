@@ -248,27 +248,47 @@
 <!-- Registration modal -->
 <div class="modal-backdrop" id="registerModal">
   <div class="modal">
-    <!-- Form state -->
-    <div id="modalForm">
+    <!-- Step 1: Email -->
+    <div id="modalStep1">
       <h3>Get started free</h3>
-      <p>Create your account and receive your API key instantly.</p>
-      <div class="form-group">
-        <label for="regName">Name</label>
-        <input type="text" id="regName" placeholder="Your name" autocomplete="name" />
-      </div>
+      <p>Enter your email to receive a 6-digit verification code.</p>
       <div class="form-group">
         <label for="regEmail">Email</label>
         <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email" />
       </div>
-      <div id="modalError" class="modal-error"></div>
+      <div id="modalError1" class="modal-error"></div>
       <div class="modal-actions">
         <button class="modal-cancel" onclick="closeRegisterModal()">Cancel</button>
-        <button class="modal-submit" id="modalSubmit" onclick="submitRegister()">Create account →</button>
+        <button class="modal-submit" id="modalSubmit1" onclick="submitRegister()">Send code →</button>
+      </div>
+      <div style="margin-top:1rem;font-size:0.75rem;color:#555;text-align:center;">
+        Free tier: 50 req/day · No credit card required.
       </div>
     </div>
 
-    <!-- Success state -->
-    <div class="modal-success" id="modalSuccess">
+    <!-- Step 2: OTP code -->
+    <div id="modalStep2" style="display:none;">
+      <h3>Check your inbox</h3>
+      <p>We sent a 6-digit code to <strong id="sentToEmail" style="color:#f0f0f0;"></strong></p>
+      <div class="form-group">
+        <label for="regCode">Verification code</label>
+        <input type="text" id="regCode" placeholder="000000" maxlength="6" inputmode="numeric"
+               style="text-align:center;letter-spacing:0.5em;font-size:1.25rem;"
+               oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)" />
+      </div>
+      <div id="modalError2" class="modal-error"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeRegisterModal()">Cancel</button>
+        <button class="modal-submit" id="modalSubmit2" onclick="submitVerify()">Verify →</button>
+      </div>
+      <div style="margin-top:1rem;font-size:0.75rem;color:#555;text-align:center;">
+        Didn't get it? <button onclick="resendCode()" style="background:none;border:none;color:#888;font-size:0.75rem;cursor:pointer;text-decoration:underline;">Resend code</button>
+        · Code expires in 15 min.
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="modal-success" id="modalStep3">
       <div style="font-size:2rem;margin-bottom:0.75rem;">✓</div>
       <h3 style="margin-bottom:0.35rem;">You're in.</h3>
       <p>Your API key (shown once — copy it now):</p>
@@ -276,7 +296,7 @@
         <button class="copy-btn" onclick="copyKey()">Copy</button>
         <span id="keyText"></span>
       </div>
-      <p style="font-size:0.78rem;color:#555;">Check your inbox — we also sent it to your email.</p>
+      <p style="font-size:0.78rem;color:#555;">We also sent it to your email.</p>
       <a href="https://api.macropulse.live/dashboard"
          style="display:inline-block;margin-top:1rem;background:#f0f0f0;color:#000;padding:0.65rem 1.5rem;border-radius:7px;font-size:0.875rem;font-weight:600;text-decoration:none;">
         Open Dashboard →
@@ -296,17 +316,26 @@
   }
 
   /* ── Free registration modal ── */
+  let _regEmail = '';
+
   function openRegisterModal() {
     document.getElementById('registerModal').classList.add('open');
-    document.getElementById('regName').focus();
+    document.getElementById('regEmail').focus();
   }
   function closeRegisterModal() {
     document.getElementById('registerModal').classList.remove('open');
-    document.getElementById('modalForm').style.display = '';
-    document.getElementById('modalSuccess').style.display = 'none';
-    document.getElementById('modalError').style.display = 'none';
-    document.getElementById('regName').value = '';
+    document.getElementById('modalStep1').style.display = '';
+    document.getElementById('modalStep2').style.display = 'none';
+    document.getElementById('modalStep3').style.display = 'none';
+    document.getElementById('modalError1').style.display = 'none';
+    document.getElementById('modalError2').style.display = 'none';
     document.getElementById('regEmail').value = '';
+    document.getElementById('regCode').value = '';
+    document.getElementById('modalSubmit1').disabled = false;
+    document.getElementById('modalSubmit1').textContent = 'Send code →';
+    document.getElementById('modalSubmit2').disabled = false;
+    document.getElementById('modalSubmit2').textContent = 'Verify →';
+    _regEmail = '';
   }
   document.getElementById('registerModal').addEventListener('click', function(e) {
     if (e.target === this) closeRegisterModal();
@@ -316,40 +345,85 @@
   });
 
   async function submitRegister() {
-    const name  = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
-    const errEl = document.getElementById('modalError');
-    const btn   = document.getElementById('modalSubmit');
-
-    if (!email) { showErr('Email is required.'); return; }
+    const btn   = document.getElementById('modalSubmit1');
+    if (!email) { showErr1('Email is required.'); return; }
 
     btn.disabled = true;
-    btn.textContent = 'Creating account…';
-    errEl.style.display = 'none';
+    btn.textContent = 'Sending…';
+    document.getElementById('modalError1').style.display = 'none';
 
     try {
-      const res = await fetch('https://api.macropulse.live/v1/auth/register', {
+      const res  = await fetch('https://api.macropulse.live/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: name || undefined }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Registration failed.');
 
-      document.getElementById('modalForm').style.display = 'none';
-      document.getElementById('keyText').textContent = data.api_key;
-      document.getElementById('modalSuccess').style.display = 'block';
+      _regEmail = email;
+      document.getElementById('sentToEmail').textContent = email;
+      document.getElementById('modalStep1').style.display = 'none';
+      document.getElementById('modalStep2').style.display = '';
+      document.getElementById('regCode').focus();
     } catch (e) {
-      showErr(e.message);
+      showErr1(e.message);
       btn.disabled = false;
-      btn.textContent = 'Create account →';
+      btn.textContent = 'Send code →';
     }
   }
 
-  function showErr(msg) {
-    const el = document.getElementById('modalError');
-    el.textContent = msg;
-    el.style.display = 'block';
+  async function submitVerify() {
+    const code = document.getElementById('regCode').value.trim();
+    const btn  = document.getElementById('modalSubmit2');
+    if (code.length !== 6) { showErr2('Enter the 6-digit code from your email.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+    document.getElementById('modalError2').style.display = 'none';
+
+    try {
+      const res  = await fetch('https://api.macropulse.live/v1/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: _regEmail, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Verification failed.');
+
+      document.getElementById('keyText').textContent = data.api_key;
+      document.getElementById('modalStep2').style.display = 'none';
+      document.getElementById('modalStep3').style.display = 'block';
+    } catch (e) {
+      showErr2(e.message);
+      btn.disabled = false;
+      btn.textContent = 'Verify →';
+    }
+  }
+
+  async function resendCode() {
+    if (!_regEmail) return;
+    try {
+      await fetch('https://api.macropulse.live/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: _regEmail }),
+      });
+      showErr2('New code sent — check your inbox.');
+      document.getElementById('modalError2').style.color = '#22c55e';
+    } catch (e) {
+      showErr2('Could not resend. Try again.');
+    }
+  }
+
+  function showErr1(msg) {
+    const el = document.getElementById('modalError1');
+    el.textContent = msg; el.style.display = 'block'; el.style.color = '';
+  }
+  function showErr2(msg) {
+    const el = document.getElementById('modalError2');
+    el.textContent = msg; el.style.display = 'block';
   }
 
   function copyKey() {
