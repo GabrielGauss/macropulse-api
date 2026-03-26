@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2322c55e' stroke-width='1.5'/%3E%3Cellipse cx='16' cy='16' rx='4.5' ry='9' fill='none' stroke='%2322c55e' stroke-width='1.2'/%3E%3Cline x1='7' y1='16' x2='25' y2='16' stroke='%2322c55e' stroke-width='1.2'/%3E%3C/svg%3E"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IRL Protocol Whitepaper — Immutable Reasoning Log</title>
+<meta name="description" content="Technical whitepaper for IRL — the cryptographic compliance protocol for autonomous trading agents. Protocol specification, regulatory mapping, and deployment architecture."/>
+<link rel="canonical" href="https://macropulse.live/irl-whitepaper"/>
+<meta property="og:title" content="IRL Protocol Whitepaper — Immutable Reasoning Log"/>
+<meta property="og:description" content="Cryptographic proof of autonomous trading intent. Protocol spec, regulatory mapping, and case studies."/>
+<meta property="og:image" content="https://macropulse.live/og-image.svg"/>
+<meta property="og:url" content="https://macropulse.live/irl-whitepaper"/>
+<meta property="og:type" content="article"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="IRL Protocol Whitepaper"/>
+<meta name="twitter:description" content="The cryptographic compliance protocol for autonomous trading agents. Technical spec and regulatory mapping."/>
+<meta name="twitter:image" content="https://macropulse.live/og-image.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--bg1:#0d0d0d;--bg2:#111;
+  --ln:#1c1c1c;--ln2:#282828;
+  --tx:#e8e8e8;--mu:#888;--di:#444;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:15px;line-height:1.7;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* ── Nav ── */
+nav{
+  position:sticky;top:0;z-index:100;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;border-bottom:1px solid var(--ln);
+  background:rgba(8,8,8,0.94);backdrop-filter:blur(16px)
+}
+.logo{font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.nav-links{display:flex;gap:1.5rem}
+.nav-links a{font-size:.82rem;color:var(--di);transition:color .15s}
+.nav-links a:hover{color:var(--mu)}
+.nav-links a.active{color:var(--green)}
+
+/* ── Layout ── */
+.page{display:grid;grid-template-columns:220px 1fr;gap:0;max-width:1080px;margin:0 auto;padding:0 2rem}
+@media(max-width:760px){.page{grid-template-columns:1fr}.toc{display:none}}
+
+/* ── TOC ── */
+.toc{position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;padding:3rem 2rem 3rem 0;border-right:1px solid var(--ln)}
+.toc-title{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--di);margin-bottom:1.25rem}
+.toc ol{list-style:none}
+.toc li{margin-bottom:.1rem}
+.toc a{font-size:.8rem;color:var(--di);transition:color .15s;display:block;padding:.25rem 0}
+.toc a:hover{color:var(--mu)}
+.toc a.sub{padding-left:.75rem;font-size:.75rem}
+
+/* ── Article ── */
+.article{padding:3rem 0 6rem 3rem;max-width:700px}
+@media(max-width:760px){.article{padding:2rem 0 4rem}}
+
+/* Cover */
+.cover{padding-bottom:3rem;border-bottom:1px solid var(--ln);margin-bottom:3rem}
+.cover-label{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--green);margin-bottom:1rem}
+.cover h1{font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem}
+.cover-sub{font-size:.95rem;color:var(--mu);max-width:540px;line-height:1.75;margin-bottom:1.5rem}
+.cover-meta{font-family:var(--mono);font-size:.7rem;color:var(--di);display:flex;gap:2rem;flex-wrap:wrap}
+
+/* Sections */
+.wp-section{margin-bottom:3.5rem}
+.wp-section:last-child{margin-bottom:0}
+.section-num{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);margin-bottom:.5rem}
+.wp-section h2{font-size:1.2rem;font-weight:600;letter-spacing:-.02em;margin-bottom:1rem;padding-top:.5rem;border-top:1px solid var(--ln)}
+.wp-section h3{font-size:.9rem;font-weight:600;color:var(--tx);margin:1.75rem 0 .6rem}
+.wp-section p{color:#bbb;font-size:.92rem;line-height:1.8;margin-bottom:1rem}
+.wp-section ul,.wp-section ol{color:#bbb;font-size:.92rem;line-height:1.8;padding-left:1.25rem;margin-bottom:1rem}
+.wp-section li{margin-bottom:.4rem}
+.wp-section strong{color:var(--tx);font-weight:600}
+
+/* Code / schema blocks */
+.schema{
+  background:var(--bg1);border:1px solid var(--ln2);
+  padding:1.25rem 1.5rem;margin:1.25rem 0;
+  font-family:var(--mono);font-size:.76rem;line-height:1.9;color:var(--mu);
+  overflow-x:auto
+}
+.schema .key{color:var(--tx)}
+.schema .val{color:var(--green)}
+.schema .cmt{color:var(--di)}
+.schema .type{color:var(--amber)}
+
+/* Definition rows */
+.def-table{width:100%;border-collapse:collapse;margin:1.25rem 0;font-size:.85rem}
+.def-table th{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--di);padding:.5rem .75rem;border-bottom:1px solid var(--ln);text-align:left;font-weight:400}
+.def-table td{padding:.6rem .75rem;border-bottom:1px solid var(--ln);color:#bbb;vertical-align:top}
+.def-table td:first-child{font-family:var(--mono);font-size:.78rem;color:var(--tx);white-space:nowrap}
+.def-table td:nth-child(2){color:var(--amber);font-family:var(--mono);font-size:.76rem;white-space:nowrap}
+
+/* Callout */
+.callout{border-left:2px solid var(--green);background:rgba(34,197,94,.04);padding:.9rem 1.25rem;margin:1.25rem 0}
+.callout p{margin:0;font-size:.85rem;color:var(--mu);line-height:1.65}
+.callout strong{color:var(--tx)}
+
+/* Regulation table */
+.reg-table{width:100%;border-collapse:collapse;margin:1.25rem 0;font-size:.82rem}
+.reg-table th{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--di);padding:.5rem .75rem;border-bottom:1px solid var(--ln);text-align:left;font-weight:400}
+.reg-table td{padding:.65rem .75rem;border-bottom:1px solid var(--ln);color:#bbb;vertical-align:top;line-height:1.6}
+.reg-table td:first-child{color:var(--tx);font-weight:500;white-space:nowrap}
+.reg-badge{display:inline-block;font-family:var(--mono);font-size:.6rem;padding:.15rem .4rem;border:1px solid var(--ln2);color:var(--di);margin-right:.3rem}
+
+/* Case study */
+.case{background:var(--bg1);border:1px solid var(--ln2);padding:1.5rem;margin:1.25rem 0}
+.case-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.case-label{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--green)}
+.case h3{font-size:.9rem;font-weight:600;margin:0}
+.case p{font-size:.85rem;color:var(--mu);line-height:1.7;margin-bottom:.75rem}
+.case p:last-child{margin-bottom:0}
+.case-stat{display:inline-block;font-family:var(--mono);font-size:.78rem;color:var(--green);margin-right:1.5rem}
+
+/* Flow diagram */
+.flow{display:flex;flex-direction:column;gap:0;margin:1.25rem 0}
+.flow-step{display:flex;gap:.75rem;align-items:flex-start}
+.flow-spine{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:24px}
+.flow-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.flow-dot.g{background:var(--green)}
+.flow-dot.a{background:var(--amber)}
+.flow-dot.d{background:var(--di)}
+.flow-line{width:1px;flex:1;background:var(--ln2);min-height:20px}
+.flow-body{padding-bottom:1.25rem}
+.flow-label{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+.flow-label.g{color:var(--green)}.flow-label.a{color:var(--amber)}.flow-label.d{color:var(--mu)}
+.flow-desc{font-size:.82rem;color:var(--mu);line-height:1.6}
+.flow-desc code{font-family:var(--mono);font-size:.76rem;color:var(--tx)}
+
+/* CTA */
+.cta{border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.04);padding:2rem;margin-top:3rem;text-align:center}
+.cta h3{font-size:1rem;font-weight:600;margin-bottom:.4rem}
+.cta p{color:var(--mu);font-size:.85rem;margin-bottom:1.25rem}
+.btn-g{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:500;padding:.65rem 1.5rem;background:var(--green);color:#000;letter-spacing:.02em;transition:opacity .15s}
+.btn-g:hover{opacity:.85}
+.btn-ghost{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:500;padding:.65rem 1.5rem;background:transparent;color:var(--mu);border:1px solid var(--ln2);letter-spacing:.02em;margin-left:.75rem;transition:color .15s,border-color .15s}
+.btn-ghost:hover{color:var(--tx);border-color:var(--mu)}
+
+footer{border-top:1px solid var(--ln);padding:2rem;text-align:center}
+footer p{color:var(--di);font-size:.78rem}
+footer a{color:var(--di)}
+footer a:hover{color:var(--mu)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo"><div class="logo-dot"></div>MacroPulse</a>
+  <div class="nav-links">
+    <a href="/irl.html">IRL Overview</a>
+    <a href="/irl-whitepaper.html" class="active">Whitepaper</a>
+    <a href="/api-docs.html">API Docs</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- TOC -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#problem">1. The Ownership Gap</a></li>
+      <li><a href="#protocol">2. The IRL Protocol</a>
+        <ul style="list-style:none">
+          <li><a href="#mta" class="sub">2.1 Market Truth Anchor</a></li>
+          <li><a href="#snapshot" class="sub">2.2 CognitiveSnapshot</a></li>
+          <li><a href="#chain" class="sub">2.3 The Audit Chain</a></li>
+          <li><a href="#verifier" class="sub">2.4 Post-Trade Verifier</a></li>
+        </ul>
+      </li>
+      <li><a href="#crypto">3. Cryptographic Guarantees</a></li>
+      <li><a href="#bitemporal">4. Bitemporal Ledger</a></li>
+      <li><a href="#mar">5. Multi-Agent Registry</a></li>
+      <li><a href="#policy">6. Policy Engine</a></li>
+      <li><a href="#regulation">7. Regulatory Mapping</a></li>
+      <li><a href="#editions">8. Deployment Editions</a></li>
+      <li><a href="#cases">9. Case Studies</a></li>
+      <li><a href="#conclusion">10. Conclusion</a></li>
+    </ol>
+  </aside>
+
+  <!-- Article -->
+  <article class="article">
+
+    <!-- Cover -->
+    <div class="cover">
+      <div class="cover-label">Technical Whitepaper · v1.1</div>
+      <h1>IRL: Immutable Reasoning Log<br>Protocol Specification</h1>
+      <p class="cover-sub">A cryptographic compliance protocol that seals every autonomous trading decision before it reaches the market — creating a tamper-evident chain of custody from regime attestation to exchange confirmation.</p>
+      <div class="cover-meta">
+        <span>IRL Protocol v1.1</span>
+        <span>March 2026</span>
+        <span>MacroPulse Research</span>
+        <span><a href="mailto:support@macropulse.live" style="color:var(--green)">support@macropulse.live</a></span>
+      </div>
+    </div>
+
+    <!-- Abstract -->
+    <div class="wp-section" id="abstract">
+      <div class="section-num">Abstract</div>
+      <h2>Abstract</h2>
+      <p>Autonomous trading agents are increasingly prevalent in systematic finance, yet no standard mechanism exists for proving the reasoning behind individual trading decisions at the moment they were made. Post-hoc log analysis is insufficient: logs can be altered, they do not prove what the agent <em>knew</em> at decision time, and they cannot demonstrate that pre-execution compliance rules were actually enforced.</p>
+      <p>This paper introduces IRL — the Immutable Reasoning Log — a pre-execution compliance gateway that addresses these deficiencies through a combination of cryptographic sealing, bitemporal timestamping, and post-trade binding. IRL produces a <strong>final_proof</strong> for every trade: an unforgeable record that links the agent's reasoning, the market state it operated under, the policies that were enforced, and the exchange confirmation it produced.</p>
+      <p>IRL is signal-agnostic. Any cryptographically signed regime source may serve as the Market Truth Anchor (MTA). MacroPulse provides a turnkey MTA implementation using Ed25519-signed HMM/PCA regime broadcasts.</p>
+    </div>
+
+    <!-- 1. The Problem -->
+    <div class="wp-section" id="problem">
+      <div class="section-num">Section 1</div>
+      <h2>The Ownership Gap</h2>
+      <p>When a human trader executes a position, intent is implicit: the trader was present, made a judgment, and bears direct accountability. When an autonomous agent executes the same position, the chain of accountability dissolves. The agent acted on a model, under market conditions that existed at a precise moment, subject to policies that may or may not have been enforced. None of these facts are provable from a standard execution log.</p>
+      <p>We define this as the <strong>Ownership Gap</strong>: the absence of a verifiable link between an autonomous agent's decision and the conditions under which it was made.</p>
+
+      <h3>Why logs are not enough</h3>
+      <p>Application logs record what happened. They do not prove:</p>
+      <ul>
+        <li><strong>What the agent knew</strong> — the exact market state at the moment of decision, not reconstructed after the fact</li>
+        <li><strong>That policies were enforced</strong> — a log entry saying "policy check passed" is indistinguishable from one that was written retroactively</li>
+        <li><strong>That the reasoning was not altered</strong> — any log stored in a mutable system can be modified by a sufficiently privileged actor</li>
+        <li><strong>That the decision preceded the outcome</strong> — without a bitemporal record, an agent could theoretically be claimed to have decided after the fact</li>
+      </ul>
+
+      <h3>The regulatory trend</h3>
+      <p>Regulators across jurisdictions are converging on a common requirement: autonomous systems making consequential decisions must be able to demonstrate, to an external auditor, that those decisions were made under specific conditions, subject to specific controls, and that the record has not been altered. The EU AI Act, SEC AI examination priorities, and MiFID II algorithmic trading requirements all point in this direction. IRL is designed around these requirements from the ground up.</p>
+    </div>
+
+    <!-- 2. The Protocol -->
+    <div class="wp-section" id="protocol">
+      <div class="section-num">Section 2</div>
+      <h2>The IRL Protocol</h2>
+      <p>IRL operates as a sidecar between the agent and the exchange. Every trade that passes through IRL acquires a cryptographic chain: a sequence of signed, timestamped, and bound records that collectively prove what happened and when.</p>
+    </div>
+
+    <div class="wp-section" id="mta">
+      <div class="section-num">Section 2.1</div>
+      <h2>Market Truth Anchor (MTA)</h2>
+      <p>The Market Truth Anchor is the source of ground truth about the market state at decision time. IRL requires any MTA to provide signed broadcasts satisfying the following interface:</p>
+
+      <div class="schema">
+<span class="cmt">// MTA Broadcast Schema</span>
+{
+  <span class="key">"regime_id"</span>:        <span class="type">integer</span>,       <span class="cmt">// stable numeric enum (0–3)</span>
+  <span class="key">"regime_label"</span>:     <span class="type">string</span>,        <span class="cmt">// human-readable label</span>
+  <span class="key">"risk_score"</span>:       <span class="type">float [0,100]</span>, <span class="cmt">// composite risk level</span>
+  <span class="key">"probabilities"</span>:    <span class="type">object</span>,        <span class="cmt">// per-regime probability vector</span>
+  <span class="key">"model_version"</span>:    <span class="type">string</span>,        <span class="cmt">// frozen model hash</span>
+  <span class="key">"broadcast_time"</span>:   <span class="type">integer</span>,       <span class="cmt">// Unix milliseconds (wall clock)</span>
+  <span class="key">"signature"</span>:        <span class="type">string</span>         <span class="cmt">// Base64 Ed25519 over canonical JSON</span>
+}
+      </div>
+
+      <p>The <strong>signature</strong> field is computed over the RFC 8785 canonical JSON serialization of all other fields. Any party holding the MTA operator's public key can independently verify the broadcast without trusting any intermediary.</p>
+
+      <div class="callout">
+        <p><strong>MacroPulse as a turnkey MTA:</strong> MacroPulse's daily pipeline produces Ed25519-signed regime broadcasts via <code>GET /v1/regime/current</code>. The model is frozen — it cannot be retroactively altered to produce a different historical signature. The public key is published and stable.</p>
+      </div>
+
+      <p>Custom MTA implementations are supported. Any operator who can produce signed payloads conforming to the above schema can serve as the MTA for an IRL deployment. This includes proprietary factor models, alternative data providers, or internal risk systems.</p>
+    </div>
+
+    <div class="wp-section" id="snapshot">
+      <div class="section-num">Section 2.2</div>
+      <h2>CognitiveSnapshot</h2>
+      <p>Before any order is submitted to an exchange, the agent must construct a <strong>CognitiveSnapshot</strong> — a structured record of its decision context — and submit it to IRL for sealing. The snapshot captures everything the agent knew and intended at the moment of decision.</p>
+
+      <div class="schema">
+<span class="cmt">// CognitiveSnapshot Schema</span>
+{
+  <span class="key">"agent_id"</span>:          <span class="type">string</span>,   <span class="cmt">// registered agent identifier</span>
+  <span class="key">"model_hash"</span>:         <span class="type">string</span>,   <span class="cmt">// SHA-256 of the agent's model weights</span>
+  <span class="key">"mta_broadcast"</span>:      <span class="type">object</span>,   <span class="cmt">// full MTA broadcast (including signature)</span>
+  <span class="key">"decision_time"</span>:      <span class="type">integer</span>,  <span class="cmt">// Unix ms — when the agent decided</span>
+  <span class="key">"intent"</span>:             <span class="type">object</span>,   <span class="cmt">// instrument, direction, size, price type</span>
+  <span class="key">"reasoning_summary"</span>:  <span class="type">string</span>,   <span class="cmt">// agent-provided explanation (optional)</span>
+  <span class="key">"policy_context"</span>:     <span class="type">object</span>    <span class="cmt">// active policy version at decision time</span>
+}
+      </div>
+
+      <p>IRL computes the <strong>reasoning_hash</strong> as the SHA-256 of the RFC 8785 canonical JSON serialization of the CognitiveSnapshot. This hash is deterministic — any auditor who holds the original snapshot can reproduce it independently.</p>
+    </div>
+
+    <div class="wp-section" id="chain">
+      <div class="section-num">Section 2.3</div>
+      <h2>The Audit Chain</h2>
+      <p>The IRL audit chain is a sequence of five verifiable events, each dependent on the one before it. Altering any event invalidates all subsequent events.</p>
+
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-spine"><div class="flow-dot g"></div><div class="flow-line"></div></div>
+          <div class="flow-body">
+            <div class="flow-label g">1 — MTA Broadcast</div>
+            <div class="flow-desc">The MTA emits an Ed25519-signed regime broadcast. The signature proves the broadcast was produced by the MTA operator's private key and has not been altered since. <code>broadcast_time</code> anchors the broadcast to wall clock.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-spine"><div class="flow-dot g"></div><div class="flow-line"></div></div>
+          <div class="flow-body">
+            <div class="flow-label g">2 — CognitiveSnapshot Sealed (POST /irl/authorize)</div>
+            <div class="flow-desc">The agent submits its CognitiveSnapshot. IRL verifies the MTA signature, runs all pre-execution checks, and seals the snapshot: <code>reasoning_hash = SHA-256(canonical_json(snapshot))</code>. IRL returns the <code>reasoning_hash</code> and a <code>trace_id</code>. The snapshot is stored in the bitemporal ledger.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-spine"><div class="flow-dot d"></div><div class="flow-line"></div></div>
+          <div class="flow-body">
+            <div class="flow-label d">3 — Order Submission</div>
+            <div class="flow-desc">The agent embeds the <code>reasoning_hash</code> and <code>trace_id</code> in the exchange order metadata (e.g., client order ID or custom tag field). This binds the sealed intent to the exchange record before the order is sent.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-spine"><div class="flow-dot a"></div><div class="flow-line"></div></div>
+          <div class="flow-body">
+            <div class="flow-label a">4 — Exchange Execution</div>
+            <div class="flow-desc">The exchange fills the order and returns an execution report containing the <code>exchange_tx_id</code>. This is the first point at which the outcome is known. The agent was committed to the decision (step 2) before this happened.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-spine"><div class="flow-dot g"></div></div>
+          <div class="flow-body">
+            <div class="flow-label g">5 — Execution Bound (POST /irl/bind-execution)</div>
+            <div class="flow-desc">The agent submits the <code>exchange_tx_id</code> to IRL. IRL computes: <code>final_proof = SHA-256(reasoning_hash ‖ exchange_tx_id)</code>. If the reasoning hash matches the sealed record, the chain is closed as <strong>MATCHED</strong>. If it does not, or if the execution parameters diverged materially from the stated intent, the chain is flagged <strong>DIVERGENT</strong> and the reason is recorded permanently.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Tamper-evidence:</strong> the final_proof chains together the agent identity, the market state at decision time, the policy context, the order intent, and the exchange confirmation. Altering any component changes the hash and breaks the chain. No party — including the agent operator — can retroactively produce a valid chain for a trade that did not follow this sequence.</p>
+      </div>
+    </div>
+
+    <div class="wp-section" id="verifier">
+      <div class="section-num">Section 2.4</div>
+      <h2>Post-Trade Verifier</h2>
+      <p>Every sealed snapshot enters a lifecycle managed by the IRL post-trade verifier. The lifecycle has three terminal states:</p>
+
+      <table class="def-table">
+        <tr><th>State</th><th>Type</th><th>Meaning</th></tr>
+        <tr><td>MATCHED</td><td style="color:var(--green);font-family:var(--mono);font-size:.76rem">terminal</td><td>Execution bound, final_proof computed, chain closed. Regulator can independently verify.</td></tr>
+        <tr><td>DIVERGENT</td><td style="color:var(--red);font-family:var(--mono);font-size:.76rem">terminal</td><td>Execution parameters deviated materially from sealed intent. Flagged, reason recorded permanently.</td></tr>
+        <tr><td>EXPIRED</td><td style="color:var(--amber);font-family:var(--mono);font-size:.76rem">terminal</td><td>Authorized snapshot was not bound within the allowed window. Treated as a compliance gap.</td></tr>
+      </table>
+
+      <p>An async expiry worker monitors all open snapshots. Snapshots that exceed the binding window without a <code>bind-execution</code> call transition to EXPIRED. This prevents agents from accumulating authorized-but-never-executed snapshots as a form of option on market conditions.</p>
+    </div>
+
+    <!-- 3. Cryptographic Guarantees -->
+    <div class="wp-section" id="crypto">
+      <div class="section-num">Section 3</div>
+      <h2>Cryptographic Guarantees</h2>
+
+      <h3>Ed25519 MTA signatures</h3>
+      <p>Ed25519 (RFC 8032) provides 128-bit security with fast verification and small signature size (64 bytes). The MTA operator's private key is used to sign each broadcast. The corresponding public key is published and stable. Any party can verify a broadcast without trusting any intermediary, including IRL itself.</p>
+
+      <h3>RFC 8785 canonical JSON</h3>
+      <p>All hashes are computed over RFC 8785 canonical JSON — a deterministic serialization that sorts object keys lexicographically and removes insignificant whitespace. This ensures that the same logical document always produces the same hash regardless of how it was serialized by the producer.</p>
+
+      <h3>SHA-256 snapshot sealing</h3>
+      <p>The reasoning_hash is SHA-256 of the canonical CognitiveSnapshot. SHA-256 is a one-way function: given the hash, it is computationally infeasible to produce an alternative snapshot that hashes to the same value. The snapshot is therefore bound to its hash in both directions.</p>
+
+      <h3>final_proof binding</h3>
+      <p>The final_proof concatenates the reasoning_hash and the exchange_tx_id before hashing: <code>SHA-256(reasoning_hash ‖ exchange_tx_id)</code>. This produces a single value that cryptographically binds the agent's decision to the exchange record. Neither can be substituted without invalidating the proof.</p>
+
+      <div class="callout">
+        <p><strong>What IRL does not do:</strong> IRL does not evaluate whether the agent's decision was correct, profitable, or wise. It only proves that the decision was made, under specific conditions, subject to specific policies, and that the execution matched the declared intent. Judgment remains with the operator.</p>
+      </div>
+    </div>
+
+    <!-- 4. Bitemporal Ledger -->
+    <div class="wp-section" id="bitemporal">
+      <div class="section-num">Section 4</div>
+      <h2>Bitemporal Audit Ledger</h2>
+      <p>IRL's ledger is bitemporal: every record carries two timestamps that serve distinct functions.</p>
+
+      <table class="def-table">
+        <tr><th>Field</th><th>Type</th><th>Definition</th></tr>
+        <tr><td>valid_time</td><td>timestamp</td><td>When the agent could have known the information — bounded by the MTA broadcast_time. Proves the agent could not have seen the future.</td></tr>
+        <tr><td>txn_time</td><td>timestamp</td><td>When IRL recorded the event. Always ≥ valid_time. Set by IRL's system clock at the moment of record creation.</td></tr>
+      </table>
+
+      <p>The bitemporal structure provides a fundamental proof of temporal integrity: <code>valid_time ≤ txn_time</code> is enforced by IRL at sealing time. An agent that attempts to submit a snapshot with a <code>decision_time</code> after the MTA's <code>broadcast_time</code> will be rejected — it cannot have decided before it received the information.</p>
+
+      <p>Because txn_time is set by IRL and valid_time is bounded by the MTA broadcast, no party — not the agent, not the operator, not the MTA — can retroactively claim a decision was made at a different time than it was recorded.</p>
+    </div>
+
+    <!-- 5. Multi-Agent Registry -->
+    <div class="wp-section" id="mar">
+      <div class="section-num">Section 5</div>
+      <h2>Multi-Agent Registry (MAR)</h2>
+      <p>The MAR maintains identity records for all agents registered with an IRL deployment. Every <code>POST /irl/authorize</code> call is validated against the MAR before any other check runs.</p>
+
+      <table class="def-table">
+        <tr><th>Field</th><th>Type</th><th>Purpose</th></tr>
+        <tr><td>agent_id</td><td>string</td><td>Unique agent identifier, operator-assigned</td></tr>
+        <tr><td>model_hash</td><td>SHA-256</td><td>Hash of approved model weights. Snapshot rejected if agent presents a different hash.</td></tr>
+        <tr><td>notional_cap</td><td>decimal</td><td>Maximum single-trade notional. Enforced at authorization time.</td></tr>
+        <tr><td>allowed_regimes</td><td>integer[]</td><td>Regime IDs under which the agent is permitted to trade.</td></tr>
+        <tr><td>status</td><td>enum</td><td>ACTIVE / SUSPENDED / RETIRED. Suspended agents are rejected at the MAR gate.</td></tr>
+      </table>
+
+      <p>The model_hash check provides a strong guarantee against unauthorized model substitution: an agent running a model whose hash is not registered cannot obtain authorization, regardless of whether its other parameters are valid.</p>
+    </div>
+
+    <!-- 6. Policy Engine -->
+    <div class="wp-section" id="policy">
+      <div class="section-num">Section 6</div>
+      <h2>Policy Engine</h2>
+      <p>IRL's policy engine evaluates a set of operator-defined rules against the CognitiveSnapshot at authorization time. Policies are evaluated atomically with the MAR check — a single failed policy halts the entire authorization and returns an explicit rejection reason.</p>
+
+      <h3>Built-in policy types (L1)</h3>
+      <ul>
+        <li><strong>Regime gate</strong> — reject orders when current regime_id is not in the agent's allowed_regimes set</li>
+        <li><strong>Risk score ceiling</strong> — reject orders when risk_score exceeds a configured threshold</li>
+        <li><strong>Notional cap</strong> — reject orders where intended size exceeds the per-agent or per-regime notional limit</li>
+        <li><strong>Direction constraint</strong> — prevent long exposure during specific regimes (e.g., no long equity in risk_off)</li>
+        <li><strong>Blackout window</strong> — reject orders during defined calendar windows (e.g., FOMC meeting days)</li>
+      </ul>
+
+      <h3>WebAssembly policy modules (L3)</h3>
+      <p>L3 deployments support hot-reloadable policy modules compiled to WebAssembly. Modules run in a sandboxed environment with no network access and bounded execution time. New policies can be deployed without restarting the IRL engine or modifying its core logic. This enables operators to respond to regulatory changes or risk events without a deployment cycle.</p>
+    </div>
+
+    <!-- 7. Regulatory Mapping -->
+    <div class="wp-section" id="regulation">
+      <div class="section-num">Section 7</div>
+      <h2>Regulatory Mapping</h2>
+      <p>IRL is designed to satisfy the technical requirements of the primary regulatory frameworks governing autonomous trading systems. The following table maps IRL protocol components to specific regulatory requirements.</p>
+
+      <table class="reg-table">
+        <tr>
+          <th>Framework</th>
+          <th>Requirement</th>
+          <th>IRL Component</th>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">EU AI Act</span>Art. 13</td>
+          <td>High-risk AI systems must maintain logs enabling post-hoc monitoring and reconstruction of decisions</td>
+          <td>Bitemporal ledger + CognitiveSnapshot. Every decision is sealed before execution and is permanently reconstructable.</td>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">EU AI Act</span>Art. 14</td>
+          <td>Human oversight mechanisms must be able to intervene and halt automated systems</td>
+          <td>MAR suspension: setting an agent's status to SUSPENDED immediately blocks all future authorizations.</td>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">SEC</span>Rule 15c3-5</td>
+          <td>Market access controls must prevent erroneous orders before they reach the exchange</td>
+          <td>Pre-execution policy engine enforces notional caps, direction constraints, and risk score ceilings before the order is submitted.</td>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">SEC</span>AI Exam Priority</td>
+          <td>AI-generated trading decisions must be explainable and auditable</td>
+          <td>reasoning_summary field in CognitiveSnapshot. final_proof links decision to execution. Forensic replay reconstructs any historical trade from its sealed snapshot.</td>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">MiFID II</span>Art. 17</td>
+          <td>Algorithmic trading systems must have effective systems and risk controls, with a clear audit trail</td>
+          <td>Full audit chain from regime attestation to exchange confirmation. DIVERGENT flag catches cases where execution deviated from declared intent.</td>
+        </tr>
+        <tr>
+          <td><span class="reg-badge">MiFID II</span>RTS 6</td>
+          <td>Records must be kept for at least 5 years and be available to authorities on request</td>
+          <td>The bitemporal ledger is append-only and immutable. L2+ deployments anchor period root hashes to an external ledger for additional tamper-evidence.</td>
+        </tr>
+      </table>
+
+      <div class="callout">
+        <p><strong>Note on ZK compliance proofs (L3):</strong> For operators subject to regulatory examination, L3's zero-knowledge proofs allow demonstrating policy compliance without revealing the underlying model, strategy, or position data. The regulator receives a proof that the policy was enforced; they do not learn what the policy was or what position was taken.</p>
+      </div>
+    </div>
+
+    <!-- 8. Editions -->
+    <div class="wp-section" id="editions">
+      <div class="section-num">Section 8</div>
+      <h2>Deployment Editions</h2>
+
+      <table class="def-table">
+        <tr><th>Feature</th><th>L1 Sidecar</th><th>L2 Audit Platform</th><th>L3 Sovereign Gateway</th></tr>
+        <tr><td>CognitiveSnapshot sealing</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Pre-execution policy enforcement</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Bitemporal ledger</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Multi-Agent Registry</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Post-trade verifier (MATCHED/DIVERGENT)</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Signed heartbeats (replay prevention)</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Merkle anchoring</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Forensic replay</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>TEE execution (Intel TDX / AMD SEV)</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>WebAssembly policy modules</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Zero-knowledge compliance proofs</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Double-Green signing</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
+      </table>
+
+      <p>All editions expose the same REST API surface. Upgrading from L1 to L2 or L3 does not require changes to the agent integration — the agent continues to call the same endpoints. Capabilities are added transparently on the IRL side.</p>
+    </div>
+
+    <!-- 9. Case Studies -->
+    <div class="wp-section" id="cases">
+      <div class="section-num">Section 9</div>
+      <h2>Case Studies</h2>
+
+      <div class="case">
+        <div class="case-header">
+          <span class="case-label">Case Study A</span>
+          <h3>Systematic Equity Fund — L1 Sidecar</h3>
+        </div>
+        <p><strong>Situation:</strong> A mid-sized systematic equity fund runs a fleet of 12 agents trading US equities across multiple strategies. After an internal compliance review, the fund's risk committee requires that every agent decision be auditable within 24 hours. The fund's existing infrastructure is Python-based and runs on AWS.</p>
+        <p><strong>Implementation:</strong> IRL L1 deployed as a Docker sidecar alongside each agent. Agents are modified to call <code>POST /irl/authorize</code> before order submission and <code>POST /irl/bind-execution</code> after fill confirmation. The MacroPulse MTA provides the regime broadcast. Total integration time: 2 days.</p>
+        <p><strong>Outcome:</strong> Every trade now carries a final_proof. The compliance team can reconstruct any historical decision from its CognitiveSnapshot. The risk committee can demonstrate to external auditors that pre-execution notional caps were enforced on every trade.</p>
+        <span class="case-stat">12 agents</span>
+        <span class="case-stat">~340 trades/day</span>
+        <span class="case-stat">L1 Sidecar</span>
+      </div>
+
+      <div class="case">
+        <div class="case-header">
+          <span class="case-label">Case Study B</span>
+          <h3>Proprietary Trading Desk — L2 Audit Platform</h3>
+        </div>
+        <p><strong>Situation:</strong> A proprietary trading desk is preparing for a MiFID II audit. The desk runs agents across equities, rates, and FX. The compliance requirement is a 5-year tamper-evident record of every algorithmic decision, with the ability to demonstrate to the regulator that execution matched declared intent.</p>
+        <p><strong>Implementation:</strong> IRL L2 deployed on-premise. Signed heartbeats ensure that each authorization is bound to a specific MTA broadcast — replay of historical regime data to authorize present-day trades is impossible. Period root hashes are anchored to an external ledger daily, providing independent tamper-evidence. The forensic replay tool allows the compliance team to reconstruct any historical trade in full.</p>
+        <p><strong>Outcome:</strong> The desk passes the MiFID II audit. The regulator receives a complete audit trail for 5 years of algorithmic trading activity, including the regime context for every decision, the policies that were in force, and cryptographic proof that execution matched intent.</p>
+        <span class="case-stat">3 desks</span>
+        <span class="case-stat">~2,100 trades/day</span>
+        <span class="case-stat">L2 Audit Platform</span>
+      </div>
+
+      <div class="case">
+        <div class="case-header">
+          <span class="case-label">Case Study C</span>
+          <h3>Quantitative Hedge Fund — L3 Sovereign Gateway</h3>
+        </div>
+        <p><strong>Situation:</strong> A quantitative hedge fund runs proprietary alpha-generating models. The fund is required to demonstrate policy compliance to an external regulator, but cannot reveal its models, strategies, or position data — doing so would compromise the fund's competitive edge.</p>
+        <p><strong>Implementation:</strong> IRL L3 with zero-knowledge compliance proofs. The fund provides the regulator with ZK proofs demonstrating that every trade passed the registered policy set. The proofs are verifiable without revealing the underlying model, strategy, or position. The TEE execution environment ensures that even IRL's operator cannot access the fund's model internals.</p>
+        <p><strong>Outcome:</strong> The fund satisfies its regulatory compliance requirement without disclosing alpha-sensitive information. The regulator receives mathematical proof of compliance; the fund's competitive advantage is preserved.</p>
+        <span class="case-stat">1 fund</span>
+        <span class="case-stat">alpha-sensitive</span>
+        <span class="case-stat">L3 Sovereign Gateway</span>
+      </div>
+    </div>
+
+    <!-- 10. Conclusion -->
+    <div class="wp-section" id="conclusion">
+      <div class="section-num">Section 10</div>
+      <h2>Conclusion</h2>
+      <p>The gap between autonomous agent activity and provable accountability is one of the defining challenges facing systematic finance as AI adoption accelerates. IRL addresses this gap through a protocol that is cryptographically sound, operationally lightweight, and aligned with the direction of regulatory travel across major jurisdictions.</p>
+      <p>The protocol makes one guarantee: if a trade passed through IRL, there is a final_proof. That proof is unforgeable, permanently stored, and independently verifiable. It links the agent's identity, the market state it operated under, the policies that were enforced, and the exchange execution it produced. No party — including the operator — can alter any link without breaking the chain.</p>
+      <p>IRL is signal-agnostic. The MacroPulse MTA provides the easiest path to a complete deployment, but any cryptographically signed regime source can serve as the MTA. The protocol is designed to fit the existing infrastructure of systematic trading operations, not to replace it.</p>
+
+      <div class="cta">
+        <h3>Request Early Access</h3>
+        <p>IRL is in early access. Contact us to discuss your deployment requirements or request a technical briefing.</p>
+        <a href="mailto:support@macropulse.live?subject=IRL Early Access" class="btn-g">Request Access</a>
+        <a href="/irl.html" class="btn-ghost">IRL Overview →</a>
+      </div>
+    </div>
+
+  </article>
+</div>
+
+<footer>
+  <p>© 2026 MacroPulse · IRL Protocol Whitepaper v1.1 · <a href="/terms.html">Terms</a> · <a href="mailto:support@macropulse.live">support@macropulse.live</a></p>
+</footer>
+
+</body>
+</html>
