@@ -102,3 +102,50 @@ def send_regime_change_alerts(prev_regime: str, new_regime: str, risk_score: flo
                 logger.info("webhook delivered to %s → %d", user["webhook_url"][:40], resp.status_code)
             except Exception as exc:
                 logger.warning("webhook failed for user %s: %s", user["id"], exc)
+
+
+def alert_drift_warning(
+    metric_name: str,
+    value: float,
+    threshold: float,
+    timestamp: str,
+) -> None:
+    """
+    Notify the owner when a model drift metric exceeds its warning threshold.
+
+    Sends to settings.pipeline_alert_email via Brevo (fire-and-forget).
+    Also POSTs to settings.webhook_url if configured (Discord / Slack).
+    """
+    from config.settings import get_settings
+    settings = get_settings()
+
+    subject = f"[MacroPulse] Drift Warning: {metric_name} = {value:.4f}"
+    body_html = f"""
+<div style="font-family:monospace;background:#0a0a0a;color:#f0f0f0;padding:32px;max-width:480px;">
+  <div style="font-size:11px;color:#666;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">MacroPulse · Model Drift Warning</div>
+  <div style="font-size:18px;font-weight:700;color:#f59e0b;margin-bottom:12px;">⚠ {metric_name}</div>
+  <div style="font-size:13px;color:#aaa;margin-bottom:8px;">Value: <strong style="color:#f0f0f0;">{value:.4f}</strong></div>
+  <div style="font-size:13px;color:#aaa;margin-bottom:8px;">Threshold: <strong style="color:#f0f0f0;">{threshold:.4f}</strong></div>
+  <div style="font-size:13px;color:#aaa;margin-bottom:24px;">Timestamp: {timestamp}</div>
+  <div style="font-size:12px;color:#666;">Consider retraining the model. Check the dashboard drift panel.</div>
+</div>
+"""
+
+    if settings.pipeline_alert_email:
+        try:
+            from services.email import send_email
+            send_email(to=settings.pipeline_alert_email, subject=subject, html=body_html)
+            logger.info("drift alert email sent: %s=%.4f", metric_name, value)
+        except Exception as exc:
+            logger.warning("drift alert email failed: %s", exc)
+
+    if settings.webhook_url:
+        try:
+            import httpx as _httpx
+            _httpx.post(
+                settings.webhook_url,
+                json={"text": f"⚠️ *MacroPulse Drift Warning*\n`{metric_name}` = {value:.4f} (threshold: {threshold:.4f})"},
+                timeout=10.0,
+            )
+        except Exception as exc:
+            logger.warning("drift alert webhook failed: %s", exc)

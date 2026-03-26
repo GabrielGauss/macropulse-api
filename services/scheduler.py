@@ -17,6 +17,32 @@ from data.pipelines.daily_pipeline import run_daily_pipeline
 
 logger = logging.getLogger(__name__)
 
+
+def _run_pipeline_with_alert() -> None:
+    """Run the daily pipeline and email the owner if it fails."""
+    try:
+        run_daily_pipeline()
+    except Exception as exc:
+        logger.error("Daily pipeline FAILED: %s", exc, exc_info=True)
+        settings = get_settings()
+        if settings.pipeline_alert_email:
+            try:
+                from services.email import send_email
+                send_email(
+                    to=settings.pipeline_alert_email,
+                    subject="[MacroPulse] Pipeline failure",
+                    html=(
+                        f"<p>The MacroPulse daily pipeline failed at "
+                        f"<strong>{__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}</strong>.</p>"
+                        f"<p><code>{exc}</code></p>"
+                        f"<p>Check the server logs for full traceback. "
+                        f"The previous regime signal is still being served.</p>"
+                    ),
+                )
+            except Exception as mail_exc:
+                logger.error("Could not send pipeline failure alert: %s", mail_exc)
+        raise
+
 _scheduler: BackgroundScheduler | None = None
 
 
@@ -37,7 +63,7 @@ def start_scheduler() -> BackgroundScheduler:
     )
 
     _scheduler.add_job(
-        run_daily_pipeline,
+        _run_pipeline_with_alert,
         trigger=trigger,
         id="daily_macro_pipeline",
         name="MacroPulse Daily Pipeline",

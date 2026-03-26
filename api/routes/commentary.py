@@ -25,6 +25,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1", tags=["MacroPulse"])
 
+# In-process commentary cache keyed by (regime_timestamp_iso, regime_name).
+# Invalidated naturally on container restart (once per deploy) or regime change.
+# Eliminates redundant Anthropic API calls when multiple users load the dashboard
+# on a day when the regime hasn't changed.
+_commentary_cache: dict[tuple[str, str], CommentaryResponse] = {}
+
 _SYSTEM_PROMPT = """\
 You are a senior macro strategist at a quantitative hedge fund with deep expertise \
 in monetary policy, credit markets, and cross-asset analysis.
@@ -129,7 +135,8 @@ def get_regime_commentary() -> CommentaryResponse:
     Generate a Claude AI macro narrative for the current regime signal.
 
     Requires ANTHROPIC_API_KEY to be set in the environment.
-    Cached for the session — call /v1/regime/current for raw data.
+    Cached in-process by (regime_date, regime_name) — one Anthropic call per
+    regime-day, not per user request.
     """
     settings = get_settings()
 
@@ -146,12 +153,18 @@ def get_regime_commentary() -> CommentaryResponse:
     if regime_row is None:
         raise HTTPException(status_code=404, detail="No regime data available. Run the pipeline first.")
 
+    # Return cached commentary if the regime hasn't changed since last generation.
+    cache_key = (regime_row["time"].isoformat(), regime_row["regime"])
+    if cache_key in _commentary_cache:
+        logger.debug("Commentary cache hit for regime=%s time=%s", regime_row["regime"], regime_row["time"])
+        return _commentary_cache[cache_key]
+
     history = queries.fetch_regime_history(limit=14)
     liquidity = queries.fetch_latest_liquidity(limit=7)
     factors = queries.fetch_latest_factors(limit=1)
 
     context = _build_context(regime_row, history, liquidity, factors)
-    logger.info("Requesting Claude commentary for regime=%s", regime_row["regime"])
+    logger.info("Requesting Claude commentary for regime=%s (cache miss)", regime_row["regime"])
 
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     message = client.messages.create(
@@ -174,7 +187,7 @@ def get_regime_commentary() -> CommentaryResponse:
             "watch_for": "",
         }
 
-    return CommentaryResponse(
+    result = CommentaryResponse(
         timestamp=regime_row["time"],
         macro_regime=regime_row["regime"],
         risk_score=regime_row["risk_score"],
@@ -184,3 +197,5 @@ def get_regime_commentary() -> CommentaryResponse:
         watch_for=parsed.get("watch_for", ""),
         model_version=regime_row.get("model_version"),
     )
+    _commentary_cache[cache_key] = result
+    return result

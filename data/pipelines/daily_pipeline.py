@@ -40,7 +40,7 @@ from models.garch_model import GARCHModel
 from models.hmm_model import HMMModel
 from models.pca_model import PCAModel
 from models.regime_classifier import RegimeClassifier
-from services.alerting import alert_drift_warning
+from services.alerts import alert_drift_warning
 from services.drift_monitor import (
     compute_feature_shift,
     compute_pca_variance_drift,

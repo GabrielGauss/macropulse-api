@@ -97,6 +97,7 @@ class Settings(BaseSettings):
     # ── Transactional email (Brevo) ──────────────────────────────────
     brevo_api_key: str = ""          # xkeysib-... from Brevo dashboard
     brevo_sender_email: str = ""     # override sender (default: noreply@macropulse.live)
+    pipeline_alert_email: str = ""   # owner email for pipeline failure notifications
 
     # ── Alerting (operator notifications) ───────────────────────────
     smtp_host: str = ""
