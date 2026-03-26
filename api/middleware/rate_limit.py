@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 # Paths that are never rate-limited (health, public demo, docs, auth)
 _EXEMPT_PATHS = {
     "/health", "/docs", "/openapi.json", "/redoc", "/dashboard",
-    "/v1/auth/register", "/v1/pipeline/status",
+    "/v1/auth/register", "/v1/auth/recover", "/v1/auth/recover/verify",
+    "/v1/pipeline/status",
 }
 
 # Path prefixes that bypass rate limiting (unauthenticated public routes)

@@ -58,6 +58,9 @@ export const api = {
   // Auth — registration flow (no key required)
   register:          (email) => publicFetch('/v1/auth/register', { email }),
   verify:            (email, code) => publicFetch('/v1/auth/verify', { email, code }),
+  // Auth — key recovery flow (no key required)
+  recover:           (email) => publicFetch('/v1/auth/recover', { email }),
+  recoverVerify:     (email, code) => publicFetch('/v1/auth/recover/verify', { email, code }),
   // Auth — key management (key required)
   rotateKey:         () => apiFetch('/v1/auth/rotate', { method: 'POST' }),
   getUsage:          () => apiFetch('/v1/auth/usage'),

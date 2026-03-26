@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { useFetch } from '../hooks/useFetch';
 import { useCountdown } from '../hooks/useCountdown';
 import RegisterModal from './RegisterModal';
+import RecoverModal from './RecoverModal';
 
 const TIER_COLOR = {
   free:    'rgba(255,255,255,0.2)',
@@ -29,6 +30,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   const [keyDraft, setKeyDraft] = useState('');
   const [hasKey, setHasKey] = useState(api.hasKey());
   const [showRegister, setShowRegister] = useState(false);
+  const [showRecover, setShowRecover] = useState(false);
   const inputRef = useRef(null);
   const popoverRef = useRef(null);
 
@@ -204,7 +206,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
                   Save key
                 </button>
               </div>
-              <div className="mt-3 pt-3 border-t border-[#1a1a1a] text-center">
+              <div className="mt-3 pt-3 border-t border-[#1a1a1a] flex flex-col gap-1.5 text-center">
                 <button
                   onClick={() => { setShowKeyInput(false); setKeyDraft(''); setShowRegister(true); }}
                   className="text-[10px] font-mono transition-colors"
@@ -213,6 +215,15 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
                   onMouseLeave={e => e.target.style.opacity = '1'}
                 >
                   Don't have a key? Register for free →
+                </button>
+                <button
+                  onClick={() => { setShowKeyInput(false); setKeyDraft(''); setShowRecover(true); }}
+                  className="text-[10px] font-mono transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                  onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                  onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.35)'}
+                >
+                  Forgot your key? Recover it →
                 </button>
               </div>
             </div>
@@ -282,7 +293,17 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
         onRegistered={() => {
           setHasKey(true);
           setShowRegister(false);
-          // Reload page so App picks up the new key and re-fetches tier
+          window.location.reload();
+        }}
+        onSwitchToRecover={() => { setShowRegister(false); setShowRecover(true); }}
+      />
+    )}
+    {showRecover && (
+      <RecoverModal
+        onClose={() => setShowRecover(false)}
+        onRecovered={() => {
+          setHasKey(true);
+          setShowRecover(false);
           window.location.reload();
         }}
       />

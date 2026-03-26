@@ -26,7 +26,7 @@ from api.schemas.responses import (
     VerifyRequest,
 )
 from database import queries
-from services.email import send_verification_email, send_welcome_email
+from services.email import send_key_recovery_email, send_verification_email, send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -151,6 +151,118 @@ def verify(body: VerifyRequest) -> RegisterResponse:
         key_prefix=key_prefix,
         tier="free",
         daily_limit=_tier_limit("free"),
+    )
+
+
+@router.post(
+    "/recover",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Start key recovery — sends a verification code to your email",
+)
+def recover(body: RegisterRequest) -> dict:
+    """
+    Step 1 of 2: if the email has an account, send a 6-digit recovery code.
+
+    Always returns the same response regardless of whether the email exists
+    (prevents account enumeration). Call `POST /v1/auth/recover/verify` with
+    the code to receive a new API key (old key is revoked on verify).
+    """
+    email = str(body.email).strip().lower()
+
+    existing = queries.get_user_by_email(email)
+    if existing:
+        code = _generate_code()
+        try:
+            queries.create_email_verification(email=email, code=code)
+            send_verification_email(to=email, code=code)
+        except Exception as exc:
+            logger.error("Key recovery initiation error for %s: %s", email, exc)
+            # Still return success — don't reveal DB errors to caller
+
+    logger.info("Key recovery requested: email=%s found=%s", email, bool(existing))
+    return {"status": "recovery_code_sent", "email": email}
+
+
+@router.post(
+    "/recover/verify",
+    response_model=RotateKeyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify recovery code and receive a new API key",
+)
+def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
+    """
+    Step 2 of 2: submit the 6-digit code received by email.
+
+    On success revokes the old API key and issues a new one with the same tier.
+    The new plaintext `api_key` is shown **once only**.
+    """
+    email = body.email.strip().lower()
+    code  = body.code.strip()
+
+    if not queries.verify_email_code(email=email, code=code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired recovery code.",
+        )
+
+    user = queries.get_user_by_email(email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found for that email.",
+        )
+
+    user_id: int = user["id"]
+
+    # Determine current tier before revoking
+    from database.connection import get_sync_cursor
+    with get_sync_cursor() as cur:
+        cur.execute(
+            "SELECT tier FROM api_keys WHERE user_id = %s AND is_active = TRUE ORDER BY created_at DESC LIMIT 1;",
+            (user_id,),
+        )
+        row = cur.fetchone()
+        tier = row["tier"] if row else "free"
+
+    # Revoke existing keys
+    try:
+        queries.revoke_api_keys_for_user(user_id)
+    except Exception as exc:
+        logger.error("Failed to revoke keys during recovery user_id=%d: %s", user_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not revoke old key. Please try again.",
+        )
+
+    # Issue new key
+    plaintext_key = generate_api_key()
+    key_prefix = plaintext_key[:12]
+    try:
+        queries.create_api_key(
+            user_id=user_id,
+            key_hash=hash_key(plaintext_key),
+            key_prefix=key_prefix,
+            tier=tier,
+        )
+    except Exception as exc:
+        logger.error("Failed to issue recovery key user_id=%d: %s", user_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not issue new key. Please try again.",
+        )
+
+    logger.info("Key recovered: user_id=%d tier=%s", user_id, tier)
+
+    try:
+        send_key_recovery_email(to=email, api_key=plaintext_key, tier=tier)
+    except Exception:
+        logger.warning("Recovery email dispatch error for %s (non-fatal)", email, exc_info=True)
+
+    return RotateKeyResponse(
+        api_key=plaintext_key,
+        key_prefix=key_prefix,
+        tier=tier,
+        daily_limit=_tier_limit(tier),
     )
 
 

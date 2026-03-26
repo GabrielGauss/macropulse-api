@@ -2,15 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { api } from '../lib/api';
 
 /**
- * Two-step registration modal.
- * Step 1: enter email → POST /v1/auth/register
- * Step 2: enter 6-digit code → POST /v1/auth/verify → get API key
+ * Two-step key recovery modal.
+ * Step 1: enter email → POST /v1/auth/recover
+ * Step 2: enter 6-digit code → POST /v1/auth/recover/verify → get new API key
  *
  * Props:
  *   onClose()          — called when modal is dismissed
- *   onRegistered(key)  — called with the plaintext API key on success
+ *   onRecovered(key)   — called with the new plaintext API key on success
  */
-export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover }) {
+export default function RecoverModal({ onClose, onRecovered }) {
   const [step, setStep]       = useState(1); // 1 | 2 | 3 (success)
   const [email, setEmail]     = useState('');
   const [code, setCode]       = useState('');
@@ -19,31 +19,30 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
-  const emailRef  = useRef(null);
-  const codeRef   = useRef(null);
+  const emailRef = useRef(null);
+  const codeRef  = useRef(null);
 
   useEffect(() => {
     if (step === 1) emailRef.current?.focus();
     if (step === 2) codeRef.current?.focus();
   }, [step]);
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  async function handleRegister(e) {
+  async function handleRecover(e) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
     setError('');
     try {
-      await api.register(email.trim().toLowerCase());
+      await api.recover(email.trim().toLowerCase());
       setStep(2);
     } catch (err) {
-      setError(err?.detail || 'Could not send verification email. Try again.');
+      setError(err?.detail || 'Could not send recovery email. Try again.');
     } finally {
       setLoading(false);
     }
@@ -55,11 +54,11 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
     setLoading(true);
     setError('');
     try {
-      const res = await api.verify(email.trim().toLowerCase(), code.trim());
+      const res = await api.recoverVerify(email.trim().toLowerCase(), code.trim());
       setApiKey(res.api_key);
       api.setKey(res.api_key);
       setStep(3);
-      onRegistered?.(res.api_key);
+      onRecovered?.(res.api_key);
     } catch (err) {
       setError(err?.detail || 'Invalid or expired code.');
     } finally {
@@ -96,19 +95,22 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
         {/* Header */}
         <div className="mb-5">
           <div className="text-[11px] font-mono uppercase tracking-widest mb-1"
-            style={{ color: '#22c55e' }}>
-            {step === 3 ? 'Registration complete' : 'Get free API key'}
+            style={{ color: '#f59e0b' }}>
+            {step === 3 ? 'Key recovered' : 'Recover API key'}
           </div>
           <div className="text-[13px] font-semibold text-white/80">
-            {step === 1 && 'Create your account'}
-            {step === 2 && 'Verify your email'}
-            {step === 3 && 'Your API key'}
+            {step === 1 && 'Enter your email'}
+            {step === 2 && 'Check your inbox'}
+            {step === 3 && 'Your new API key'}
           </div>
         </div>
 
         {/* Step 1 — Email */}
         {step === 1 && (
-          <form onSubmit={handleRegister}>
+          <form onSubmit={handleRecover}>
+            <div className="mb-4 text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              We'll send a 6-digit code. Your old key will be revoked on verify.
+            </div>
             <label className="block text-[10px] font-mono uppercase tracking-wide mb-1.5"
               style={{ color: 'rgba(255,255,255,0.45)' }}>
               Email address
@@ -129,28 +131,10 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
               type="submit"
               disabled={loading || !email.trim()}
               className="w-full py-2 text-[12px] font-semibold transition-opacity disabled:opacity-40"
-              style={{ background: '#22c55e', color: '#000' }}
+              style={{ background: '#f59e0b', color: '#000' }}
             >
-              {loading ? 'Sending...' : 'Send verification code'}
+              {loading ? 'Sending...' : 'Send recovery code'}
             </button>
-            <div className="mt-4 text-[10px] font-mono text-center" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              A 6-digit code will be sent to your email.
-              <br />Free tier: 50 req/day · No credit card required.
-            </div>
-            {onSwitchToRecover && (
-              <div className="mt-3 text-center">
-                <button
-                  type="button"
-                  onClick={onSwitchToRecover}
-                  className="text-[10px] font-mono"
-                  style={{ color: 'rgba(255,255,255,0.30)' }}
-                  onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.55)'}
-                  onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.30)'}
-                >
-                  Already registered? Recover your key →
-                </button>
-              </div>
-            )}
           </form>
         )}
 
@@ -158,11 +142,11 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
         {step === 2 && (
           <form onSubmit={handleVerify}>
             <div className="mb-4 text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
-              Code sent to <span style={{ color: '#22c55e' }}>{email}</span>
+              Code sent to <span style={{ color: '#f59e0b' }}>{email}</span>
             </div>
             <label className="block text-[10px] font-mono uppercase tracking-wide mb-1.5"
               style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Verification code
+              Recovery code
             </label>
             <input
               ref={codeRef}
@@ -182,9 +166,9 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
               type="submit"
               disabled={loading || code.length !== 6}
               className="w-full py-2 text-[12px] font-semibold transition-opacity disabled:opacity-40"
-              style={{ background: '#22c55e', color: '#000' }}
+              style={{ background: '#f59e0b', color: '#000' }}
             >
-              {loading ? 'Verifying...' : 'Verify & get key'}
+              {loading ? 'Verifying...' : 'Verify & recover key'}
             </button>
             <button
               type="button"
@@ -203,11 +187,11 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
         {step === 3 && (
           <div>
             <div className="mb-3 text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
-              Registered as <span style={{ color: '#22c55e' }}>{email}</span>
+              New key issued for <span style={{ color: '#f59e0b' }}>{email}</span>. Old key revoked.
             </div>
             <div className="text-[10px] font-mono uppercase tracking-wide mb-2"
               style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Your API key — shown once only
+              Your new API key — shown once only
             </div>
             <div
               className="flex items-center justify-between border border-[#252525] bg-[#080808] px-3 py-2.5 mb-4"
@@ -224,7 +208,7 @@ export default function RegisterModal({ onClose, onRegistered, onSwitchToRecover
               </button>
             </div>
             <div className="mb-5 text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.40)' }}>
-              Key saved to this browser. Use it in the <code style={{ color: 'rgba(255,255,255,0.6)' }}>X-MacroPulse-Key</code> header.
+              Key saved to this browser. Also sent to your email.
             </div>
             <button
               onClick={onClose}

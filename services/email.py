@@ -216,6 +216,92 @@ If you didn't request this, ignore this email.
     })
 
 
+def send_key_recovery_email(to: str, api_key: str, tier: str = "free") -> None:
+    """
+    Send key recovery email with the new API key after a successful recovery.
+    The old key has already been revoked. Fire-and-forget — never blocks or raises.
+    """
+    tier_label   = tier.capitalize()
+    daily_limits = {"free": "50 req/day", "starter": "500 req/day", "pro": "Unlimited"}
+    limit_str    = daily_limits.get(tier, "50 req/day")
+
+    text_content = f"""MacroPulse — your new API key.
+
+Your previous key has been revoked. Your new key ({tier_label} · {limit_str}):
+
+  {api_key}
+
+This key is shown once. Store it securely.
+
+Dashboard:  https://api.macropulse.live/dashboard
+API docs:   https://api.macropulse.live/docs
+
+Questions? support@macropulse.live
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Inter',Arial,sans-serif;color:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:48px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+  <tr><td style="padding-bottom:32px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle;"></td>
+      <td style="padding-left:8px;font-size:15px;font-weight:600;letter-spacing:-0.02em;vertical-align:middle;">MacroPulse</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding-bottom:6px;">
+    <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.03em;line-height:1.2;">Key recovered.</h1>
+  </td></tr>
+  <tr><td style="padding-bottom:28px;">
+    <p style="margin:0;font-size:14px;color:#888;">{tier_label} &middot; {limit_str} &middot; Previous key revoked.</p>
+  </td></tr>
+
+  <tr><td style="padding-bottom:6px;">
+    <p style="margin:0 0 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#555;">Your New API Key</p>
+    <div style="background:#111;border:1px solid #1f1f1f;border-radius:8px;padding:16px 20px;">
+      <code style="font-family:'Courier New',monospace;font-size:13px;color:#22c55e;word-break:break-all;">{api_key}</code>
+    </div>
+  </td></tr>
+  <tr><td style="padding-bottom:28px;">
+    <p style="margin:6px 0 0;font-size:11px;color:#555;">Shown <strong style="color:#888;">once only</strong> — store it securely.</p>
+  </td></tr>
+
+  <tr><td style="height:1px;background:#1f1f1f;"></td></tr>
+
+  <tr><td style="padding:28px 0;">
+    <a href="https://api.macropulse.live/dashboard"
+       style="display:inline-block;background:#f0f0f0;color:#0a0a0a;font-size:13px;font-weight:600;padding:10px 22px;border-radius:7px;text-decoration:none;">
+      Open Dashboard &rarr;
+    </a>
+  </td></tr>
+
+  <tr><td style="padding-top:16px;border-top:1px solid #1a1a1a;">
+    <p style="margin:0;font-size:11px;color:#444;line-height:1.8;">
+      If you didn't request this recovery, contact us immediately.<br>
+      MacroPulse &middot; <a href="mailto:support@macropulse.live" style="color:#555;text-decoration:none;">support@macropulse.live</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    _post({
+        "sender":      _get_sender(),
+        "to":          [{"email": to}],
+        "subject":     "MacroPulse — your new API key",
+        "htmlContent": html_content,
+        "textContent": text_content,
+    })
+
+
 def send_welcome_email(to: str, api_key: str, tier: str = "free") -> None:
     """
     Send post-registration welcome email with the user's API key.
