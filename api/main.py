@@ -52,6 +52,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _run_migrations() -> None:
+    """Apply all SQL migration files in order. All DDL uses IF NOT EXISTS — safe to re-run."""
+    from database.connection import get_sync_cursor
+
+    migrations_dir = Path(__file__).parent.parent / "database" / "migrations"
+    if not migrations_dir.is_dir():
+        return
+    sql_files = sorted(migrations_dir.glob("*.sql"))
+    for path in sql_files:
+        sql = path.read_text(encoding="utf-8")
+        try:
+            with get_sync_cursor() as cur:
+                cur.execute(sql)
+            logger.info("Migration applied: %s", path.name)
+        except Exception as exc:
+            logger.error("Migration failed (%s): %s", path.name, exc)
+            raise
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start / stop the background scheduler and DB pool with the app lifecycle."""
@@ -60,6 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     from database.connection import close_pool
 
     logger.info("Starting MacroPulse API v%s", settings.app_version)
+    _run_migrations()
     init_signer(settings.mta_signing_key_hex)
     start_scheduler()
     yield
