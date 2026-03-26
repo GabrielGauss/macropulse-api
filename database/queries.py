@@ -383,6 +383,61 @@ def touch_api_key(key_hash: str) -> None:
         cur.execute(sql, {"hash": key_hash})
 
 
+_IP_LOCK_MINUTES = 15
+
+
+def check_and_set_ip_lock(key_hash: str, client_ip: str) -> bool:
+    """
+    Enforce single-location key usage.
+
+    Returns True  → request allowed (same IP, or lock expired, or first use).
+    Returns False → request blocked (different IP, lock still active).
+
+    The lock refreshes on every allowed request, so a user actively polling
+    keeps the key bound to their IP. After IP_LOCK_MINUTES of inactivity the
+    key is released and can be claimed from any location.
+    """
+    sql = """
+        WITH current AS (
+            SELECT last_ip, ip_locked_at
+            FROM api_keys
+            WHERE key_hash = %(hash)s
+        ),
+        updated AS (
+            UPDATE api_keys
+            SET last_ip      = CASE
+                                  WHEN (SELECT last_ip FROM current) IS NULL
+                                    OR (SELECT last_ip FROM current) = %(ip)s
+                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL '%(mins)s minutes'
+                                  THEN %(ip)s
+                                  ELSE (SELECT last_ip FROM current)
+                                END,
+                ip_locked_at = CASE
+                                  WHEN (SELECT last_ip FROM current) IS NULL
+                                    OR (SELECT last_ip FROM current) = %(ip)s
+                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL '%(mins)s minutes'
+                                  THEN NOW()
+                                  ELSE (SELECT ip_locked_at FROM current)
+                                END
+            WHERE key_hash = %(hash)s
+            RETURNING last_ip
+        )
+        SELECT (SELECT last_ip FROM current) AS old_ip,
+               (SELECT last_ip FROM updated) AS new_ip;
+    """
+    # psycopg2 doesn't support %(var)s inside INTERVAL literals; use format
+    sql = sql.replace("%(mins)s", str(_IP_LOCK_MINUTES))
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"hash": key_hash, "ip": client_ip})
+        row = cur.fetchone()
+    if not row:
+        return True  # key not found — let auth handle it
+    old_ip = row["old_ip"]
+    new_ip = row["new_ip"]
+    # Blocked if a different IP held the lock and we didn't update it
+    return new_ip == client_ip or old_ip is None
+
+
 def increment_daily_usage(key_hash: str) -> int:
     """
     Atomically increment the daily request counter for a key.

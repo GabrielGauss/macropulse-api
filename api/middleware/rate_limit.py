@@ -147,6 +147,29 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         reset = _reset_ts()
 
         if key_hash:
+            # ── IP lock: one active location per key ──────────────────────
+            # Pro/owner already returned above (limit == 0).
+            # For free/starter, enforce single-IP binding.
+            try:
+                from database.queries import check_and_set_ip_lock
+                allowed = check_and_set_ip_lock(key_hash, client_ip)
+            except Exception as exc:
+                logger.error("IP lock DB error for key %s…: %s", key_hash[:8], exc)
+                allowed = True  # fail open — don't block on DB error
+
+            if not allowed:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "error": "ip_locked",
+                        "detail": (
+                            "This API key is active from a different location. "
+                            "Keys are single-location. Wait 15 minutes of inactivity "
+                            "for the lock to expire, or upgrade to Pro for multi-location access."
+                        ),
+                    },
+                )
+
             # ── Authenticated path: DB-persisted counter ──────────────────
             # Increment first, then check — prevents TOCTOU race.
             try:
