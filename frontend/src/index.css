@@ -29,11 +29,12 @@
 @layer components {
   /* Base card */
   .card {
-    @apply bg-surface-1 border border-[#1a1a1a];
+    background: #0f0f0f;
+    border: 1px solid #222;
     transition: border-color 0.15s ease;
   }
   .card:hover {
-    border-color: #252525;
+    border-color: #2a2a2a;
   }
 
   /* Compact section label */
