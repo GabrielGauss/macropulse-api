@@ -310,9 +310,12 @@
   /* ── Paddle ── */
   const PADDLE_CLIENT_TOKEN = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
   const PRICE_IDS = { starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER', pro: 'PADDLE_PRO_PRICE_ID_PLACEHOLDER' };
-  Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+  let _paddleReady = false;
   function openCheckout(tier) {
-    Paddle.Checkout.open({ items: [{ priceId: PRICE_IDS[tier], quantity: 1 }], customData: { tier } });
+    if (!_paddleReady) {
+      try { Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN }); _paddleReady = true; } catch(e) { console.warn('Paddle not configured'); }
+    }
+    if (_paddleReady) Paddle.Checkout.open({ items: [{ priceId: PRICE_IDS[tier], quantity: 1 }], customData: { tier } });
   }
 
   /* ── Free registration modal ── */
