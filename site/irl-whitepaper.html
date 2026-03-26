@@ -178,7 +178,11 @@ footer a:hover{color:var(--mu)}
           <li><a href="#verifier" class="sub">2.4 Post-Trade Verifier</a></li>
         </ul>
       </li>
-      <li><a href="#crypto">3. Cryptographic Guarantees</a></li>
+      <li><a href="#crypto">3. Cryptographic Guarantees</a>
+        <ul style="list-style:none">
+          <li><a href="#heartbeat" class="sub">3.1 Heartbeat Protocol (L2)</a></li>
+        </ul>
+      </li>
       <li><a href="#bitemporal">4. Bitemporal Ledger</a></li>
       <li><a href="#mar">5. Multi-Agent Registry</a></li>
       <li><a href="#policy">6. Policy Engine</a></li>
@@ -259,7 +263,7 @@ footer a:hover{color:var(--mu)}
 }
       </div>
 
-      <p>The <strong>signature</strong> field is computed over the RFC 8785 canonical JSON serialization of all other fields. Any party holding the MTA operator's public key can independently verify the broadcast without trusting any intermediary.</p>
+      <p>The <strong>signature</strong> field is computed over the RFC 8785 canonical JSON serialization of all other fields. Any party holding the MTA operator's public key can independently verify the broadcast without trusting any intermediary. The MTA operator's public key is published and stable — it does not rotate without advance notice. <strong>IRL rejects any broadcast that carries no valid signature or whose signature fails verification.</strong> An unsigned MTA source cannot be used with IRL in production mode.</p>
 
       <div class="callout">
         <p><strong>MacroPulse as a turnkey MTA:</strong> MacroPulse's daily pipeline produces Ed25519-signed regime broadcasts via <code>GET /v1/regime/current</code>. The model is frozen — it cannot be retroactively altered to produce a different historical signature. The public key is published and stable.</p>
@@ -367,7 +371,17 @@ footer a:hover{color:var(--mu)}
       <p>The reasoning_hash is SHA-256 of the canonical CognitiveSnapshot. SHA-256 is a one-way function: given the hash, it is computationally infeasible to produce an alternative snapshot that hashes to the same value. The snapshot is therefore bound to its hash in both directions.</p>
 
       <h3>final_proof binding</h3>
-      <p>The final_proof concatenates the reasoning_hash and the exchange_tx_id before hashing: <code>SHA-256(reasoning_hash ‖ exchange_tx_id)</code>. This produces a single value that cryptographically binds the agent's decision to the exchange record. Neither can be substituted without invalidating the proof.</p>
+      <p>The final_proof concatenates the reasoning_hash and the exchange_tx_id before hashing: <code>SHA-256(reasoning_hash ‖ exchange_tx_id)</code>. This produces a single value that cryptographically binds the agent's decision to the exchange record. Neither can be substituted without invalidating the proof. For concrete examples of final_proof in context, see the case studies in §9.</p>
+
+      <h3 id="heartbeat">L2: Signed heartbeats and replay prevention</h3>
+      <p>L2 deployments add a signed heartbeat protocol that binds each authorization to a specific, fresh MTA broadcast. The mechanism works as follows:</p>
+      <ul>
+        <li>The MTA assigns a <strong>monotonic sequence ID</strong> to each broadcast, incrementing by one with every emission.</li>
+        <li>When a CognitiveSnapshot is submitted for authorization, IRL checks that the embedded MTA broadcast's sequence ID is within the configured <strong>freshness bound</strong> (e.g., the last N broadcasts).</li>
+        <li>A snapshot referencing a broadcast outside the freshness bound is rejected — the agent cannot use a stale or historical regime state to authorize a present-day trade.</li>
+        <li>Each heartbeat is signed by the MTA with the same Ed25519 key as the broadcast, so sequence IDs cannot be fabricated or reordered.</li>
+      </ul>
+      <p>This prevents a class of attacks where an agent accumulates authorized snapshots during a favorable regime and attempts to replay them during a different, unfavorable regime. Without L2 heartbeats, the time window between authorization and binding could in principle be exploited by an adversarial agent.</p>
 
       <div class="callout">
         <p><strong>What IRL does not do:</strong> IRL does not evaluate whether the agent's decision was correct, profitable, or wise. It only proves that the decision was made, under specific conditions, subject to specific policies, and that the execution matched the declared intent. Judgment remains with the operator.</p>
@@ -488,7 +502,7 @@ footer a:hover{color:var(--mu)}
         <tr><td>Pre-execution policy enforcement</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Bitemporal ledger</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Multi-Agent Registry</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
-        <tr><td>Post-trade verifier (MATCHED/DIVERGENT)</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Post-trade verifier (MATCHED/DIVERGENT/EXPIRED)</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Signed heartbeats (replay prevention)</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Merkle anchoring</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Forensic replay</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
