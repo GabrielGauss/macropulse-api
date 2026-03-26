@@ -244,7 +244,7 @@
     </table>
   </div>
 
-  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</div>
+  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Lemon Squeezy</div>
 </div>
 
 <footer>
@@ -253,6 +253,7 @@
     <a href="/terms.html">Terms</a>
     <a href="/privacy.html">Privacy</a>
     <a href="/refund.html">Refund Policy</a>
+    <a href="mailto:support@macropulse.live">Contact</a>
   </div>
 </footer>
 
@@ -317,22 +318,35 @@
 </div>
 
 <script>
-  /* ── Paddle (loaded lazily when checkout is triggered) ── */
-  const PADDLE_CLIENT_TOKEN = 'PADDLE_CLIENT_TOKEN_PLACEHOLDER';
-  const PRICE_IDS = { starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER', pro: 'PADDLE_PRO_PRICE_ID_PLACEHOLDER' };
-  let _paddleReady = false;
+  /* ── Lemon Squeezy checkout ── */
+  /* Replace these with your actual Lemon Squeezy variant checkout URLs */
+  /* Found in: LS Dashboard → Products → [Product] → Variants → Share → Checkout URL */
+  const LS_URLS = {
+    starter: 'LS_STARTER_CHECKOUT_URL_PLACEHOLDER',
+    pro:     'LS_PRO_CHECKOUT_URL_PLACEHOLDER',
+  };
+  let _lsReady = false;
   function openCheckout(tier) {
-    function launchCheckout() {
-      try {
-        if (!_paddleReady) { Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN }); _paddleReady = true; }
-        Paddle.Checkout.open({ items: [{ priceId: PRICE_IDS[tier], quantity: 1 }], customData: { tier } });
-      } catch(e) { console.warn('Paddle not configured:', e); }
+    const url = LS_URLS[tier];
+    if (!url || url.includes('PLACEHOLDER')) {
+      console.warn('Lemon Squeezy checkout URL not configured for tier:', tier);
+      return;
     }
-    if (typeof Paddle !== 'undefined') { launchCheckout(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-    s.onload = launchCheckout;
-    document.head.appendChild(s);
+    if (!_lsReady) {
+      const s = document.createElement('script');
+      s.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+      s.defer = true;
+      s.onload = () => { _lsReady = true; window.createLemonSqueezy && window.createLemonSqueezy(); };
+      document.head.appendChild(s);
+    }
+    /* Open overlay checkout — Lemon Squeezy detects the lemonsqueezy-button class */
+    const a = document.createElement('a');
+    a.href = url;
+    a.className = 'lemonsqueezy-button';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 1000);
   }
 
   /* ── Free registration modal ── */
