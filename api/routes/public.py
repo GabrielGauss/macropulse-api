@@ -147,6 +147,43 @@ def get_chart_data():
     }
 
 
+@router.get("/latest")
+def get_public_latest():
+    """
+    Current regime snapshot for the marketing site terminal display.
+    Returns a subset of the full signal package — no API key required.
+    """
+    try:
+        from services.signals import build_signal_package
+        pkg = build_signal_package()
+    except Exception as exc:
+        logger.error("public latest DB error: %s", exc)
+        raise HTTPException(status_code=503, detail="Data temporarily unavailable")
+
+    if pkg is None:
+        raise HTTPException(status_code=503, detail="No regime data available yet")
+
+    return {
+        "date": pkg["date"],
+        "regime": {
+            "most_likely": pkg["regime"]["most_likely"],
+            "confidence": pkg["regime"]["confidence"],
+            "persistence_days": pkg["regime"]["persistence_days"],
+            "risk_score": pkg["regime"]["risk_score"],
+        },
+        "net_liquidity": {
+            "zscore": pkg["net_liquidity"]["zscore"],
+            "trend": pkg["net_liquidity"]["trend"],
+        },
+        "equity_exposure": {
+            "expansion": 1.0,
+            "recovery": 0.75,
+            "tightening": 0.25,
+            "risk_off": 0.0,
+        }.get(pkg["regime"]["most_likely"], 0.0),
+    }
+
+
 class SubscribeRequest(BaseModel):
     email: EmailStr
 
