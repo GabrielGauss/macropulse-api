@@ -534,20 +534,47 @@ def create_email_verification(email: str, code: str) -> None:
         )
 
 
+_OTP_MAX_ATTEMPTS = 5
+
+
 def verify_email_code(email: str, code: str) -> bool:
-    """Mark code used and return True if valid + unexpired, False otherwise."""
-    sql = """
-        UPDATE email_verifications
-        SET used = TRUE
-        WHERE email = %(email)s
-          AND code  = %(code)s
-          AND expires_at > NOW()
-          AND used = FALSE
-        RETURNING id;
+    """
+    Mark code used and return True if valid + unexpired, False otherwise.
+
+    Wrong guesses increment an attempt counter; after 5 failures the row is
+    exhausted (marked used) so further guesses are impossible.
     """
     with get_sync_cursor() as cur:
-        cur.execute(sql, {"email": email, "code": code})
-        return cur.fetchone() is not None
+        # Attempt exact match — also guards on attempt ceiling
+        cur.execute(
+            """
+            UPDATE email_verifications
+            SET used = TRUE
+            WHERE email = %(email)s
+              AND code  = %(code)s
+              AND expires_at > NOW()
+              AND used = FALSE
+              AND attempts < %(max_attempts)s
+            RETURNING id;
+            """,
+            {"email": email, "code": code, "max_attempts": _OTP_MAX_ATTEMPTS},
+        )
+        if cur.fetchone():
+            return True
+
+        # Wrong code — increment attempts; exhaust row if ceiling reached
+        cur.execute(
+            """
+            UPDATE email_verifications
+            SET attempts = attempts + 1,
+                used = (attempts + 1 >= %(max_attempts)s)
+            WHERE email = %(email)s
+              AND expires_at > NOW()
+              AND used = FALSE;
+            """,
+            {"email": email, "max_attempts": _OTP_MAX_ATTEMPTS},
+        )
+        return False
 
 
 def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
