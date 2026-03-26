@@ -152,15 +152,49 @@
     }
 
     /* ── Chain diagram ── */
-    .chain {
-      background: var(--s1); border: 1px solid var(--border2);
-      border-radius: 8px; padding: 1.75rem 2rem;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
-      line-height: 2; color: var(--muted); overflow-x: auto;
+    .chain { display: flex; flex-direction: column; gap: 0; max-width: 560px; }
+    .chain-step {
+      display: flex; gap: 1rem; align-items: flex-start;
     }
-    .chain .green { color: var(--green); }
-    .chain .dim { color: var(--dim); }
-    .chain .amber { color: var(--amber); }
+    .chain-spine {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 32px;
+    }
+    .chain-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+    }
+    .chain-dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .chain-dot.amber  { background: var(--amber); }
+    .chain-dot.blue   { background: #3b82f6; }
+    .chain-dot.dim    { background: var(--dim); }
+    .chain-line {
+      width: 1px; flex: 1; background: var(--border2); min-height: 24px;
+    }
+    .chain-body { padding-bottom: 1.5rem; }
+    .chain-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem;
+    }
+    .chain-label.green { color: var(--green); }
+    .chain-label.amber { color: var(--amber); }
+    .chain-label.blue  { color: #3b82f6; }
+    .chain-label.dim   { color: var(--muted); }
+    .chain-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+    .chain-desc code { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text); }
+    .chain-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+    .chain-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+      padding: 0.2rem 0.5rem; border: 1px solid var(--border2);
+      color: var(--muted); white-space: nowrap;
+    }
+    .chain-outcome { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+    .chain-outcome-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+    .chain-outcome-row .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+      font-weight: 600; padding: 0.15rem 0.45rem;
+    }
+    .tag-matched   { background: rgba(34,197,94,.12); color: var(--green); }
+    .tag-divergent { background: rgba(239,68,68,.12); color: var(--red); }
 
     /* ── Editions ── */
     .editions { display: grid; gap: 1rem; }
@@ -286,7 +320,7 @@
     </p>
     <div class="hero-actions">
       <a href="mailto:gabriel.veron134@gmail.com" class="btn-primary">Request Early Access</a>
-      <a href="https://github.com/GabrielGauss/irl-engine" target="_blank" rel="noopener" class="btn-ghost">View on GitHub →</a>
+      <a href="mailto:gabriel.veron134@gmail.com?subject=IRL Whitepaper Request" class="btn-ghost">Request Whitepaper →</a>
     </div>
   </div>
 </div>
@@ -334,27 +368,58 @@
       No party can alter any link without breaking the chain.
     </p>
     <div class="chain">
-<span class="green">MacroPulse MTA</span> <span class="dim">── Ed25519-signed regime broadcast ──►</span> <span class="green">IRL Engine</span>
-<span class="dim">                                                    │</span>
-<span class="dim">Agent ──(POST /irl/authorize)───────────────────────┤</span>
-<span class="dim">                                                    │  MAR check       (is this the registered agent?)</span>
-<span class="dim">                                                    │  Policy enforce  (is this action allowed now?)</span>
-<span class="dim">                                                    │  L_t fingerprint (is this the registered model?)</span>
-<span class="dim">                                                    │  Bitemporal gate (valid_time &lt; txn_time)</span>
-<span class="dim">                                                    │  Snapshot sealed (SHA-256 of canonical JSON)</span>
-<span class="dim">                                                    │</span>
-<span class="dim">Agent ◄──(</span><span class="green">reasoning_hash</span> + trace_id<span class="dim">)──────────────────┘</span>
-  <span class="dim">│</span>
-  <span class="dim">│  Places order on exchange (reasoning_hash in order metadata)</span>
-  <span class="dim">▼</span>
-<span class="amber">Exchange</span> <span class="dim">──(execution report)──► Agent</span>
-                                   <span class="dim">│</span>
-                                   <span class="dim">│  POST /irl/bind-execution</span>
-                                   <span class="dim">▼</span>
-                               <span class="green">final_proof</span> <span class="dim">= SHA-256(reasoning_hash ‖ exchange_tx_id)</span>
-                                   <span class="dim">│</span>
-                                   <span class="dim">├── MATCHED   → chain closed, regulator can verify</span>
-                                   <span class="dim">└── DIVERGENT → flagged, reason recorded permanently</span>
+
+      <div class="chain-step">
+        <div class="chain-spine"><div class="chain-dot green"></div><div class="chain-line"></div></div>
+        <div class="chain-body">
+          <div class="chain-label green">MacroPulse MTA</div>
+          <div class="chain-desc">Ed25519-signed regime broadcast. Cryptographic proof of the macro state at the exact moment of decision.</div>
+        </div>
+      </div>
+
+      <div class="chain-step">
+        <div class="chain-spine"><div class="chain-dot green"></div><div class="chain-line"></div></div>
+        <div class="chain-body">
+          <div class="chain-label green">IRL Engine — POST /irl/authorize</div>
+          <div class="chain-desc">Agent submits reasoning snapshot. IRL runs all pre-execution checks atomically.</div>
+          <div class="chain-pills">
+            <span class="chain-pill">MAR check</span>
+            <span class="chain-pill">Policy enforce</span>
+            <span class="chain-pill">L_t fingerprint</span>
+            <span class="chain-pill">Bitemporal gate</span>
+            <span class="chain-pill">SHA-256 seal</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chain-step">
+        <div class="chain-spine"><div class="chain-dot dim"></div><div class="chain-line"></div></div>
+        <div class="chain-body">
+          <div class="chain-label dim">Agent receives</div>
+          <div class="chain-desc"><code>reasoning_hash</code> + <code>trace_id</code> — embedded in exchange order metadata before submission.</div>
+        </div>
+      </div>
+
+      <div class="chain-step">
+        <div class="chain-spine"><div class="chain-dot amber"></div><div class="chain-line"></div></div>
+        <div class="chain-body">
+          <div class="chain-label amber">Exchange execution</div>
+          <div class="chain-desc">Order hits the market. Execution report returned to agent with <code>exchange_tx_id</code>.</div>
+        </div>
+      </div>
+
+      <div class="chain-step">
+        <div class="chain-spine"><div class="chain-dot green"></div></div>
+        <div class="chain-body">
+          <div class="chain-label green">IRL Engine — POST /irl/bind-execution</div>
+          <div class="chain-desc"><code>final_proof = SHA-256(reasoning_hash ‖ exchange_tx_id)</code> — chain closed.</div>
+          <div class="chain-outcome">
+            <div class="chain-outcome-row"><span class="tag tag-matched">MATCHED</span><span style="color:var(--muted)">Chain closed. Regulator can verify independently.</span></div>
+            <div class="chain-outcome-row"><span class="tag tag-divergent">DIVERGENT</span><span style="color:var(--muted)">Flagged. Reason recorded permanently.</span></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
