@@ -23,7 +23,8 @@ jobs:
 
             # Rebuild and restart only the API container
             # (DB and nginx keep running — no downtime)
-            docker compose up -d --build --no-deps api
+            docker compose build --no-cache api
+            docker compose up -d --no-deps api
 
             # Verify health
             sleep 10
