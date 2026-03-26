@@ -67,6 +67,11 @@ nav{
 .nav-links{display:flex;align-items:center;gap:2rem}
 .nav-links a{font-family:var(--mono);font-size:.72rem;color:var(--mu);transition:color .15s}
 .nav-links a:hover{color:var(--tx)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-right-link{font-family:var(--mono);font-size:.72rem;color:var(--mu);transition:color .15s}
+.nav-right-link:hover{color:var(--tx)}
+.nav-irl{color:var(--green) !important;border:1px solid var(--gbrd);padding:.28rem .7rem;background:var(--gdim)}
+.nav-irl:hover{opacity:.85}
 .nav-cta{font-family:var(--mono);font-size:.72rem;font-weight:500;padding:.42rem 1.1rem;border:1px solid var(--ln2);background:transparent;color:var(--tx);transition:border-color .15s,color .15s}
 .nav-cta:hover{border-color:var(--green);color:var(--green)}
 .nav-ham{display:none;background:none;border:none;color:var(--tx);padding:.25rem}
@@ -291,7 +296,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
 
 /* ── Mobile ──────────────────────────────────────────────── */
 @media(max-width:900px){
-  .nav-links{display:none}.nav-ham{display:block}
+  .nav-links{display:none}.nav-right{display:none}.nav-ham{display:block}
   .hero-inner{grid-template-columns:1fr}.hero-term{display:none}
   .hero-strip{grid-template-columns:repeat(2,1fr)}
   .perf-stats-row{grid-template-columns:repeat(3,1fr)}
@@ -321,10 +326,12 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
     <a href="#integration">Docs</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
-    <a href="/irl.html" style="color:var(--green)">IRL</a>
-    <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
   </div>
-  <button class="nav-cta" onclick="scrollTo('#register')">Get Free Key</button>
+  <div class="nav-right">
+    <a href="/irl.html" class="nav-right-link nav-irl">IRL</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener" class="nav-right-link">Dashboard</a>
+    <button class="nav-cta" onclick="jumpTo('#register')">Get Free Key</button>
+  </div>
   <button class="nav-ham" onclick="toggleNav()" aria-label="Menu">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
@@ -336,7 +343,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   <a href="#pricing" onclick="closeNav()">Pricing</a>
   <a href="#faq" onclick="closeNav()">FAQ</a>
   <a href="/irl.html" onclick="closeNav()" style="color:var(--green)">IRL</a>
-  <a href="https://api.macropulse.live" target="_blank">Dashboard</a>
+  <a href="https://api.macropulse.live" target="_blank" onclick="closeNav()">Dashboard</a>
 </div>
 
 <!-- HERO -->
@@ -374,8 +381,8 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
           </div>
         </div>
         <div class="hero-actions">
-          <button class="btn btn-green" onclick="scrollTo('#register')">Get Free Key</button>
-          <button class="btn btn-ghost" onclick="scrollTo('#pricing')">View pricing →</button>
+          <button class="btn btn-green" onclick="jumpTo('#register')">Get Free Key</button>
+          <button class="btn btn-ghost" onclick="jumpTo('#pricing')">View pricing →</button>
         </div>
       </div>
       <div class="hero-term" data-reveal>
@@ -691,7 +698,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         <tr><td>Priority support</td><td><span class="cx">✗</span></td><td class="pt-featured"><span class="cx">✗</span></td><td><span class="ch">✓</span></td></tr>
         <tr class="pt-cta-row">
           <th></th>
-          <th><button class="btn btn-ghost btn-sm" style="width:100%" onclick="scrollTo('#register')">Get free key</button></th>
+          <th><button class="btn btn-ghost btn-sm" style="width:100%" onclick="jumpTo('#register')">Get free key</button></th>
           <th class="pt-featured"><button class="btn btn-green btn-sm" style="width:100%" onclick="openSub('Starter','49')">Subscribe →</button></th>
           <th><button class="btn btn-ghost btn-sm" style="width:100%" onclick="openSub('Pro','199')">Subscribe →</button></th>
         </tr>
@@ -858,7 +865,7 @@ let _liveData = null;
 let _subPlan = '', _subPrice = '';
 
 /* ── Scroll helpers ────────────────────────────────────── */
-function scrollTo(sel) {
+function jumpTo(sel) { // renamed from scrollTo to avoid shadowing window.scrollTo
   const el = document.querySelector(sel);
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
@@ -904,9 +911,15 @@ document.querySelectorAll('[data-counter]').forEach(el => counterObs.observe(el)
 /* ── Live data fetch ────────────────────────────────────── */
 async function fetchLive() {
   try {
-    const r = await fetch(API + '/v1/signals/latest', { headers: { 'X-MacroPulse-Key': 'mp_free_demo' } });
+    const r = await fetch(API + '/v1/public/latest');
     if (!r.ok) return null;
-    return await r.json();
+    const d = await r.json();
+    // Normalize to the same shape as the full signal package
+    return {
+      date: d.date,
+      regime: d.regime,
+      net_liquidity: d.net_liquidity,
+    };
   } catch { return null; }
 }
 
