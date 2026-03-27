@@ -316,6 +316,42 @@ def get_user_by_paddle_customer(paddle_customer_id: str) -> dict[str, Any] | Non
         return cur.fetchone()  # type: ignore[return-value]
 
 
+def get_user_by_ls_customer(ls_customer_id: str) -> dict[str, Any] | None:
+    sql = """
+        SELECT id, email, name, ls_customer_id, ls_subscription_id, ls_status
+        FROM users WHERE ls_customer_id = %(cid)s;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"cid": ls_customer_id})
+        return cur.fetchone()  # type: ignore[return-value]
+
+
+def upsert_ls_subscription(
+    user_id: int,
+    ls_customer_id: str,
+    ls_subscription_id: str,
+    ls_variant_id: str,
+    ls_status: str,
+) -> None:
+    """Persist Lemon Squeezy subscription data on the user row."""
+    sql = """
+        UPDATE users
+        SET ls_customer_id     = %(cid)s,
+            ls_subscription_id = %(sid)s,
+            ls_variant_id      = %(vid)s,
+            ls_status          = %(status)s
+        WHERE id = %(uid)s;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {
+            "cid": ls_customer_id,
+            "sid": ls_subscription_id,
+            "vid": ls_variant_id,
+            "status": ls_status,
+            "uid": user_id,
+        })
+
+
 def upgrade_user_tier(user_id: int, tier: str) -> None:
     """Set the tier on all active API keys for a user."""
     sql = "UPDATE api_keys SET tier = %(tier)s WHERE user_id = %(uid)s AND is_active = TRUE;"

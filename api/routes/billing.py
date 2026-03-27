@@ -1,14 +1,18 @@
 """
-Paddle billing endpoints for MacroPulse.
+Billing endpoints for MacroPulse.
 
   POST /v1/billing/checkout          — create a Paddle checkout session (auth required)
   POST /v1/billing/portal            — get Paddle customer portal URL (auth required)
   POST /v1/billing/webhook           — Paddle webhook receiver (no auth, signature verified)
+  POST /v1/billing/lemonsqueezy      — Lemon Squeezy webhook receiver (no auth, HMAC verified)
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
+import os
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
@@ -188,3 +192,139 @@ async def paddle_webhook(
         logger.error("Webhook handler error: %s", exc, exc_info=True)
 
     return {"ok": True}
+
+
+# ── Lemon Squeezy webhook ────────────────────────────────────────────────────
+
+# Variant ID (integer) → MacroPulse tier.
+# Set LS_VARIANT_ID_STARTER and LS_VARIANT_ID_PRO env vars from the LS dashboard.
+def _ls_variant_map() -> dict[str, str]:
+    m: dict[str, str] = {}
+    for env_key, tier in (("LS_VARIANT_ID_STARTER", "starter"), ("LS_VARIANT_ID_PRO", "pro")):
+        v = os.getenv(env_key, "").strip()
+        if v:
+            m[v] = tier
+    return m
+
+
+def _ls_verify_signature(raw_body: bytes, signature: str) -> bool:
+    secret = os.getenv("LS_WEBHOOK_SECRET", "").strip()
+    if not secret:
+        logger.warning("LS_WEBHOOK_SECRET not set — skipping signature check")
+        return True
+    digest = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(digest, signature)
+
+
+def _ls_resolve_tier(variant_id: int | str | None, variant_name: str) -> str | None:
+    """Return 'starter' or 'pro' from variant_id env map, falling back to name."""
+    vmap = _ls_variant_map()
+    if variant_id is not None:
+        t = vmap.get(str(variant_id))
+        if t:
+            return t
+    name = (variant_name or "").lower()
+    if "pro" in name:
+        return "pro"
+    if "starter" in name:
+        return "starter"
+    return None
+
+
+@router.post(
+    "/lemonsqueezy",
+    status_code=200,
+    summary="Lemon Squeezy webhook receiver",
+    include_in_schema=False,
+)
+async def lemonsqueezy_webhook(request: Request) -> dict:
+    """
+    Processes Lemon Squeezy subscription lifecycle events.
+
+    Configure in LS dashboard:
+      Webhooks → Add endpoint → https://api.macropulse.live/v1/billing/lemonsqueezy
+      Events: subscription_created, subscription_updated, subscription_cancelled,
+              subscription_expired, subscription_payment_success, subscription_payment_failed
+    """
+    raw_body = await request.body()
+    signature = request.headers.get("X-Signature", "")
+
+    if not _ls_verify_signature(raw_body, signature):
+        logger.warning("LS webhook: invalid signature rejected")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature.")
+
+    try:
+        import json
+        payload = json.loads(raw_body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload.")
+
+    event: str = payload.get("meta", {}).get("event_name", "")
+    data: dict = payload.get("data", {})
+    attrs: dict = data.get("attributes", {})
+    if "id" in data:
+        attrs.setdefault("subscription_id", data["id"])
+
+    logger.info("LS webhook event=%s", event)
+
+    try:
+        result = _ls_handle(event, attrs)
+    except Exception as exc:
+        # Always return 200 so LS doesn't retry on our internal errors
+        logger.error("LS webhook handler error: %s", exc, exc_info=True)
+        result = {"result": "internal_error_logged"}
+
+    return {"ok": True, **result}
+
+
+def _ls_handle(event: str, attrs: dict) -> dict:
+    email    = (attrs.get("user_email") or "").lower().strip()
+    cid      = str(attrs.get("customer_id") or "")
+    sid      = str(attrs.get("subscription_id") or attrs.get("id") or "")
+    vid      = attrs.get("variant_id")
+    vname    = attrs.get("variant_name") or attrs.get("product_name") or ""
+    ls_status = attrs.get("status") or "unknown"
+
+    # Resolve user
+    user = queries.get_user_by_email(email) if email else None
+    if user is None and cid:
+        user = queries.get_user_by_ls_customer(cid)
+    if user is None:
+        logger.warning("LS %s: no user for email=%s cid=%s", event, email, cid)
+        return {"result": "user_not_found", "email": email}
+
+    uid: int = user["id"]
+
+    if event in ("subscription_created", "subscription_updated", "subscription_resumed"):
+        tier = _ls_resolve_tier(vid, vname)
+        active = ls_status in ("active", "trialing", "past_due")
+        if active and tier:
+            queries.upgrade_user_tier(uid, tier)
+            action = f"upgraded_to_{tier}"
+        elif ls_status in ("expired", "unpaid", "paused"):
+            queries.upgrade_user_tier(uid, "free")
+            action = "downgraded_to_free"
+        else:
+            action = f"no_change_status={ls_status}"
+        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status)
+        return {"result": action, "user_id": uid}
+
+    elif event == "subscription_cancelled":
+        # Access continues until period end; just record the cancellation
+        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), "cancelled")
+        return {"result": "cancelled_access_retained", "user_id": uid}
+
+    elif event == "subscription_expired":
+        queries.upgrade_user_tier(uid, "free")
+        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), "expired")
+        return {"result": "expired_downgraded_to_free", "user_id": uid}
+
+    elif event in ("subscription_payment_success",):
+        return {"result": "payment_ok_no_action"}
+
+    elif event in ("subscription_payment_failed", "subscription_payment_recovered"):
+        logger.warning("LS payment event %s for user_id=%s — LS handles dunning", event, uid)
+        return {"result": f"payment_event_{event}_logged"}
+
+    else:
+        return {"result": "ignored", "event": event}
