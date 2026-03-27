@@ -401,6 +401,19 @@ def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
         return cur.fetchone()  # type: ignore[return-value]
 
 
+def get_active_keys_for_user(user_id: int) -> list[dict[str, Any]]:
+    """Return all active API key rows for a user (key_hash not exposed)."""
+    sql = """
+        SELECT id, user_id, key_prefix, tier, is_active, created_at
+        FROM api_keys
+        WHERE user_id = %(uid)s AND is_active = TRUE
+        ORDER BY created_at ASC;
+    """
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"uid": user_id})
+        return cur.fetchall()  # type: ignore[return-value]
+
+
 def revoke_api_keys_for_user(user_id: int) -> None:
     """Deactivate all active keys for a user (used during rotation)."""
     sql = """

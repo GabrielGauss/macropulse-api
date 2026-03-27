@@ -277,53 +277,110 @@ async def lemonsqueezy_webhook(request: Request) -> dict:
     return {"ok": True, **result}
 
 
-def _ls_handle(event: str, attrs: dict) -> dict:
-    email    = (attrs.get("user_email") or "").lower().strip()
-    cid      = str(attrs.get("customer_id") or "")
-    sid      = str(attrs.get("subscription_id") or attrs.get("id") or "")
-    vid      = attrs.get("variant_id")
-    vname    = attrs.get("variant_name") or attrs.get("product_name") or ""
-    ls_status = attrs.get("status") or "unknown"
+def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
+    """
+    Ensure a paid user has an account and an active API key at the given tier.
 
-    # Resolve user
-    user = queries.get_user_by_email(email) if email else None
-    if user is None and cid:
-        user = queries.get_user_by_ls_customer(cid)
+    Returns (user_id, key_prefix, key_is_new).
+    key_is_new=True  → a new plaintext key was just generated and emailed.
+    key_is_new=False → user already had a key; tier was upgraded in place.
+    """
+    from api.auth import generate_api_key, hash_key
+    from services.email import send_welcome_email, send_upgrade_email
+
+    # Get or create user
+    user = queries.get_user_by_email(email)
     if user is None:
-        logger.warning("LS %s: no user for email=%s cid=%s", event, email, cid)
-        return {"result": "user_not_found", "email": email}
+        user = queries.create_user(email)
 
     uid: int = user["id"]
+
+    # Check for an existing active key
+    existing_keys = queries.get_active_keys_for_user(uid)
+
+    if not existing_keys:
+        # New user (or one without a key) — generate and deliver a key
+        raw_key = generate_api_key()
+        queries.create_api_key(
+            user_id=uid,
+            key_hash=hash_key(raw_key),
+            key_prefix=raw_key[:12],
+            tier=tier,
+        )
+        try:
+            send_welcome_email(email, raw_key, tier)
+        except Exception as exc:
+            logger.error("send_welcome_email failed for %s: %s", email, exc)
+        return uid, raw_key[:12], True
+    else:
+        # Existing user — upgrade tier on all active keys and notify
+        queries.upgrade_user_tier(uid, tier)
+        key_prefix = existing_keys[0]["key_prefix"]
+        try:
+            send_upgrade_email(email, tier, key_prefix)
+        except Exception as exc:
+            logger.error("send_upgrade_email failed for %s: %s", email, exc)
+        return uid, key_prefix, False
+
+
+def _ls_handle(event: str, attrs: dict) -> dict:
+    email     = (attrs.get("user_email") or "").lower().strip()
+    cid       = str(attrs.get("customer_id") or "")
+    sid       = str(attrs.get("subscription_id") or attrs.get("id") or "")
+    vid       = attrs.get("variant_id")
+    vname     = attrs.get("variant_name") or attrs.get("product_name") or ""
+    ls_status = attrs.get("status") or "unknown"
 
     if event in ("subscription_created", "subscription_updated", "subscription_resumed"):
         tier = _ls_resolve_tier(vid, vname)
         active = ls_status in ("active", "trialing", "past_due")
+
         if active and tier:
-            queries.upgrade_user_tier(uid, tier)
-            action = f"upgraded_to_{tier}"
+            if not email:
+                logger.warning("LS %s: no email in payload, cid=%s", event, cid)
+                return {"result": "no_email", "cid": cid}
+            uid, key_prefix, key_is_new = _ls_provision(email, tier)
+            queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status)
+            action = f"{'created' if key_is_new else 'upgraded'}_to_{tier}"
+            logger.info("LS %s: uid=%s email=%s action=%s", event, uid, email, action)
+            return {"result": action, "user_id": uid}
+
         elif ls_status in ("expired", "unpaid", "paused"):
-            queries.upgrade_user_tier(uid, "free")
-            action = "downgraded_to_free"
+            # Downgrade path — user must already exist
+            user = queries.get_user_by_email(email) if email else None
+            if user is None and cid:
+                user = queries.get_user_by_ls_customer(cid)
+            if user:
+                queries.upgrade_user_tier(user["id"], "free")
+                queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), ls_status)
+            return {"result": f"downgraded_to_free_status={ls_status}"}
+
         else:
-            action = f"no_change_status={ls_status}"
-        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status)
-        return {"result": action, "user_id": uid}
+            return {"result": f"no_change_status={ls_status}"}
 
     elif event == "subscription_cancelled":
-        # Access continues until period end; just record the cancellation
-        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), "cancelled")
-        return {"result": "cancelled_access_retained", "user_id": uid}
+        # Access continues until period end — record cancellation, don't downgrade yet
+        user = queries.get_user_by_email(email) if email else None
+        if user is None and cid:
+            user = queries.get_user_by_ls_customer(cid)
+        if user:
+            queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "cancelled")
+        return {"result": "cancelled_access_retained"}
 
     elif event == "subscription_expired":
-        queries.upgrade_user_tier(uid, "free")
-        queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), "expired")
-        return {"result": "expired_downgraded_to_free", "user_id": uid}
+        user = queries.get_user_by_email(email) if email else None
+        if user is None and cid:
+            user = queries.get_user_by_ls_customer(cid)
+        if user:
+            queries.upgrade_user_tier(user["id"], "free")
+            queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "expired")
+        return {"result": "expired_downgraded_to_free"}
 
-    elif event in ("subscription_payment_success",):
+    elif event == "subscription_payment_success":
         return {"result": "payment_ok_no_action"}
 
     elif event in ("subscription_payment_failed", "subscription_payment_recovered"):
-        logger.warning("LS payment event %s for user_id=%s — LS handles dunning", event, uid)
+        logger.warning("LS payment event %s email=%s — LS handles dunning", event, email)
         return {"result": f"payment_event_{event}_logged"}
 
     else:
