@@ -69,6 +69,14 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   const storedKey = api.getKey();
   const keyPrefix = storedKey ? storedKey.slice(0, 16) + '…' : null;
 
+  const [portalUrl, setPortalUrl] = useState(null);
+  useEffect(() => {
+    if (!meInfo || meInfo.tier === 'free' || !api.hasKey()) return;
+    api.getLsPortal()
+      .then(d => { if (d?.portal_url) setPortalUrl(d.portal_url); })
+      .catch(() => {});
+  }, [meInfo?.tier]);
+
   const [copied, setCopied] = useState(false);
   function copyKey() {
     if (!storedKey) return;
@@ -230,7 +238,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
           )}
         </div>
 
-        {/* Email + tier */}
+        {/* Email + tier + manage subscription */}
         {meInfo && (
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
@@ -246,6 +254,19 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
             >
               {meInfo.tier}
             </span>
+            {portalUrl && (
+              <a
+                href={portalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-mono transition-colors"
+                style={{ color: 'rgba(255,255,255,0.30)' }}
+                onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.60)'}
+                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.30)'}
+              >
+                manage →
+              </a>
+            )}
           </div>
         )}
 

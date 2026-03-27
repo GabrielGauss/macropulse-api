@@ -143,6 +143,29 @@ def get_portal(
     return PortalResponse(portal_url=portal_url)
 
 
+@router.get(
+    "/ls-portal",
+    summary="Get Lemon Squeezy customer portal URL",
+)
+def get_ls_portal(key_record: dict = Depends(require_api_key)) -> dict:
+    """
+    Returns the Lemon Squeezy customer portal URL for the authenticated user.
+    Used by the dashboard to render a 'Manage subscription' link.
+    Returns null if the user has no LS subscription on file.
+    """
+    user_id: int = key_record["user_id"]
+    try:
+        from database.queries import get_user_by_id
+        user = get_user_by_id(user_id)
+    except Exception as exc:
+        logger.error("ls-portal lookup error for user_id=%d: %s", user_id, exc)
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable.")
+
+    portal_url = user.get("ls_portal_url") if user else None
+    tier = key_record.get("tier", "free")
+    return {"portal_url": portal_url, "tier": tier, "has_subscription": bool(portal_url)}
+
+
 @router.post(
     "/webhook",
     status_code=status.HTTP_200_OK,
@@ -330,6 +353,7 @@ def _ls_handle(event: str, attrs: dict) -> dict:
     vid       = attrs.get("variant_id")
     vname     = attrs.get("variant_name") or attrs.get("product_name") or ""
     ls_status = attrs.get("status") or "unknown"
+    portal_url: str | None = (attrs.get("urls") or {}).get("customer_portal") or None
 
     if event in ("subscription_created", "subscription_updated", "subscription_resumed"):
         tier = _ls_resolve_tier(vid, vname)
@@ -340,7 +364,7 @@ def _ls_handle(event: str, attrs: dict) -> dict:
                 logger.warning("LS %s: no email in payload, cid=%s", event, cid)
                 return {"result": "no_email", "cid": cid}
             uid, key_prefix, key_is_new = _ls_provision(email, tier)
-            queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status)
+            queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status, portal_url)
             action = f"{'created' if key_is_new else 'upgraded'}_to_{tier}"
             logger.info("LS %s: uid=%s email=%s action=%s", event, uid, email, action)
             return {"result": action, "user_id": uid}

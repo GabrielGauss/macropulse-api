@@ -285,7 +285,7 @@ def get_user_by_email(email: str) -> dict[str, Any] | None:
 
 
 def get_user_by_id(user_id: int) -> dict[str, Any] | None:
-    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id FROM users WHERE id = %(id)s;"
+    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id, ls_portal_url, ls_status FROM users WHERE id = %(id)s;"
     with get_sync_cursor() as cur:
         cur.execute(sql, {"id": user_id})
         return cur.fetchone()  # type: ignore[return-value]
@@ -332,6 +332,7 @@ def upsert_ls_subscription(
     ls_subscription_id: str,
     ls_variant_id: str,
     ls_status: str,
+    ls_portal_url: str | None = None,
 ) -> None:
     """Persist Lemon Squeezy subscription data on the user row."""
     sql = """
@@ -339,7 +340,8 @@ def upsert_ls_subscription(
         SET ls_customer_id     = %(cid)s,
             ls_subscription_id = %(sid)s,
             ls_variant_id      = %(vid)s,
-            ls_status          = %(status)s
+            ls_status          = %(status)s,
+            ls_portal_url      = COALESCE(%(portal)s, ls_portal_url)
         WHERE id = %(uid)s;
     """
     with get_sync_cursor() as cur:
@@ -348,6 +350,7 @@ def upsert_ls_subscription(
             "sid": ls_subscription_id,
             "vid": ls_variant_id,
             "status": ls_status,
+            "portal": ls_portal_url,
             "uid": user_id,
         })
 

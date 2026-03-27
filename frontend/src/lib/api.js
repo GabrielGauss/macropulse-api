@@ -52,6 +52,7 @@ export const api = {
   getCommentary:        () => apiFetch('/v1/regime/commentary'),
   getForecast:          (horizon = 5) => apiFetch(`/v1/forecast?horizon=${horizon}`),
   getCompositeAnalysis: () => apiFetch('/v1/analysis/composite'),
+  getLsPortal:       () => apiFetch('/v1/billing/ls-portal'),
   getWebhookInfo:    () => apiFetch('/v1/webhook/info'),
   setWebhook:        (url) => apiFetch('/v1/webhook/set', { method: 'POST', body: JSON.stringify({ url }) }),
   testWebhook:       () => apiFetch('/v1/webhook/test'),
