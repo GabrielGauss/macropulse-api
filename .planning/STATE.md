@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: production-hardening
-status: defining
+status: roadmapped
 stopped_at: ~
 last_updated: "2026-03-28T00:00:00.000Z"
-last_activity: "2026-03-28 — Milestone v1.1 started (production hardening)"
+last_activity: "2026-03-28 — v1.1 roadmap created (7 phases, 35 requirements)"
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,55 +21,55 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Signal must be accurate, fresh, and delivered with zero friction
-**Current focus:** v1.1 Production Hardening — defining requirements
+**Current focus:** v1.1 Production Hardening — roadmap complete, ready to plan Phase 6
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 6 — Secrets, Webhooks, and Infrastructure Hardening (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-28 — Milestone v1.1 started
-Last activity: 2026-03-18 — Completed plan 04: WebSocket disconnect fix (BUG-02)
+Status: Roadmapped — awaiting phase planning
+Last activity: 2026-03-28 — v1.1 roadmap created (7 phases, 35 requirements mapped)
 
-Progress: [████████░░] 75%
+Progress (v1.1): [░░░░░░░░░░] 0%
+
+v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
+
+## v1.1 Phase Overview
+
+| Phase | Goal | Requirements | Status |
+|-------|------|--------------|--------|
+| 6. Secrets, Webhooks, Infra | Purge secrets, enforce webhooks, lock infra config | SEC-10–13, SEC-20–22, SEC-40–42 | Not started |
+| 7. Auth Rate Limiting | Brute-force protection for registration and OTP | SEC-30–33 | Not started |
+| 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | Not started |
+| 9. Observability and Alerting | Prometheus metrics + pipeline failure alerts | OBS-01–05 | Not started |
+| 10. Paddle Billing | Checkout, webhooks, subscription lifecycle | BILL-01–05 | Not started |
+| 11. GDPR Compliance | User erasure endpoint, retention cleanup | GDPR-01–04 | Not started |
+| 12. Test Coverage | Automated tests for auth, billing, rate limiting, migrations | TEST-01–05 | Not started |
 
 ## Performance Metrics
 
-**Velocity:**
-- Total plans completed: 1
-- Average duration: <1 min
-- Total execution time: <1 min
+**Velocity (v1.0 reference):**
+- Total plans completed: 14 (v1.0)
+- Average duration: ~5 min/plan
+- Total execution time: ~70 min
 
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-security-backend-bugs | 1 | <1 min | <1 min |
+| 02-dashboard-ux | 2 | ~7 min | ~3.5 min |
+| 03-marketing-site | 3 | <3 min | <1 min |
+| 04-api-docs | 2 | <2 min | <1 min |
+| 05-pipeline-quality-and-noise-reduction | 4 | ~55 min | ~14 min |
 
-**Recent Trend:**
-- Last 5 plans: 01-04 (<1 min)
-- Trend: —
-
-*Updated after each plan completion*
-| Phase 01-security-backend-bugs P01 | 5 | 2 tasks | 1 files |
-| Phase 01-security-backend-bugs P01-env-example-audit | 8 | 1 tasks | 1 files |
-| Phase 01-security-backend-bugs P01-rate-limit-race | 5 | 2 tasks | 1 files |
-| Phase 02-dashboard-ux P01 | 2 | 3 tasks | 3 files |
-| Phase 02-dashboard-ux P02 | 5min | 3 tasks | 4 files |
-| Phase 03-marketing-site P02 | <1min | 1 tasks | 1 files |
-| Phase 03-marketing-site P01 | <1min | 1 tasks | 1 files |
-| Phase 03-marketing-site P03 | <1min | 1 tasks | 0 files |
-| Phase 04-api-docs P01 | <1min | 1 tasks | 1 files |
-| Phase 04-api-docs P02 | <1min | 1 tasks | 1 files |
-| Phase 05-pipeline-quality-and-noise-reduction P00 | 15min | 3 tasks | 4 files |
-| Phase 05-pipeline-quality-and-noise-reduction P02 | 20min | 3 tasks | 4 files |
-| Phase 05-pipeline-quality-and-noise-reduction P01 | 5min | 3 tasks | 3 files |
-| Phase 05-pipeline-quality-and-noise-reduction P03 | 15min | 3 tasks | 7 files |
+*v1.1 metrics will be populated after plans execute*
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 - Phase 5 added: Pipeline Quality and Noise Reduction — fix silent data failures, HMM convergence gaps, consolidate magic number thresholds into config
+- v1.1 roadmap created 2026-03-28: 7 phases (6–12), 35 requirements
 
 ### Decisions
 
@@ -105,15 +105,17 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Phase 6 must begin immediately: `.env` in git history contains live Brevo API key and MTA Ed25519 private key
+- Paddle approval pending — Phase 10 unblocks once approved
 
 ### Blockers/Concerns
 
-- Phase 1: Owner API key hardcoded at `api/auth.py:86` — must be removed before any public exposure
-- Phase 2: Calendar viewDays initializes to 30 before tier resolves async — affects owner/paid UX on every load
+- Live secrets in git history (Brevo API key, MTA Ed25519 key) — Phase 6 is highest priority
+- Lemon Squeezy webhook has silent-accept vulnerability when LS_WEBHOOK_SECRET is unset — Phase 6
+- Paddle approval still pending — Phase 10 may need to wait on external approval
 
 ## Session Continuity
 
-Last session: 2026-03-19T23:16:15.976Z
-Stopped at: Completed 05-pipeline-quality-and-noise-reduction/05-03-PLAN.md
+Last session: 2026-03-28T00:00:00.000Z
+Stopped at: v1.1 roadmap created — ready to plan Phase 6
 Resume file: None

@@ -117,3 +117,121 @@ Plans:
 *Updated: 2026-03-18 — Phase 3 planned (3 plans)*
 *Updated: 2026-03-18 — Phase 4 planned (2 plans)*
 *Updated: 2026-03-19 — Phase 5 planned (4 plans)*
+
+---
+
+# Roadmap: MacroPulse v1.1 — Production Hardening
+
+## Overview
+
+v1.0 shipped a clean, visually consistent product with no known bugs. v1.1 closes the institutional deployment gap: secrets purged from git history, webhook bypass removed, auth endpoints hardened against brute-force, async DB driver replacing the sync bottleneck, Prometheus observability wired in, Paddle billing completed, GDPR erasure endpoint added, and automated test coverage established for all critical paths. Phases 6–12 deliver these capabilities in dependency order — security first, then DB, then observability, then billing and compliance, then tests that validate everything.
+
+## Phases
+
+- [ ] **Phase 6: Secrets, Webhooks, and Infrastructure Hardening** - Purge committed secrets, enforce webhook signature checking, and lock down infrastructure configuration
+- [ ] **Phase 7: Auth Endpoint Rate Limiting** - Protect registration and OTP recovery flows against brute-force with persistent rate limit state
+- [ ] **Phase 8: Async Database Migration** - Replace psycopg2 blocking driver with asyncpg throughout the codebase
+- [ ] **Phase 9: Observability and Alerting** - Expose Prometheus metrics and fire automated pipeline failure alerts
+- [ ] **Phase 10: Paddle Billing** - Complete Paddle checkout, webhook handling, and subscription lifecycle management
+- [ ] **Phase 11: GDPR Compliance** - Implement user data erasure and data retention hygiene
+- [ ] **Phase 12: Test Coverage** - Establish automated test suite covering auth, billing webhooks, rate limiting, and DB migrations
+
+## Phase Details
+
+### Phase 6: Secrets, Webhooks, and Infrastructure Hardening
+**Goal**: The production environment contains no committed secrets and no webhook handler that can silently accept unauthenticated events
+**Depends on**: Nothing (first v1.1 phase; v1.0 complete)
+**Requirements**: SEC-10, SEC-11, SEC-12, SEC-13, SEC-20, SEC-21, SEC-22, SEC-40, SEC-41, SEC-42
+**Success Criteria** (what must be TRUE):
+  1. `git log` and `git show` across the full repository history contain no Brevo API key, MTA Ed25519 key, FRED key, or owner API key values
+  2. Starting the API with `LS_WEBHOOK_SECRET` unset causes the Lemon Squeezy webhook endpoint to return 500 on every request — no event is processed
+  3. Sending a Lemon Squeezy webhook request with a tampered signature returns 401 and logs the rejection; the event handler is never called
+  4. The `model_artifacts` Docker volume is mounted with the `ro` flag in `docker-compose.yml` — a write attempt from the API container is rejected by the OS
+  5. The application refuses to start when `ENV=production` and `CORS_ORIGINS` contains a wildcard `*`
+**Plans**: TBD
+
+### Phase 7: Auth Endpoint Rate Limiting
+**Goal**: Registration and OTP recovery flows reject brute-force attempts and survive process restarts without losing rate limit state
+**Depends on**: Phase 6
+**Requirements**: SEC-30, SEC-31, SEC-32, SEC-33
+**Success Criteria** (what must be TRUE):
+  1. Sending 6 registration attempts from the same IP within one hour results in a 429 response on the 6th attempt
+  2. After 5 failed OTP verification attempts on the same email within 15 minutes, the OTP is invalidated and all subsequent attempts return a rejection until a new OTP is requested
+  3. Rate limit counters survive an API container restart — the 6th attempt after a restart still returns 429 if 5 attempts were made before restart
+  4. OTP recovery endpoints return a backoff-indicating response after the 3rd failure within the window
+**Plans**: TBD
+
+### Phase 8: Async Database Migration
+**Goal**: All database I/O in the API runs on an async driver and never blocks FastAPI's event loop
+**Depends on**: Phase 7
+**Requirements**: DB-10, DB-11, DB-12, DB-13
+**Success Criteria** (what must be TRUE):
+  1. `database/connection.py` contains no import of `psycopg2` — `asyncpg` (or `psycopg3` async) is the only DB driver
+  2. Every function in `database/queries.py` is declared `async def` — no synchronous DB calls exist anywhere in the API codebase
+  3. Setting `DB_POOL_MIN=1` and `DB_POOL_MAX=5` via environment variables changes the connection pool limits without code changes
+  4. The full existing test suite passes after the migration with no query regressions
+**Plans**: TBD
+
+### Phase 9: Observability and Alerting
+**Goal**: Pipeline health is visible in a Grafana dashboard and failures trigger an automated alert within 5 minutes
+**Depends on**: Phase 8
+**Requirements**: OBS-01, OBS-02, OBS-03, OBS-04, OBS-05
+**Success Criteria** (what must be TRUE):
+  1. `GET /metrics` returns a valid Prometheus text exposition response containing `macropulse_api_requests_total`, `macropulse_pipeline_runs_total`, `macropulse_pipeline_last_success_timestamp`, `macropulse_active_api_keys`, and `macropulse_db_pool_size`
+  2. Inserting a `status='failed'` row into `pipeline_runs` triggers an email alert to the owner address within 5 minutes
+  3. When `macropulse_pipeline_last_success_timestamp` is more than 26 hours old, a staleness alert fires
+  4. The Grafana dashboard JSON at `infrastructure/grafana/macropulse-dashboard.json` imports cleanly into a fresh Grafana instance and displays all five tracked metrics
+**Plans**: TBD
+
+### Phase 10: Paddle Billing
+**Goal**: Users can subscribe via Paddle checkout, manage their subscription via the portal, and tier changes apply automatically from webhook events
+**Depends on**: Phase 9
+**Requirements**: BILL-01, BILL-02, BILL-03, BILL-04, BILL-05
+**Success Criteria** (what must be TRUE):
+  1. `POST /v1/billing/paddle/checkout` returns a Paddle-hosted checkout URL for both starter and pro tiers
+  2. Receiving a `subscription.activated` Paddle webhook event upgrades the user's `api_keys.tier` to the subscribed tier within one processing cycle
+  3. Receiving a `subscription.cancelled` Paddle webhook event reverts the user's API key tier to `free` within one processing cycle
+  4. Sending the same Paddle webhook event ID twice results in only one DB write — the second delivery is deduplicated via `webhook_idempotency`
+  5. `GET /v1/billing/paddle/portal` returns a valid Paddle customer portal URL for the authenticated user
+**Plans**: TBD
+
+### Phase 11: GDPR Compliance
+**Goal**: Users can permanently delete their data and the system enforces retention limits on ephemeral verification records
+**Depends on**: Phase 10
+**Requirements**: GDPR-01, GDPR-02, GDPR-03, GDPR-04
+**Success Criteria** (what must be TRUE):
+  1. An authenticated user calling `DELETE /v1/auth/me` receives a success response; their `users` row has email replaced with `deleted_<uuid>@macropulse.invalid` and `deleted_at` timestamp set
+  2. After account deletion, all `api_keys` for that user are deactivated — API calls with their keys return 401
+  3. `macropulse.live/privacy` is a reachable page that documents data categories, retention periods, and erasure rights
+  4. `email_verifications` rows older than 30 days are absent from the database after the daily cleanup job runs
+**Plans**: TBD
+
+### Phase 12: Test Coverage
+**Goal**: Automated tests exist for all critical security and reliability paths and pass in CI against a real TimescaleDB schema
+**Depends on**: Phase 11
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
+**Success Criteria** (what must be TRUE):
+  1. Running `pytest` against the test suite produces passing tests for registration, OTP verification, recovery, and key rotation flows
+  2. Paddle webhook tests cover `subscription.activated` and `subscription.cancelled` with both valid and invalid signatures — invalid signatures produce 401
+  3. Lemon Squeezy webhook tests confirm valid-signature acceptance, invalid-signature rejection (401), and missing-secret rejection (500)
+  4. Rate limit middleware tests confirm OTP lockout after 5 attempts and per-IP throttle on auth registration
+  5. Running all migrations in `database/migrations/` against a fresh TimescaleDB schema in CI completes without errors
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11 → 12
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 6. Secrets, Webhooks, and Infrastructure Hardening | 0/? | Not started | - |
+| 7. Auth Endpoint Rate Limiting | 0/? | Not started | - |
+| 8. Async Database Migration | 0/? | Not started | - |
+| 9. Observability and Alerting | 0/? | Not started | - |
+| 10. Paddle Billing | 0/? | Not started | - |
+| 11. GDPR Compliance | 0/? | Not started | - |
+| 12. Test Coverage | 0/? | Not started | - |
+
+---
+*v1.1 roadmap created: 2026-03-28 — Production Hardening milestone*
