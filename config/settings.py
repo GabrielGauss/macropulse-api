@@ -10,7 +10,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     # ── Auth ────────────────────────────────────────────────────────
     api_keys: list[str] = []  # Empty = dev-mode (no auth enforced)
     owner_api_key: str = ""   # Master key — tier="owner", all features, no rate limit
+    owner_email: str = Field(
+        default="owner@macropulse.live",
+        validation_alias=AliasChoices("OWNER_EMAIL", "owner_email"),
+    )
 
     # ── Paddle Billing ───────────────────────────────────────────────
     paddle_api_key: str = ""                        # Bearer token for Paddle API

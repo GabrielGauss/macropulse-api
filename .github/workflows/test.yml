@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_DB: macropulse_test
+          POSTGRES_USER: macropulse
+          POSTGRES_PASSWORD: macropulse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://macropulse:macropulse@localhost:5432/macropulse_test
+      ENVIRONMENT: test
+      OWNER_API_KEY: test-owner-key-000000000000000000000000000000
+      OWNER_EMAIL: owner@macropulse.live
+      FRED_API_KEY: test
+      ANTHROPIC_API_KEY: test
+      MTA_SIGNING_KEY_HEX: "0000000000000000000000000000000000000000000000000000000000000000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short -x

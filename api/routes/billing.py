@@ -207,6 +207,30 @@ async def paddle_webhook(
             detail="Invalid JSON body.",
         )
 
+    # Idempotency check — Paddle may retry on network errors
+    event_id: str | None = (
+        event.get("event_id")
+        or request.headers.get("paddle-event-id")
+    )
+    if event_id:
+        from database.connection import get_sync_cursor
+        try:
+            with get_sync_cursor() as cur:
+                cur.execute(
+                    "SELECT 1 FROM webhook_idempotency WHERE event_id = %s",
+                    (event_id,),
+                )
+                if cur.fetchone() is not None:
+                    logger.info("Paddle webhook duplicate skipped: event_id=%s", event_id)
+                    return {"ok": True, "duplicate": True}
+                cur.execute(
+                    "INSERT INTO webhook_idempotency (event_id, provider) VALUES (%s, 'paddle') ON CONFLICT DO NOTHING",
+                    (event_id,),
+                )
+        except Exception as exc:
+            logger.error("Webhook idempotency check failed: %s", exc)
+            # Fall through and process anyway — better to double-process than reject
+
     try:
         result = handle_webhook_event(event)
         logger.info("Webhook processed: %s → %s", event.get("event_type"), result)

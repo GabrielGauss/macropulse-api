@@ -81,6 +81,7 @@ class CommentaryResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
+    checks: dict[str, str] = {}
 
 
 # ── Forecast ──────────────────────────────────────────────────────────

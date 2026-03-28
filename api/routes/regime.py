@@ -113,18 +113,24 @@ def get_regime_history(
     ]
 
 
+_CSV_MAX_ROWS = 10_000
+
+
 @router.get("/regime/export")
 def export_regime_history(
-    limit: int = Query(730, ge=1, le=730),
+    limit: int = Query(730, ge=1, le=10_000),
     key_record: dict = Depends(require_api_key),
 ):
     """
     Download regime history as CSV.
-    Free: 30 days. Starter/Pro: up to 730 days.
+    Free: 30 days. Starter/Pro: up to 730 days. Hard cap: 10,000 rows.
     """
     tier = key_record.get("tier", "free")
     if tier == "free":
         limit = min(limit, 30)
+
+    # Safety cap: never return more than 10,000 rows regardless of tier or query param
+    limit = min(limit or _CSV_MAX_ROWS, _CSV_MAX_ROWS)
 
     rows = queries.fetch_regime_history(limit=limit)
     rows_asc = list(reversed(rows))

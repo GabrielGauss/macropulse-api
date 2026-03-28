@@ -83,7 +83,7 @@ async def require_api_key(
     if settings.owner_api_key and raw_key == settings.owner_api_key:
         return {
             "user_id": 0,
-            "email": "gabriel.veron134@gmail.com",
+            "email": getattr(settings, "owner_email", "owner@macropulse.live"),
             "tier": "owner",
             "key_prefix": raw_key[:12],
             "is_active": True,

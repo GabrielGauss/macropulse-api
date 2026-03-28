@@ -143,8 +143,23 @@ def redirect_dashboard():
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check() -> HealthResponse:
-    """Liveness probe."""
-    return HealthResponse(status="ok", version=settings.app_version)
+    """Liveness probe — includes database connectivity check."""
+    from database.connection import get_sync_cursor
+
+    db_status = "ok"
+    try:
+        with get_sync_cursor() as cur:
+            cur.execute("SELECT 1")
+    except Exception as exc:
+        logger.warning("Health check DB ping failed: %s", exc)
+        db_status = "error"
+
+    overall = "ok" if db_status == "ok" else "degraded"
+    return HealthResponse(
+        status=overall,
+        version=settings.app_version,
+        checks={"database": db_status},
+    )
 
 
 # ── Static frontend (served in production) ───────────────────────

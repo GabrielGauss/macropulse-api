@@ -5,6 +5,7 @@ import { useFetch } from '../hooks/useFetch';
 import { useCountdown } from '../hooks/useCountdown';
 import RegisterModal from './RegisterModal';
 import RecoverModal from './RecoverModal';
+import { TierBadge } from './TierBadge';
 
 const TIER_COLOR = {
   free:    'rgba(255,255,255,0.2)',
@@ -244,16 +245,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
             <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.50)' }}>
               {meInfo.email}
             </span>
-            <span
-              className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5"
-              style={{
-                color: TIER_COLOR[meInfo.tier] || TIER_COLOR.free,
-                border: `1px solid ${TIER_COLOR[meInfo.tier] || TIER_COLOR.free}`,
-                opacity: 0.85,
-              }}
-            >
-              {meInfo.tier}
-            </span>
+            <TierBadge tier={meInfo.tier} />
             {portalUrl && (
               <a
                 href={portalUrl}
