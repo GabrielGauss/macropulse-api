@@ -28,34 +28,50 @@ MacroPulse is a macro regime signal API and developer dashboard that classifies 
 
 ### Active
 
-<!-- v1.0 milestone — ship-ready -->
+<!-- v1.1 milestone — production hardening -->
 
-- [ ] Dashboard calendar shows correct date range for user's tier on mount
-- [ ] API docs consolidated into one excellent page
-- [ ] Marketing site hero section optimized (code snippet vs better hook)
-- [ ] FAQ accordion closes on re-click
-- [ ] Security: owner key moved out of source code
-- [ ] Duplicate alerting system consolidated
-- [ ] Data lag off-by-one bug fixed
-- [ ] Rate limit race condition fixed (async-safe counter)
+- [ ] **SECURITY**: All secrets removed from `.env` in git history; rotated and stored in environment only
+- [ ] **SECURITY**: Lemon Squeezy webhook rejects all events when `LS_WEBHOOK_SECRET` is unset (no silent accept)
+- [ ] **SECURITY**: OTP and auth endpoints rate-limited with exponential backoff (brute-force protection)
+- [ ] **SECURITY**: `model_artifacts` volume is read-only from API container
+- [ ] **ASYNC**: `psycopg2` replaced with `asyncpg` or `psycopg3` async driver (eliminate thread-pool blocking)
+- [ ] **OBSERVABILITY**: Prometheus `/metrics` endpoint exposed; Grafana dashboard with pipeline failure alerting
+- [ ] **BILLING**: Paddle integration complete and live (checkout, subscription management, webhook)
+- [ ] **COMPLIANCE**: GDPR user data deletion endpoint
+- [ ] **TESTING**: Auth routes, billing webhooks, and DB migrations covered by automated tests
+- [ ] **INFRA**: Automated pipeline failure alerting (Telegram/email on pipeline `status=failed`)
 
 ### Out of Scope
 
-- Stripe/Paddle payment integration — next milestone
-- User self-serve registration UI — next milestone
 - Mobile app — not planned
 - Real-time chat or community features — not the product
 - Model retraining UI — ops tooling, CLI is sufficient
+- Database replication — single VPS constraint; acceptable risk for now
+- Kubernetes / managed cloud migration — deferred to v2.0
+
+## Current Milestone: v1.1 — Production Hardening
+
+**Goal:** Close all critical security gaps, eliminate the sync DB bottleneck, add observability, and complete Paddle billing — making MacroPulse institutionally deployable and monetization-ready.
+
+**Target features:**
+- Secret rotation + `.env` git history purge
+- Webhook signature enforcement (no silent bypass)
+- OTP brute-force protection
+- Async DB driver migration (psycopg2 → asyncpg)
+- Prometheus metrics + pipeline failure alerting
+- Paddle billing completion
+- GDPR erasure endpoint
+- Test coverage for auth, webhooks, migrations
 
 ## Context
 
 - Live at `api.macropulse.live` (Docker on VPS, Nginx + Certbot)
 - Marketing site at `macropulse.live` (same deployment)
-- Owner API key currently hardcoded in `api/auth.py:86` — critical fix needed
-- Two alerting modules coexist: `services/alerting.py` and `services/alerts.py` — causes double-fires
-- Zero automated tests across the entire codebase — testing left for future milestone
-- AI commentary panel is built but locked (no ANTHROPIC_API_KEY in prod env yet)
-- Calendar `viewDays` initializes to 30 (free tier default) even for owner, because tier resolves async after mount
+- v1.0 completed: bugs fixed, dashboard polished, marketing site ready, API docs consolidated
+- Professional assessment scored 6.0/10 — security gaps are the primary blocker for institutional adoption
+- `.env` committed to repo contains live Brevo API key and MTA Ed25519 private key — must be rotated immediately
+- Synchronous psycopg2 in async FastAPI is the dominant performance bottleneck under concurrent load
+- Paddle approval pending; Lemon Squeezy webhook has silent-accept vulnerability when secret unset
 
 ## Constraints
 
@@ -75,4 +91,4 @@ MacroPulse is a macro regime signal API and developer dashboard that classifies 
 | Owner key in source | Expedient for v0 | ⚠️ Revisit — fix in v1.0 |
 
 ---
-*Last updated: 2026-03-18 — initial GSD initialization from codebase map*
+*Last updated: 2026-03-28 — v1.1 milestone started (production hardening)*
