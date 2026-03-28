@@ -1,274 +1,251 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-18
+**Analysis Date:** 2026-03-28
+
+## Python Code Style
+
+**Linting & Formatting:**
+- Tool: Ruff
+- Config: `pyproject.toml` [tool.ruff]
+- Line length: 100 characters
+- Selectors: E, F, I, N, W, UP, B, SIM (error, pyflakes, isort, pep8-naming, pycodestyle, upgrade, bugbear, simplify)
+
+**Type Checking:**
+- Tool: mypy
+- Config: `pyproject.toml` [tool.mypy]
+- Mode: strict
+- Python version: 3.11+
+
+**Import Organization:**
+- First-party modules configured: api, config, data, database, models, services
+- isort enforcement via Ruff
+- Circular import avoidance via deferred imports where needed (e.g., `api/auth.py` defers `database.queries` import)
 
 ## Naming Patterns
 
 **Files:**
-- Python files: `lowercase_with_underscores.py` (snake_case)
-  - Examples: `api/auth.py`, `services/inference.py`, `database/connection.py`
-- React/JSX files: `PascalCase.jsx` for components, `camelCase.js` for utilities
-  - Examples: `src/components/RegimeCard.jsx`, `src/hooks/useFetch.js`, `src/lib/api.js`
-- CSS/Config files: lowercase with hyphens
-  - Examples: `tailwind.config.js`, `vite.config.js`, `postcss.config.js`
+- Python: snake_case (e.g., `garch_model.py`, `daily_pipeline.py`)
+- Frontend: camelCase components (e.g., `Header.jsx`, `CommentaryCard.jsx`), snake_case utilities (e.g., `useFetch.js`)
 
-**Functions:**
-- Python functions: snake_case
-  - Examples: `hash_key()`, `_lookup_key()`, `require_api_key()`, `get_sync_cursor()`
-  - Private functions prefixed with underscore: `_get_pool()`, `_lookup_key()`
-- JavaScript functions: camelCase
-  - Examples: `apiFetch()`, `useRegimeSocket()`, `getCurrentRegime()`, `getKey()`
-  - Hooks follow React convention: `useFetch()`, `useRegimeSocket()`
-- React components: PascalCase (enforced by JSX)
-  - Examples: `ErrorBoundary`, `StatCard`, `RegimeCard`
+**Functions & Methods:**
+- Python: snake_case (e.g., `predict_proba()`, `upsert_macro_features()`)
+- Frontend: camelCase (e.g., `getCurrentRegime()`, `saveKey()`)
 
 **Variables:**
-- Python: snake_case throughout
-  - Examples: `feature_matrix`, `regime_row`, `api_keys`, `db_password`
-  - Module-level constants: UPPERCASE_WITH_UNDERSCORES
-  - Private module variables: prefixed with underscore `_pool`, `_header_scheme`
-- JavaScript: camelCase throughout
-  - Examples: `activeSection`, `guideMode`, `historyDays`, `isFree`
-  - Constants: UPPERCASE_WITH_UNDERSCORES (e.g., `FREE_HISTORY_LIMIT = 30`)
+- Python: snake_case (e.g., `model_version`, `daily_limit`)
+- Frontend: camelCase (e.g., `keyDraft`, `showKeyInput`, `pipelineStatus`)
 
-**Types:**
-- Python: Use `from __future__ import annotations` for forward references
-  - Type hints use pipe for unions: `str | None`, `dict[str, Any]`
-  - Examples: `def infer(self, feature_matrix: np.ndarray, vix_diff: float | None = None)`
-- JavaScript: JSDoc comments for prop types (no TypeScript)
-  - Example: `/** @type {import('tailwindcss').Config} */`
+**Constants:**
+- Python: UPPER_SNAKE_CASE (e.g., `_REGIME_ID`, `TIER_LIMITS`)
+- Frontend: camelCase or CONST (e.g., `TIER_COLOR`, `GATE_COPY`)
+- Internal/private: prefixed with underscore (e.g., `_EXEMPT_PATHS`, `_reset_ts()`)
 
-## Code Style
+**Types & Classes:**
+- Python: PascalCase (e.g., `RegimeResponse`, `GARCHModel`, `HMMModel`)
+- Frontend components: PascalCase (e.g., `Header`, `RegimeCard`)
+- Python type aliases: PascalCase (e.g., `VolState = Literal[...]`)
 
-**Formatting:**
-- Ruff (Python linter) - configured in `pyproject.toml`
-  - Line length: 100 characters
-  - Target: Python 3.11+
-  - Enabled rule sets: E, F, I, N, W, UP, B, SIM
+## Module Organization
 
-**Linting:**
-- Python: Ruff for linting and isort for imports
-  - Configuration in `pyproject.toml`:
-    - `select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]`
-    - `line-length = 100`
-    - isort known-first-party: `["api", "config", "data", "database", "models", "services"]`
-- Python: mypy for type checking
-  - Configuration in `pyproject.toml`:
-    - `strict = true`
-    - `warn_return_any = true`
-    - `ignore_missing_imports = true`
-- JavaScript: No formal linter configured (no `.eslintrc` or `eslint.config.js` in project root)
-  - Formatting: Tailwind CSS classes use arbitrary values inline with style objects
-  - Pattern: mix of className strings and style object props
+**Backend Structure:**
+- `api/` — FastAPI routes and schemas
+  - `routes/` — endpoint handlers organized by domain (regime.py, analysis.py, etc.)
+  - `schemas/` — Pydantic response models
+  - `middleware/` — CORS, rate-limiting, custom middleware
+  - `main.py` — FastAPI app initialization, lifespan, static serving
+  - `auth.py` — API key validation logic
+  - `deps.py` — Shared FastAPI dependencies (require_api_key, require_paid)
 
-**Indentation and Spacing:**
-- Python: 4 spaces (PEP 8)
-- JavaScript: 2 spaces (Vite/React default)
+- `config/` — Configuration management
+  - `settings.py` — Single Settings class with all env vars, defaults, computed properties
 
-## Import Organization
+- `database/` — Data layer
+  - `queries.py` — Parameterized SQL queries (all writes use INSERT...ON CONFLICT upsert)
+  - `connection.py` — Sync/async connection pooling
+  - `migrations/` — SQL migration files (numbered, applied in order)
 
-**Order (Python):**
-1. `from __future__ import annotations` (always first)
-2. Standard library imports (alphabetical)
-3. Third-party imports (alphabetical)
-4. Local application imports (alphabetical by module)
+- `services/` — Business logic (orchestrator, scheduler, email, etc.)
+- `models/` — ML model classes (HMMModel, GARCHModel, PCAModel)
+- `data/` — Data ingestion and processing (FRED client, market data, feature engineering)
 
-**Examples from codebase:**
-```python
-# api/main.py
-from __future__ import annotations
-
-import logging
-from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import AsyncIterator
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-
-from api.middleware.rate_limit import RateLimitMiddleware
-from api.routes.auth import router as auth_router
-from config.settings import get_settings
-```
-
-**Order (JavaScript):**
-1. React/third-party imports
-2. Local component imports
-3. Hook imports
-4. Utility/lib imports
-
-**Examples from codebase:**
-```jsx
-// src/App.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import { useFetch } from './hooks/useFetch';
-import { GuideModeContext, useGuideModeState } from './lib/guideMode';
-import { useRegimeSocket } from './hooks/useRegimeSocket';
-import { api } from './lib/api';
-```
-
-**Path Aliases:**
-- Not used in this codebase (relative imports throughout)
+**Frontend Structure:**
+- `src/components/` — React components (Cards, Charts, Views)
+- `src/views/` — Full-page views (InflationView, GrowthView, etc.) lazy-loaded with React.lazy()
+- `src/hooks/` — Custom React hooks (useFetch, useCountdown, useRegimeSocket)
+- `src/lib/` — Utilities and helpers (api.js for endpoint definitions, utils.js for constants)
 
 ## Error Handling
 
-**Python Patterns:**
-- Use typed `dict[str, Any]` for auth records and query results instead of custom classes
-  - Example from `api/auth.py`: returns `dict[str, Any]` with keys like `user_id`, `email`, `tier`
-- HTTP exceptions using FastAPI's `HTTPException` with status codes
-  - Example: `raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="...")`
-- Logging errors with `logger.error()`, `logger.warning()`, `logger.exception()`
-  - Exception context logged: `logger.exception("Composite analysis failed: %s", exc)`
-- Dev-mode fallback: return synthetic defaults if DB/config unavailable
-  - Example in `api/auth.py`: dev mode returns `{"user_id": 0, "email": "dev@localhost", "tier": "pro", ...}`
-- Service layer catches and re-raises as HTTP exceptions for clarity
-  - Example in `api/routes/analysis.py`: catch orchestrator exceptions and convert to 500 response
+**Python Pattern:**
+- FastAPI routes raise `HTTPException` with `status_code` and `detail`
+- Service functions log exceptions with `logger.exception()` then re-raise or convert to HTTPException
+- Database operations wrapped in try-except, with context managers ensuring cursor cleanup
+- Validation failures raise early with clear error messages
 
-**JavaScript Patterns:**
-- API errors thrown from `apiFetch()` as generic Error with status
-  - Example: `throw new Error(`API ${res.status}: ${res.statusText}`)`
-- Caught and handled in useFetch hook: `catch(setError)` stores error state
-- Error state handled in components: check `data.error && <ErrorBoundary>`
-- React error boundary component catches unhandled render errors
-  - Class component using `getDerivedStateFromError()` and `componentDidCatch()`
-  - Renders error message and "try again" button
+**Example from `api/routes/analysis.py`:**
+```python
+try:
+    result = composite_analysis(regime_row, history, features, liquidity)
+except Exception as exc:
+    logger.exception("Composite analysis failed: %s", exc)
+    raise HTTPException(
+        status_code=500,
+        detail=f"Analysis computation failed: {exc}",
+    ) from exc
+```
+
+**Frontend Pattern:**
+- API calls use Promise rejection; errors caught in hooks or try-catch blocks
+- Components render error states from `useFetch()` error property
+- User-facing errors displayed via modal (not console output)
 
 ## Logging
 
-**Framework:** Python uses standard `logging` module with root logger from settings
+**Framework:** Python standard library logging module
+
+**Configuration:** `config/settings.py`
+- Log level field (default: INFO)
+- Format: `"%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"`
+- All loggers: `logger = logging.getLogger(__name__)`
 
 **Patterns:**
-- Initialize logger at module level: `logger = logging.getLogger(__name__)`
-- Configure via `pyproject.toml` and `config/settings.py` with log level from env
-- Format: `"%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"` (from `api/main.py`)
-- Use appropriate levels:
-  - `logger.info()` for lifecycle events: startup, shutdown, request summaries
-  - `logger.warning()` for rejected auth, invalid data: `logger.warning("Rejected invalid API key prefix=%s…", raw_key[:8])`
-  - `logger.error()` for exceptions with context: `logger.error("DB error during key lookup: %s", exc)`
-  - `logger.exception()` in except blocks: `logger.exception("Composite analysis failed: %s", exc)`
+- Info level for operations: `logger.info("Starting MacroPulse API v%s", settings.app_version)`
+- Warning level for non-fatal issues: `logger.warning("Health check DB ping failed: %s", exc)`
+- Exception level for handled errors: `logger.exception("Migration failed (%s): %s", path.name, exc)`
 
-**JavaScript:** Uses browser console (no centralized logging framework)
-- Error boundary logs to console.error: `console.error('[MacroPulse] Unhandled render error:', error, info)`
+## Docstrings
+
+**Style:** Google-style (parameters, returns, raises)
+
+**Module-level:** Docstring at top describing purpose
+- `api/main.py` example: Lists served endpoints and scheduler integration
+
+**Functions (Python):**
+```python
+def forecast_vol(self, returns_series: pd.Series) -> np.ndarray:
+    """
+    Forecast conditional volatility for next trading day.
+
+    Parameters
+    ----------
+    returns_series:
+        Daily log-return series to forecast volatility for.
+
+    Returns
+    -------
+    np.ndarray
+        Conditional variance forecast.
+    """
+```
+
+**Frontend:** Minimal JSDoc; rely on self-documenting code
+
+## API Design
+
+**Response Models:** Pydantic BaseModel in `api/schemas/responses.py`
+- RegimeResponse, CompositeAnalysisResponse, DomainSignal, etc.
+- All fields typed with validation (Field(..., ge=0, le=1) for probabilities)
+
+**Endpoints:**
+- Prefix: `/v1` (versioning)
+- RESTful: GET for reads, POST for mutations
+- Tags: By domain (MacroPulse, Analysis, Billing)
+- Rate-limited via middleware per tier in Settings
+
+**Error Responses:**
+- HTTP status codes (404, 500, 503, 403)
+- Body: `{"detail": "Human-readable message"}`
+
+## Frontend Conventions
+
+**Component Props:**
+- Destructure in signature
+- Callback props prefixed with `on` (e.g., `onToggleGuide`, `onClick`)
+
+**State Management:**
+- useState for local state
+- useCallback to memoize callbacks
+- Custom hooks (useFetch, useCountdown) for logic reuse
+- Context API (GuideModeContext) for app-level state
+
+**Styling:**
+- Tailwind CSS (config: `frontend/tailwind.config.js`)
+- Custom palette: surface-0 to surface-4, regime-colors
+- No rounded corners (border-radius: 0)
+- Font: JetBrains Mono throughout
+
+**Lazy Loading:**
+- React.lazy() for views: `const InflationView = React.lazy(() => import('./views/InflationView'))`
+- Suspense wrapper in App.jsx
 
 ## Comments
 
 **When to Comment:**
-- Document public function/class purposes with docstrings (Python)
-- Explain non-obvious logic or workarounds
-- Mark sections with ASCII dividers for large files
+- Non-obvious algorithms (z-score normalization, volatility classification)
+- Business logic justifications (threshold rationales)
+- Security notes (e.g., header-only API key in `api/auth.py`: keys in URLs appear in logs)
+- Config-driven behavior explanations
 
-**Docstring Examples:**
-
+**Example from `api/routes/regime.py`:**
 ```python
-# From api/main.py
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Start / stop the background scheduler and DB pool with the app lifecycle."""
-    ...
-
-# From database/connection.py
-@contextlib.contextmanager
-def get_sync_cursor(
-    autocommit: bool = False,
-) -> Generator[psycopg2.extras.RealDictCursor, None, None]:
-    """Context-managed cursor with automatic commit / rollback and pool return."""
-    ...
+# Build response without signature first so we can sign the exact bytes
+# that will appear in JSON body. Using model_dump(mode="json") ensures
+# Pydantic's serialization rules produce the same values IRL Engine sees.
 ```
 
-**JSDoc/TSDoc:**
-- React components use inline comments to explain complex JSX
-- No formal JSDoc decorators in use
+**Avoid:** Reiterating what code obviously does
 
-```jsx
-/**
- * Global React error boundary.
- * Catches any unhandled JS error in the component tree and renders
- * a recoverable error card instead of a blank screen.
- */
-export default class ErrorBoundary extends Component {
-  ...
-}
-```
+## Database Patterns
 
-**Section Markers:**
-- ASCII divider pattern: `# ── Section Name ─────────────────────────────`
-- Used to organize large files into logical sections
-- Examples: auth.py uses section markers for "Dev-mode", "Owner key", "Primary path"
+**Query Style:** `database/queries.py`
+- All parameterized (no string concatenation)
+- Passed as dict: `cur.execute(sql, row)`
+- Upsert semantics: `INSERT...ON CONFLICT(time) DO UPDATE SET`
+- No inline SQL in route handlers
 
-## Function Design
-
-**Size:**
-- Functions typically 20-80 lines
-- Shorter functions preferred for async handlers
-- Service/inference functions may be longer if logically cohesive
-
-**Parameters:**
-- Use type hints for all parameters and return values
-- Optional parameters documented in docstrings
-- Use `Depends()` for FastAPI dependency injection
-
-**Return Values:**
-- Python: Always return typed values or None
-  - Service methods return `dict[str, Any]` with documented keys
-  - Route handlers return Pydantic response models
-- JavaScript: Return objects/arrays or null for empty states
-  - API methods return promises resolved with JSON data
-  - Hooks return objects with `{ data, loading, error, refetch }`
-
-## Module Design
-
-**Exports:**
-- Python: Use explicit imports in route files, no wildcard imports
-  - Example: `from api.routes.auth import router as auth_router`
-- JavaScript: Named exports for utilities, default exports for components/views
-  - Example: `export const api = { ... }` for lib/api.js
-  - Example: `export default function StatCard() { ... }` for components
-
-**Barrel Files:**
-- Not used in this codebase
-- Each route defines its own router: `router = APIRouter(prefix="/v1", tags=[...])`
-
-## Configuration and Constants
-
-**Python:**
-- All config centralized in `config/settings.py` using Pydantic BaseSettings
-- Environment variables prefixed with app domain (e.g., `FRED_API_KEY`, `DB_HOST`)
-- Settings accessed via singleton: `get_settings()` with `@lru_cache`
-- Constants in files where used (e.g., `_FREE_HISTORY_LIMIT = 30` in `api/routes/regime.py`)
-
-**JavaScript:**
-- Constants defined in component files or lib utilities
-- API base URL: empty string for relative paths (proxied by Vite dev server)
-- Feature flags/limits: inline constants (e.g., `const FREE_HISTORY_LIMIT = 30`)
-- Configuration via localStorage for API keys
-
-## Class Design (Python)
-
-**Pattern:**
-- Use dataclasses or simple dicts instead of full OOP for data structures
-- Service classes used for stateful operations with lazy initialization
-  - Example: `RegimeInferenceService` with lazy-loaded models via `@property`
-- Dependency injection via FastAPI `Depends()` instead of class inheritance
-
-**Example from `services/inference.py`:**
+**Connection Management:**
 ```python
-class RegimeInferenceService:
-    def __init__(self, model_version: str | None = None) -> None:
-        self.version = model_version or settings.default_model_version
-        self._pca: PCAModel | None = None
-        self._hmm: HMMModel | None = None
-
-    @property
-    def pca(self) -> PCAModel:
-        if self._pca is None:
-            self._pca = PCAModel.load(self.version)
-        return self._pca
+with get_sync_cursor() as cur:
+    cur.execute(sql, row)
 ```
+- Context manager ensures cleanup on exception
+
+## Configuration
+
+**Environment Variables:** `config/settings.py`
+- Loaded via Pydantic Settings
+- Case-insensitive
+- File: `.env` (example: `.env.example`)
+- Never commit secrets
+
+**Settings Class:**
+- Singleton: `@lru_cache` on `get_settings()`
+- Tests must call `get_settings.cache_clear()` after env changes
+- Property methods for computed values (database_url, async_database_url)
+
+**Thresholds:** All ML/algorithm parameters in Settings
+- Prefixed: `pipeline_drift_*`, `signal_confidence_*`, `orchestrator_*`, `garch_vol_*`
+- Overridable via environment variables
+- Default values suitable for local development
+
+## Shared Principles
+
+**DRY:**
+- Auth logic centralized in `api/auth.py` → used via Depends()
+- API endpoints in `frontend/src/lib/api.js` → imported everywhere
+- DB queries in `database/queries.py`
+
+**Single Responsibility:**
+- Route handlers call services
+- Services contain business logic
+- Database queries are pure SQL
+- Middleware handles cross-cutting concerns
+
+**Fail Fast:**
+- Validate at entry point (route, middleware)
+- Early raises with clear messages
+- Database read failures propagate as HTTP errors
 
 ---
 
-*Convention analysis: 2026-03-18*
+*Convention analysis: 2026-03-28*

@@ -1,320 +1,461 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-18
+**Analysis Date:** 2026-03-28
 
-## Tech Debt
+## CRITICAL SECURITY ISSUES
 
-**Credential Exposure in source code:**
-- Issue: Owner API key hardcoded in `api/auth.py` line 86
-- Files: `api/auth.py`
-- Impact: Master key exposed; if repo is leaked or cloned, attacker has full system access
-- Fix approach: Move `owner_api_key` to environment variables only, never embed in code. Use Settings pattern from pydantic-settings (already in place for other keys)
+### Secrets Committed to Repository
 
-**Duplicate alerting logic:**
-- Issue: Two separate alert dispatch systems running — `services/alerting.py` and `services/alerts.py`
-- Files: `data/pipelines/daily_pipeline.py` lines 224-230 and 233-244
-- Impact: Alerts may fire twice; confusion about which system is authoritative; maintenance burden
-- Fix approach: Consolidate into single alerting module. Choose one implementation path, remove the other.
-
-**WebSocket connection state not persisted across restarts:**
-- Issue: `_connections` set in `api/routes/websocket.py` is in-memory only
-- Files: `api/routes/websocket.py` line 24
-- Impact: On container restart, all connected clients receive stale/broken connection; no reconnection broadcasting; clients stuck on disconnect waiting for next pipeline run
-- Fix approach: Use Redis pub/sub or message broker for horizontal scaling; document that WebSocket is best-effort, clients should auto-reconnect (already implemented)
-
-**Naive in-process FRED cache:**
-- Issue: FRED data cached in `_series_cache` dict (`data/ingestion/fred_client.py` line 24) without expiration cleanup
-- Files: `data/ingestion/fred_client.py`
-- Impact: Memory leak over time; stale cached data returned if TTL check fails; no cache invalidation on retraining
-- Fix approach: Implement periodic cleanup task (prune expired entries every 24h). Or use Redis with automatic TTL.
-
-**Model version migration incomplete:**
-- Issue: Code checks for `version == "v1"` to use different feature columns (`data/pipelines/daily_pipeline.py` line 160)
-- Files: `data/pipelines/daily_pipeline.py`, `data/processing/feature_engineering.py`
-- Impact: Hard-coded version check; difficult to add v3+; brittle version handling
-- Fix approach: Move version-specific feature mappings to a registry dict: `FEATURE_MAPS = {"v1": [...], "v2": [...]}`
-
-**Database schema lacks constraints:**
-- Issue: `macro_regimes.regime` and `macro_regimes.volatility_state` are TEXT without CHECK constraints
-- Files: `database/schema.sql` lines 74, 80
-- Impact: Invalid regime values (typos, garbage) silently persist; downstream queries may break if unexpected regime names appear
-- Fix approach: Add CHECK constraints: `CHECK (regime IN ('expansion', 'tightening', 'risk_off', 'recovery'))` and similar for volatility_state
-
-**Rate limiter in-memory counter vulnerable to race conditions:**
-- Issue: Anonymous IP counter in `_anon_counters` dict (line 219) incremented without locking in async context
-- Files: `api/middleware/rate_limit.py` lines 218-219
-- Impact: Under high concurrency, multiple requests from same IP may bypass rate limit (TOCTOU race)
-- Fix approach: Use atomic database operations or Redis INCR for all counters (authenticated path already uses DB)
+**Issue:** API keys and cryptographic material checked into version control.
+- Files: `.env` (present in repo despite `.gitignore`)
+  - Contains: `BREVO_API_KEY`, `MTA_SIGNING_KEY_HEX`, `FRED_API_KEY`, etc.
+- Impact: CRITICAL — any clone/leak of repository exposes all API credentials to attackers
+- Root cause: `.env` committed despite being in `.gitignore` (file already exists in repo history)
+- Fix approach:
+  1. Immediately rotate all exposed API keys (BREVO, FRED, MTA signing key)
+  2. Remove `.env` from git history: `git filter-branch --tree-filter 'rm -f .env'` or BFG
+  3. Add pre-commit hook to prevent `.env` commits
+  4. Enforce `.env` exclusion in CI/CD pipeline
+  5. Document secrets management: use environment-only (Docker secrets, K8s Secrets, Vault)
 
 ---
 
-## Known Bugs
+### Lemon Squeezy Webhook Signature Validation Bypass
 
-**Data lag guard off-by-one in comparison:**
-- Symptoms: Pipeline claims data_lag=true when FRED is only 2 days stale; should allow up to 3 days
-- Files: `data/pipelines/daily_pipeline.py` line 147
-- Trigger: Run pipeline when latest FRED data is from 2 days ago
-- Workaround: None — pipeline halts with partial result. Manually run `scripts/retrain_models.py` to clear stale models
-
-**HMM model not found error crashes pipeline without fallback:**
-- Symptoms: "Module not found: hmm_v2.pkl" causes pipeline failure instead of degraded inference
-- Files: `models/hmm_model.py` line 100 (load method)
-- Trigger: Run pipeline with `DEFAULT_MODEL_VERSION=v2` but artifact doesn't exist (e.g., retraining not completed)
-- Workaround: Use environment variable to point to valid model version, or copy from backup
-
-**WebSocket broadcasts swallow exceptions silently:**
-- Symptoms: Connected clients don't receive updates if a single client's connection fails
-- Files: `api/routes/websocket.py` lines 55-56 (catch-all in broadcast_regime)
-- Trigger: Client connection in stale state (half-closed); sending causes exception
-- Workaround: Client-side auto-reconnect logic in `useRegimeSocket.js` handles this partially
-
-**Timezone mismatch in rate limit reset:**
-- Symptoms: Rate limit resets at different time than user expects if system is not in UTC
-- Files: `api/middleware/rate_limit.py` line 66 (uses date.today() not UTC-aware)
-- Trigger: Run on non-UTC system; rate limit resets at local midnight not UTC midnight
-- Workaround: Always run in UTC timezone container or set TZ=UTC in env
+**Issue:** Webhook silently returns `True` when `LS_WEBHOOK_SECRET` not set → subscription fraud risk.
+- Files: `api/routes/billing.py` line 259-261
+- Code:
+  ```python
+  def _ls_verify_signature(raw_body: bytes, signature: str) -> bool:
+      secret = os.getenv("LS_WEBHOOK_SECRET", "").strip()
+      if not secret:
+          logger.warning("LS_WEBHOOK_SECRET not set — skipping signature check")
+          return True  # ← ALLOWS UNAUTHENTICATED WEBHOOKS
+  ```
+- Attack vector: Attacker sends forged webhook event with `{"variant_name": "pro", "user_email": "victim@example.com"}` → victim's tier upgraded without payment
+- Impact: CRITICAL — complete bypass of billing integrity
+- Fix approach:
+  1. Make `LS_WEBHOOK_SECRET` required in production settings
+  2. Raise `HTTPException(500)` if secret missing (fail closed, not open)
+  3. Add webhook signature validation test
+  4. Log all webhook accepts (for audit trail of fraud attempts)
+  5. Add monitoring alert: "Unsigned LS webhook received"
 
 ---
 
-## Security Considerations
+### OTP Brute Force — No Rate Limiting on Auth Endpoints
 
-**API key transmitted in plaintext over HTTP (non-prod only):**
-- Risk: If frontend runs over HTTP (local dev), API keys visible in browser history, referer headers, logs
-- Files: `frontend/src/lib/api.js`
-- Current mitigation: Header-based auth only (not query params); dev mode auto-enabled locally
-- Recommendations: Enforce HTTPS in production; add CSP headers; rotate dev keys regularly
-
-**Database credentials in environment variables (standard practice, acceptable):**
-- Risk: `.env` file contains `DB_PASSWORD` in plaintext
-- Files: `config/settings.py` lines 34-38
-- Current mitigation: `.env` listed in `.gitignore`; not committed to repo
-- Recommendations: Use secrets manager (e.g., AWS Secrets, Vault) in production; audit `.env` file permissions
-
-**FRED API key in plaintext environment:**
-- Risk: FRED key has read-only access but is valuable; if leaked, attacker can query economic data (low impact but should be rotated)
-- Files: `data/ingestion/fred_client.py` line 31
-- Current mitigation: Key scoped to FRED API only (no write access); short TTL on cached data
-- Recommendations: Rotate quarterly; log usage; consider using read-only service account
-
-**Owner key stored in settings with no audit trail:**
-- Risk: Owner key grants full system access (all tiers, no rate limits, all features)
-- Files: `api/auth.py` line 83-90; `config/settings.py` line 73
-- Current mitigation: Hardcoded email check (line 86) assumes only internal access
-- Recommendations: Implement key rotation mechanism; log all owner-key requests; use separate owner DB key with audit logging
-
-**Paddle webhook secret not validated if missing:**
-- Risk: If `paddle_webhook_secret` is empty string, webhook validation may be bypassed
-- Files: `config/settings.py` line 77
-- Current mitigation: None detected
-- Recommendations: Make `paddle_webhook_secret` required in production settings; validate in webhook handler
+**Issue:** 6-digit OTP codes brute-forceable on `/v1/auth/verify` and `/v1/auth/recover/verify` endpoints.
+- Files: `api/routes/auth.py` lines 92-105 (verify), 192-206 (recover/verify)
+- Rate limit status: Both endpoints exempt from `_EXEMPT_PATHS` in `api/middleware/rate_limit.py` line 42
+  ```python
+  "/v1/auth/register", "/v1/auth/recover", "/v1/auth/recover/verify",
+  ```
+- Attack: Attacker can submit 10⁶ possible codes (1-999999) with no delay; brute force takes ~minutes on high-concurrency load
+- Impact: CRITICAL — account takeover for any user
+- Fix approach:
+  1. Remove `/v1/auth/recover/verify` from exempt paths; apply rate limiting
+  2. Add per-email brute-force protection: max 5 failed attempts per email per hour
+  3. Implement exponential backoff: 1s after 1st failure, 5s after 2nd, 30s after 3rd, etc.
+  4. Store failed attempts in database (not in-memory; survives restarts)
+  5. Add test: attempt 6 wrong codes, verify 7th is rejected even if correct
+  6. Monitor: alert on >3 failed verifications for same email within 1h
 
 ---
 
-## Performance Bottlenecks
+### Synchronous psycopg2 in Async FastAPI — Thread Pool Starvation
 
-**PCA model transform recomputed on every request:**
-- Problem: In backtest endpoint, PCA transformation applied fresh for each date window instead of cached
-- Files: `api/routes/backtest.py` lines 63-71; `services/backtest.py` (full transform applied)
-- Cause: No caching of PCA outputs; full 60+ day feature matrix retransformed for historical data
-- Improvement path: Cache transformed factor time series in database or disk; reuse during backtest
-
-**FRED cache TTL only 1 hour — frequent re-fetches:**
-- Problem: FRED data published daily or less frequently; 1-hour cache means 24 redundant API calls/day
-- Files: `data/ingestion/fred_client.py` line 25
-- Cause: Conservative cache window doesn't account for FRED publish schedule
-- Improvement path: Increase TTL to 23 hours; add manual invalidation on upstream alert
-
-**Database queries not indexed on time ranges:**
-- Problem: `fetch_regime_history(limit=2)` scans full table without index
-- Files: `database/queries.py` (read operations); `database/schema.sql` (no indexes created)
-- Cause: Schema uses TimescaleDB hypertables but no explicit indexes defined
-- Improvement path: Add indexes on `macro_regimes(time DESC)`, `macro_features(time DESC)` for range queries
-
-**HMM predict_proba called twice per pipeline run:**
-- Problem: `predict_proba()` called once (line 191), but if GARCH model missing, classifier may call predict again implicitly
-- Files: `data/pipelines/daily_pipeline.py` lines 191, 202
-- Cause: Inefficient regime classification logic; redundant matrix operations
-- Improvement path: Store proba result; reuse in classifier.classify()
-
-**WebSocket broadcast iterates all clients synchronously:**
-- Problem: If 10k clients connected, broadcast blocks until all sends complete
-- Files: `api/routes/websocket.py` lines 46-58
-- Cause: Synchronous loop; no batching or async gather
-- Improvement path: Use `asyncio.gather()` for parallel sends; implement backpressure handling
+**Issue:** All database queries use synchronous `psycopg2` (blocking I/O) in async context.
+- Files: `database/connection.py` (ThreadedConnectionPool), used throughout `api/routes/`
+- Problem: Blocking DB calls consume uvicorn worker threads; under high concurrency, thread pool exhausts → API hangs
+- Configuration: `_POOL_MIN = 2, _POOL_MAX = 10` (line 28-29)
+  - With 1 concurrent user per thread: max 10 users before queueing
+  - Under 1000 concurrent WebSocket clients + 100 API users → guaranteed thread starvation
+- Impact: HIGH — API becomes unresponsive during load
+- Scaling limit: ~50-100 concurrent requests before degradation
+- Fix approach:
+  1. Migrate to async PostgreSQL client: `asyncpg` (drop-in replacement)
+  2. Convert all queries to async: `async def get_user(...) → dict`
+  3. Use `asyncpg` connection pool with configurable min/max
+  4. Add load test: 1000 concurrent requests; verify <100ms p99 latency
+  5. Temporary mitigation: Increase `_POOL_MAX` to 50, run multiple API containers with load balancer
 
 ---
 
-## Fragile Areas
+### No Rate Limiting on OTP Generation (Resource Exhaustion)
 
-**Feature engineering depends on exact column order:**
+**Issue:** `/v1/auth/register` and `/v1/auth/recover` endpoints exempt from rate limiting.
+- Files: `api/middleware/rate_limit.py` line 42
+- Exempt paths:
+  ```python
+  "/v1/auth/register", "/v1/auth/recover", "/v1/auth/recover/verify",
+  ```
+- Attack: Attacker can call `/register` with unlimited email addresses → email spam DOS, database bloat
+- Impact: MEDIUM-HIGH — denial of service; email server overload
+- Fix approach:
+  1. Apply rate limiting to `/register` and `/recover` per IP (not exempt)
+  2. Suggested limits:
+     - Anonymous IP: 5 registrations/hour
+     - Registered user: 10 recovery requests/day
+  3. Add monitoring: alert if >100 registrations/hour from single IP
+  4. Implement email verification cleanup: auto-delete unverified registrations after 24h
+
+---
+
+### No Database Replication (Single Point of Failure)
+
+**Issue:** Single PostgreSQL instance, no replication or failover.
+- Files: `docker-compose.yml` line 5-24 (single `timescaledb` service)
+- Current state: `timescale_data` volume (local or single-host only)
+- Impact: HIGH — any database outage = API down; no recovery
+- Fix approach:
+  1. Implement PostgreSQL streaming replication (Primary + Replica)
+  2. Use Patroni or PgBouncer for automatic failover
+  3. Test failover: stop primary, verify replica takes over
+  4. Add monitoring: alert if replica lag > 1 second
+  5. Document backup strategy: daily pg_dump to S3 (current: none)
+
+---
+
+## High-Priority Security & Reliability Issues
+
+### Model Artifacts Volume Writable from API Container — Model Substitution Risk
+
+**Issue:** `model_artifacts` volume mounted writable to API container; attacker can replace trained models.
+- Files: `docker-compose.yml` line 45
+  ```yaml
+  volumes:
+    - model_artifacts:/app/models/artifacts  # writable so retrain works
+  ```
+- Attack: Attacker with API container access (or RCE) replaces `pca_v2.pkl`, `hmm_v2.pkl` → model produces attacker-controlled regime signals
+- Impact: HIGH — signal integrity compromised; can induce false trading signals
+- Fix approach:
+  1. Separate read-only model serving from retraining process
+  2. Create separate retraining container with write access to artifacts
+  3. API container mounts artifacts as read-only
+  4. Implement model signing: `sign_model()` writes `.sig` file; `load_model()` verifies signature before use
+  5. Hash verification: compute SHA256 of model files on startup; alert if mismatch
+
+---
+
+### No CSRF Protection on State-Changing Endpoints
+
+**Issue:** POST endpoints (`/webhook/set`, `/billing/checkout`, etc.) accept requests without CSRF tokens.
+- Files: `api/main.py` (no CsrfMiddleware)
+- Vulnerable endpoints:
+  - `POST /v1/webhook/set` — changes webhook URL
+  - `POST /v1/billing/checkout` — initiates payment
+  - `POST /v1/auth/rotate` — rotates API key
+- Attack: Attacker tricks authenticated user into visiting malicious site; site posts to `/webhook/set` with attacker's URL → user's signals sent to attacker
+- Impact: MEDIUM — webhook hijacking, state changes without user consent
+- Mitigating factors: API key in header (not cookie), so CSRF less likely than traditional web apps
+- Fix approach:
+  1. Add CSRF token to all POST/PUT/DELETE endpoints
+  2. Implementation options:
+     - Use double-submit cookie pattern (API key + CSRF token)
+     - For SPA: issue CSRF token on `/auth/me`, require in `X-CSRF-Token` header
+  3. Exempt endpoints: internal webhooks (Paddle, LS)
+  4. Test: attempt CSRF on `/webhook/set`, verify rejected without token
+
+---
+
+### No GDPR Right to Erasure Endpoint
+
+**Issue:** No endpoint to delete user data; violates GDPR Article 17.
+- Files: `database/queries.py`, `api/routes/` (no delete operations)
+- Current state: Users can rotate keys but never delete account
+- Impact: MEDIUM-LEGAL — GDPR compliance gap
+- Fix approach:
+  1. Add `DELETE /v1/auth/account` endpoint (requires API key auth)
+  2. Implement hard deletion: remove from `users`, `api_keys`, webhooks
+  3. Soft delete alternative: mark user as deleted; zero out PII; retain logs
+  4. Test: create user → delete → verify inaccessible
+  5. Document in API: "Right to be forgotten: request account deletion"
+
+---
+
+## Medium-Priority Issues
+
+### No Prometheus Metrics / Observability
+
+**Issue:** No metrics collection; can't observe API performance, error rates, or pipeline health.
+- Files: No metrics middleware found in `api/main.py`
+- Current observability: Logs only
+- Impact: MEDIUM — ops team blind to issues until they cause outages
+- Fix approach:
+  1. Integrate `prometheus-client` into FastAPI
+  2. Add metrics:
+     - Request latency histogram: `request_duration_seconds`
+     - Error rates: `http_requests_total{status}`
+     - DB connection pool: `db_pool_connections{state}`
+     - Pipeline run duration: `pipeline_duration_seconds`
+     - Rate limit hits: `rate_limit_exceeded_total`
+  3. Export endpoint: `/metrics` for Prometheus scraping
+  4. Dashboard: Grafana for API latency, error rates, pipeline status
+
+---
+
+### No Automated Pipeline Failure Alerting
+
+**Issue:** Pipeline failures logged but not alerted; ops team unaware until users complain.
+- Files: `data/pipelines/daily_pipeline.py` (logs errors but doesn't notify)
+- Current state: `logger.error()` calls but no Slack/email alerts
+- Impact: MEDIUM — delayed response to signal delivery failures
+- Fix approach:
+  1. Add alerting on pipeline failure:
+     - Check `pipeline_runs.status = 'error'` every 5 minutes
+     - Alert if status != 'success' after scheduled run time (18:30 UTC)
+  2. Channels: Slack → #macropulse-alerts, PagerDuty for on-call
+  3. Include in alert: error message, run duration, data lag
+  4. Test: simulate pipeline failure, verify alert fires within 5 minutes
+
+---
+
+### Limited Test Coverage — Auth, Webhooks, Migrations Untested
+
+**Issue:** Critical paths have no automated tests.
+- Files: `tests/test_pipeline_quality.py` (only pipeline tests; no auth, webhook, migration tests)
+- Missing coverage:
+  - `api/routes/auth.py` — registration, verification, key rotation
+  - `api/routes/billing.py` — Paddle/LS webhook handlers
+  - `database/migrations/` — schema changes not tested
+  - `api/middleware/rate_limit.py` — race conditions not tested
+- Impact: HIGH — bugs discovered in production (auth bypass, webhook failures)
+- Fix approach:
+  1. Add test files:
+     - `tests/test_auth_registration.py` — register, verify, recover flow
+     - `tests/test_billing_webhooks.py` — Paddle/LS webhook mocking
+     - `tests/test_rate_limiting.py` — concurrent requests, edge cases
+     - `tests/test_migrations.py` — run migrations on test DB, verify schema
+  2. Coverage target: 80%+ for `api/` and `database/`
+  3. CI/CD gate: fail deployment if coverage drops
+
+---
+
+### Timezone Bug in Rate Limit Reset
+
+**Issue:** Rate limit reset uses `dt.date.today()` (system timezone) instead of UTC.
+- Files: `api/middleware/rate_limit.py` line 71
+  ```python
+  def _reset_ts() -> int:
+      tomorrow = dt.date.today() + dt.timedelta(days=1)  # ← system timezone
+  ```
+- Impact: MEDIUM — if API server in non-UTC timezone, rate limit resets at wrong time
+- Fix approach:
+  1. Use UTC-aware datetime:
+     ```python
+     tomorrow = dt.datetime.now(dt.timezone.utc).date() + dt.timedelta(days=1)
+     ```
+  2. Ensure container runs in UTC: `TZ=UTC` in docker-compose
+  3. Test: run in non-UTC timezone, verify reset at midnight UTC
+
+---
+
+### WebSocket Broadcasts Swallow Exceptions
+
+**Issue:** Exception in one client's send breaks broadcast loop for all clients.
+- Files: `api/routes/websocket.py` lines 55-58 (catch-all exception handler)
+- Code:
+  ```python
+  try:
+      await client_conn.send_json(...)
+  except Exception:
+      pass  # ← silently drops failed client
+  ```
+- Impact: MEDIUM — clients miss updates if previous client connection stale
+- Fix approach:
+  1. Remove failed connection from set on send error
+  2. Log errors: `logger.error("WebSocket send failed for %s", client_conn.client, exc_info=True)`
+  3. Graceful degradation: send to all successful clients, log failed ones
+  4. Test: disconnect client mid-broadcast, verify other clients receive update
+
+---
+
+## Medium-Priority Tech Debt
+
+### Duplicate Alerting Logic
+
+**Issue:** Two separate alert dispatch systems.
+- Files: `services/alerting.py` and `services/alerts.py`
+- Impact: MEDIUM — code duplication; confusion about which is authoritative
+- Fix approach:
+  1. Consolidate into single `services/alerts.py`
+  2. Remove one implementation
+  3. Update all callers in `data/pipelines/daily_pipeline.py`
+
+---
+
+### In-Process FRED Cache Unbounded Growth
+
+**Issue:** FRED data cached in memory dict without cleanup.
+- Files: `data/ingestion/fred_client.py` line 24
+- Problem: Cache grows forever; after 1 year, may consume gigabytes
+- Impact: MEDIUM — memory leak; stale data if TTL check fails
+- Fix approach:
+  1. Add periodic cleanup: every 24 hours, remove entries older than 24 hours
+  2. Or switch to Redis with automatic expiration
+  3. Log cache size: `logger.info("FRED cache size: %.1f MB", cache_memory_estimate())`
+
+---
+
+### Model Version Migration Incomplete
+
+**Issue:** Hard-coded feature column mappings for v1 vs v2; no registry.
+- Files: `data/pipelines/daily_pipeline.py` line 160
+- Problem: Adding v3+ requires code changes in multiple places
+- Impact: MEDIUM — brittle; error-prone
+- Fix approach:
+  1. Create version registry:
+     ```python
+     FEATURE_MAPS = {
+         "v1": ["col1", "col2", ...],
+         "v2": ["col1", "col2", ...],
+     }
+     ```
+  2. Use in pipeline: `cols = FEATURE_MAPS[DEFAULT_MODEL_VERSION]`
+
+---
+
+### Database Schema Lacks Constraints
+
+**Issue:** `macro_regimes.regime` and `volatility_state` are TEXT without CHECK constraints.
+- Files: `database/schema.sql` line 74, 80
+- Problem: Invalid regime values (typos, garbage) silently persist
+- Impact: MEDIUM — invalid data may break downstream queries
+- Fix approach:
+  1. Add CHECK constraints:
+     ```sql
+     ALTER TABLE macro_regimes ADD CHECK (
+       regime IN ('expansion', 'tightening', 'risk_off', 'recovery')
+     );
+     ```
+  2. Enforce in code: validate before INSERT
+
+---
+
+### Rate Limiter Anonymous Counter Has Race Condition
+
+**Issue:** In-memory `_anon_counters` dict incremented without locking in async context.
+- Files: `api/middleware/rate_limit.py` line 219 (inside async lock, actually safe)
+- Current code: Uses `_anon_locks[client_ip]` so actually protected
+- Status: NOT A BUG — false alarm (already uses async locks correctly)
+
+---
+
+### Feature Engineering Column Order Fragile
+
+**Issue:** Feature matrix column order assumed consistent; no validation.
 - Files: `data/processing/feature_engineering.py`, `data/pipelines/daily_pipeline.py` line 161
-- Why fragile: If FRED or market data fetches columns in different order, feature matrix will be silently misaligned; model inputs wrong
-- Safe modification: Validate column order before PCA transform; add assertions `X.columns == MODEL_FEATURE_COLS`
-- Test coverage: No column-order validation tests; only end-to-end pipeline tests
+- Problem: If FRED fetches columns in different order, features misaligned
+- Impact: MEDIUM — silent model input corruption
+- Fix approach:
+  1. Validate after fetch:
+     ```python
+     expected_cols = ["d_sp500", "d_vix", ...]
+     assert list(X.columns) == expected_cols, f"Column mismatch"
+     ```
+  2. Test: verify column order in test suite
 
-**GARCH model optional and falls back silently:**
+---
+
+## Low-Priority Issues
+
+### HMM Model Optional Fallback Inconsistent
+
+**Issue:** Pipeline falls back to VIX threshold if GARCH missing; backtest may not have same logic.
 - Files: `data/pipelines/daily_pipeline.py` lines 164-175
-- Why fragile: If GARCH model missing, code falls back to VIX threshold. Backtest endpoint may not have same logic.
-- Safe modification: Implement explicit fallback strategy; test both paths separately
-- Test coverage: No tests for missing GARCH scenario; only happy path tested
+- Impact: LOW — inconsistent behavior; only affects degraded scenarios
+- Fix approach: Document fallback strategy; test both paths separately
 
-**Pipeline orchestrator tight coupling to database:**
-- Files: `data/pipelines/daily_pipeline.py` (line 66-75 _log_run calls queries directly)
-- Why fragile: If queries fail, pipeline logs fail but pipeline continues (good). If database is down, pipeline blocks.
-- Safe modification: Add circuit breaker for DB writes; make pipeline succeed even if logging fails
-- Test coverage: No tests with simulated DB failure; only integration tests
+---
 
-**Model artifact paths hardcoded in load methods:**
-- Files: `models/hmm_model.py` line 100, `models/pca_model.py` (similar), `models/regime_classifier.py` (similar)
-- Why fragile: If artifacts directory moved or model version renamed, all load calls fail with cryptic "file not found" errors
-- Safe modification: Add validation method to check artifact existence before pipeline starts; raise early with clear error
-- Test coverage: Artifacts assumed to exist; no tests with missing artifacts
+### Naive In-Memory FRED Cache (1-hour TTL)
 
-**Validation logic split across three functions with inconsistent thresholds:**
-- Files: `services/validation.py` lines 38-128
-- Why fragile: NaN ratio threshold (0.3) hardcoded; z-score outlier (6.0) hardcoded; stale data check (10 rows) hardcoded
-- Safe modification: Move thresholds to Settings; parameterize validation functions
-- Test coverage: Some unit tests exist but threshold values not tested against boundary cases
+**Issue:** FRED data published daily; 1-hour cache causes 24 redundant API calls/day.
+- Files: `data/ingestion/fred_client.py` line 25
+- Impact: LOW — wastes API quota; minor cost
+- Fix approach: Increase TTL to 23 hours
+
+---
+
+### PCA Transform Recomputed on Every Backtest Request
+
+**Issue:** Full PCA transformation applied fresh for each backtest window.
+- Files: `api/routes/backtest.py` lines 63-71
+- Impact: LOW — slower backtest performance
+- Fix approach: Cache transformed factor time series in database
+
+---
+
+### In-Process WebSocket Connections Not Persisted
+
+**Issue:** `_connections` set in `api/routes/websocket.py` in-memory only.
+- Files: `api/routes/websocket.py` line 24
+- Impact: LOW — on container restart, clients disconnect (but client-side auto-reconnect handles this)
+- Fix approach: Use Redis pub/sub for horizontal scaling
+
+---
+
+### Model Artifact Paths Hardcoded
+
+**Issue:** Model load methods reference hardcoded paths.
+- Files: `models/hmm_model.py` line 100, similar in other models
+- Impact: LOW — if paths change, load fails
+- Fix approach: Add validation method to check artifact existence before pipeline starts; raise early with clear error
+
+---
+
+### Paddle Webhook Secret Validation Missing
+
+**Issue:** If `paddle_webhook_secret` empty, webhook validation may be bypassed (similar to LS issue).
+- Files: `config/settings.py` line 77
+- Note: Unlike LS, Paddle handler does check: `verify_webhook()` in `services/paddle.py`
+- Status: ALREADY MITIGATED — Paddle handler properly validates
 
 ---
 
 ## Scaling Limits
 
-**In-process WebSocket connection set limited by single process memory:**
-- Current capacity: ~100k connections per process (rough estimate, ~1MB per connection)
-- Limit: Machine memory; typical server 8-32GB → 8k-32k stable connections
-- Scaling path: Move to Redis pub/sub or Kafka; separate WebSocket server from API; use load balancer
+**WebSocket Connections:**
+- Current capacity: ~100k per process (1MB per connection estimate)
+- Scaling path: Redis pub/sub; separate WebSocket server
 
-**FRED cache grows unbounded:**
-- Current capacity: Depends on number of series × date ranges cached; typical ~10-100 MB for 1 year of 20 series
-- Limit: Process memory; ~5GB available in container → cache fills after 50-500 days runtime
-- Scaling path: Implement periodic cache cleanup; use Redis with eviction policy; switch to persistent cache store
+**Database Connections:**
+- Current capacity: 10 concurrent queries
+- Scaling path: Make `_POOL_MIN/_POOL_MAX` configurable; use connection pooling proxy (PgBouncer)
 
-**Database connection pool size hardcoded at 2-10:**
-- Current capacity: 10 concurrent queries; queue beyond that
-- Limit: Database connection limits (typically 100 per user in PostgreSQL); thread pool in API
-- Scaling path: Make `_POOL_MIN` and `_POOL_MAX` configurable in Settings; add connection pool monitoring
-
-**Rate limiter in-memory anonymous counter grows with unique IPs:**
-- Current capacity: ~1 million IPs → ~100MB memory for counter dict
-- Limit: Process memory; fills after 1M unique IPs per day
-- Scaling path: Use Redis INCR for all counters (authenticated path already does); implement TTL
-
-**Daily pipeline runtime increases with historical data lookback:**
-- Current capacity: 60-day lookback → ~5-10s pipeline run; 5-year backtest → 120s+
-- Limit: Scheduler timeout; if pipeline > 1 hour, next scheduled run may overlap
-- Scaling path: Implement incremental feature computation; cache intermediate results; add async pipeline mode
+**Anonymous Rate Limiter Memory:**
+- Current capacity: ~1 million unique IPs (~100MB)
+- Scaling path: Switch to Redis INCR for all counters
 
 ---
 
-## Dependencies at Risk
+## Summary: Fix Priority
 
-**hmmlearn (~0.3.x) is unmaintained:**
-- Risk: No updates in 2+ years; potential for model instability with scikit-learn API changes
-- Impact: If scikit-learn bumped to 1.5+, HMM fitting may break
-- Migration plan: Monitor scikit-learn release notes; consider `pomegranate` or `statsmodels` HMM as backup
+**CRITICAL (Fix immediately):**
+1. Remove committed secrets; rotate all API keys
+2. Fix Lemon Squeezy webhook validation bypass
+3. Add rate limiting to OTP verification endpoints
 
-**fredapi (0.5.x) minimal maintenance:**
-- Risk: Low activity; may lag behind FRED API changes (unlikely but possible)
-- Impact: FRED data fetches may fail silently or return incomplete data
-- Migration plan: Switch to direct HTTP requests using `httpx` already in dependencies; wrap FRED client
+**HIGH (Fix before production):**
+4. Migrate to async PostgreSQL (asyncpg)
+5. Add database replication + failover
+6. Implement model signing / artifact integrity
+7. Add GDPR data deletion endpoint
+8. Add CSRF protection to state-changing endpoints
 
-**anthropic SDK version lock (>=0.40,<2.0) permissive:**
-- Risk: Major version bump (1.0, 2.0) may have breaking changes
-- Impact: Anthropic commentary endpoint may fail if SDK upgraded
-- Migration plan: Pin to ~0.40.0 for stability; add version constraints in tests
+**MEDIUM (Fix in next phase):**
+9. Add Prometheus metrics
+10. Implement pipeline failure alerting
+11. Add auth/webhook/migration tests
+12. Fix timezone bug in rate limit reset
+13. Fix WebSocket broadcast exception handling
 
-**pandas 2.2+ removed some legacy APIs:**
-- Risk: Code using deprecated DataFrame methods may break on minor version bump
-- Impact: Feature engineering pipeline may fail with AttributeError
-- Migration plan: Audit codebase for pandas deprecation warnings; use `-W ignore::FutureWarning` sparingly; test with latest pandas quarterly
-
----
-
-## Missing Critical Features
-
-**No circuit breaker for external API calls (FRED, Anthropic, Paddle):**
-- Problem: If FRED API is down, pipeline fails immediately; no graceful degradation
-- Blocks: Real-time signal delivery during market events when data is most important
-- Approach: Implement circuit breaker pattern (e.g., `PyBreaker`) for FRED; return last-known-good regime on failure
-
-**No model monitoring/alerting dashboard:**
-- Problem: Drift metrics computed but not visualized; no alerts if PCA variance drops below threshold
-- Blocks: Operations team can't detect model degradation proactively
-- Approach: Add drift metrics endpoint; expose via dashboard; send alerts if thresholds crossed
-
-**No data lineage or audit trail:**
-- Problem: Can't trace which FRED source data → features → regime output (compliance gap)
-- Blocks: Audit requirements; debugging historical inference failures
-- Approach: Log data source versions; store feature provenance; add audit endpoint
-
-**No model A/B testing framework:**
-- Problem: Can only run one model version at a time; can't compare v1 vs v2 performance on live data
-- Blocks: Gradual rollout of new models; confidence in model improvements
-- Approach: Add multi-version inference; compute metrics for all versions in parallel
+**LOW (Nice to have):**
+14. Increase FRED cache TTL
+15. Add PCA transform caching
+16. Use Redis for WebSocket state
 
 ---
 
-## Test Coverage Gaps
-
-**No integration tests for full pipeline:**
-- What's not tested: End-to-end pipeline with real/mock FRED data, database writes, alerting dispatch
-- Files: `data/pipelines/daily_pipeline.py` (no corresponding test file)
-- Risk: Silent failures if validation logic broken; regression on feature engineering changes
-- Priority: High — pipeline is critical path
-
-**No tests for error handling scenarios:**
-- What's not tested: FRED API timeout, database connection lost, model artifact missing, invalid feature values
-- Files: `services/validation.py`, `data/ingestion/fred_client.py`, `models/hmm_model.py`
-- Risk: Pipeline crashes in production without graceful fallback
-- Priority: High — affects reliability
-
-**No tests for authentication edge cases:**
-- What's not tested: Invalid API key format, expired key, rate limit bypass attempts, concurrent requests
-- Files: `api/auth.py`, `api/middleware/rate_limit.py`
-- Risk: Security vulnerabilities if auth logic broken
-- Priority: High — security critical
-
-**No tests for WebSocket connection drops:**
-- What's not tested: Client disconnect mid-broadcast, stale connection handling, high concurrency
-- Files: `api/routes/websocket.py`, `frontend/src/hooks/useRegimeSocket.js`
-- Risk: Clients stuck in disconnected state; silent failures
-- Priority: Medium — affects user experience
-
-**No UI tests for real-time updates:**
-- What's not tested: Dashboard updates when regime changes, stale data displayed, loading states
-- Files: `frontend/src/components/RegimeCard.jsx`, `frontend/src/views/*.jsx`
-- Risk: Users see outdated regime signals
-- Priority: Medium — affects product perception
-
-**No load tests:**
-- What's not tested: 1k concurrent WebSocket clients, 1k req/sec API load, database connection exhaustion
-- Files: API as a whole
-- Risk: Performance issues discovered only in production
-- Priority: Medium — affects scaling
-
-**No feature validation unit tests:**
-- What's not tested: NaN ratios at boundary (0.29999, 0.30), z-score outliers (5.99, 6.01), stale data patterns
-- Files: `services/validation.py`
-- Risk: Subtle bugs in threshold comparisons; data passes validation when it shouldn't
-- Priority: Medium — affects data quality
-
----
-
-## Architecture Concerns
-
-**Scheduler in-process with API (no separation of concerns):**
-- Issue: Daily pipeline runs in background of API process; blocking the API if pipeline slow
-- Files: `api/main.py` lines 56-66; `services/scheduler.py`
-- Impact: During pipeline run, API requests slow; pipeline can starve if too many concurrent requests
-- Recommendation: Separate scheduler into standalone process; trigger API via webhook when complete
-
-**Model versioning strategy not scalable:**
-- Issue: Hard-coded feature column mappings for v1 vs v2; no registry
-- Files: `data/pipelines/daily_pipeline.py` line 160
-- Impact: Adding v3+ requires code changes in multiple places; error-prone
-- Recommendation: Use version registry pattern (config file or database table)
-
----
-
-*Concerns audit: 2026-03-18*
+*Concerns audit: 2026-03-28*

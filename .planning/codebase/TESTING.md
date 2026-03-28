@@ -1,346 +1,335 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-18
+**Analysis Date:** 2026-03-28
 
 ## Test Framework
 
-**Status:** No formal testing framework detected in codebase.
+**Runner:** pytest
+- Config: `pytest.ini`
+- Python test directory: `tests/`
 
-**Python:**
-- No test runner configured (pytest/unittest not in `requirements.txt` or `pyproject.toml`)
-- No test files found in codebase
-- Development and production code follow the same structure without test separation
+**Test Commands:**
+```bash
+pytest                    # Run all tests
+pytest -v                 # Verbose output
+pytest tests/test_pipeline_quality.py::test_critical_fred_failure_halts  # Single test
+pytest --cov              # With coverage (if coverage plugin installed)
+```
 
-**JavaScript/Frontend:**
-- No test framework configured (no Jest, Vitest, or Playwright config)
-- No test files found in src/
-- Development relies on manual testing and browser dev tools
+**pytest Configuration (`pytest.ini`):**
+```
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts = -q
+```
 
-**Note:** This is a critical gap — the codebase lacks automated testing infrastructure.
+**Assertion Library:** Python standard `assert` statements
 
 ## Test File Organization
 
-**Current state:**
-- No dedicated test directories (`tests/`, `__tests__/`, `*.test.js`, `*.spec.py`)
-- Test infrastructure would need to be established from scratch
+**Location:** `tests/` directory at project root
 
-**Recommended structure (if implemented):**
-- Python tests in top-level `tests/` directory mirroring src structure
-  - `tests/test_api_routes.py` for FastAPI endpoints
-  - `tests/test_auth.py` for authentication
-  - `tests/test_services.py` for business logic
-- JavaScript tests co-located with components or in `src/__tests__/`
+**Current test files:**
+- `tests/test_pipeline_quality.py` — Phase 5 pipeline quality tests for PIPE-01 through PIPE-05
 
-## Error Handling in Code (Current Patterns)
+**Naming Convention:**
+- Test files: `test_*.py`
+- Test functions: `test_*`
+- Test classes: `Test*`
 
-The codebase demonstrates error handling that would need to be validated by tests:
+**Current Structure:**
+```
+tests/
+├── conftest.py                      # Shared pytest fixtures
+└── test_pipeline_quality.py         # Phase 5 pipeline quality tests
+```
 
-**Python Error Scenarios:**
+## Shared Fixtures
 
-1. **Authentication failures** (`api/auth.py`):
-   - Missing API key → 401 Unauthorized
-   - Invalid/revoked key → 403 Forbidden
-   - Dev-mode bypass when no keys configured and DB unreachable
-   - Scenarios that should be tested:
-     - Valid key lookup in database
-     - Expired/revoked key rejection
-     - Owner key special access
-     - Legacy env-key support
-     - Dev-mode activation
+**Location:** `tests/conftest.py`
 
-2. **API tier gating** (`api/deps.py`):
-   - Free-tier users blocked from premium endpoints
-   - Scenarios that should be tested:
-     - Free tier rejection with upgrade message
-     - Paid tier pass-through
-     - Owner tier bypass
+**Available Fixtures:**
 
-3. **Data availability** (`api/routes/analysis.py`):
-   - Missing regime data → 503 Service Unavailable
-   - Analysis computation errors wrapped as 500
-   - Scenarios:
-     - Graceful degradation when data missing
-     - Exception context preservation
-
-4. **Database connection** (`database/connection.py`):
-   - Pool initialization on first use
-   - Connection exhaustion handling
-   - Scenarios:
-     - Pool min/max connections enforced
-     - Concurrent access under load
-     - Graceful connection cleanup
-
-**JavaScript Error Scenarios:**
-
-1. **API fetch failures** (`src/lib/api.js`):
-   - Non-200 response → throw with status/statusText
-   - Network errors
-   - Scenarios:
-     - 4xx errors (auth, not found)
-     - 5xx errors (backend down)
-     - Network timeouts
-
-2. **Hook state management** (`src/hooks/useFetch.js`):
-   - Loading state transitions
-   - Error state capture
-   - Refetch capability
-   - Scenarios:
-     - Loading → data flow
-     - Loading → error flow
-     - Refetch clears error and sets loading
-
-3. **React error boundary** (`src/components/ErrorBoundary.jsx`):
-   - Render errors caught and displayed
-   - Recovery via "try again" button
-   - Console logging of errors
-   - Scenarios:
-     - Error display without blank screen
-     - State recovery after error
-
-## Test Structure (Recommended)
-
-**If testing framework is added, follow these patterns:**
-
-**Python (pytest structure):**
 ```python
-# tests/test_api_auth.py
-import pytest
-from fastapi.testclient import TestClient
-from api.main import app
-
-@pytest.fixture
-def client():
-    return TestClient(app)
-
-def test_require_api_key_missing_header(client):
-    """Missing API key header should return 401."""
-    response = client.get("/v1/regime/current")
-    assert response.status_code == 401
-    assert "X-MacroPulse-Key" in response.json()["detail"]
-
-def test_require_api_key_invalid(client, monkeypatch):
-    """Invalid API key should return 403."""
-    # Mock database lookup to return None
-    def mock_lookup(key):
-        return None
-    monkeypatch.setattr("api.auth._lookup_key", mock_lookup)
-
-    response = client.get("/v1/regime/current", headers={"X-MacroPulse-Key": "invalid"})
-    assert response.status_code == 403
-
-def test_free_tier_endpoint_blocking(client, monkeypatch):
-    """Free tier users should be blocked from premium endpoints."""
-    # Mock API key lookup to return free tier
-    def mock_lookup(key):
-        return {"tier": "free", "user_id": 1}
-    monkeypatch.setattr("api.auth._lookup_key", mock_lookup)
-
-    response = client.get("/v1/backtest", headers={"X-MacroPulse-Key": "test"})
-    assert response.status_code == 403
+@pytest.fixture()
+def mock_fred_df() -> pd.DataFrame:
+    """Minimal FRED DataFrame with all critical columns present and non-NaN."""
+    # 60 business days of FRED data
+    # Columns: WALCL, DGS10, DGS2, RRPONTSYD, WTREGEN, BAMLH0A0HYM2
 ```
 
-**JavaScript (recommended Jest/Vitest structure):**
-```javascript
-// src/__tests__/api.test.js
-import { api } from '../lib/api.js';
-
-describe('api.js', () => {
-  beforeEach(() => {
-    global.fetch = jest.fn();
-    localStorage.clear();
-  });
-
-  describe('apiFetch', () => {
-    it('should throw on non-200 response', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      });
-
-      await expect(api.getCurrentRegime()).rejects.toThrow('API 404: Not Found');
-    });
-
-    it('should include API key header when stored', async () => {
-      localStorage.setItem('mp_api_key', 'test-key-123');
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({})
-      });
-
-      await api.getCurrentRegime();
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/v1/regime/current',
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-MacroPulse-Key': 'test-key-123'
-          })
-        })
-      );
-    });
-  });
-
-  describe('useFetch hook', () => {
-    it('should handle loading and success states', async () => {
-      const { renderHook, waitFor } = require('@testing-library/react');
-      const { useFetch } = require('../hooks/useFetch.js');
-
-      const mockFetch = jest.fn().mockResolvedValue({ data: 'test' });
-      const { result } = renderHook(() => useFetch(mockFetch));
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(null);
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-        expect(result.current.data).toEqual({ data: 'test' });
-      });
-    });
-  });
-});
+```python
+@pytest.fixture()
+def mock_market_df() -> pd.DataFrame:
+    """Minimal market DataFrame with VIX and SP500."""
+    # 60 business days of market data
+    # Columns: vix, sp500, dxy
 ```
 
-## Mocking Strategy
+```python
+@pytest.fixture()
+def mock_hmm_model_converged() -> MagicMock:
+    """Mock HMMModel whose HMM has converged."""
+    # Configured with hmm.monitor_.converged = True
+```
+
+```python
+@pytest.fixture()
+def mock_hmm_model_not_converged() -> MagicMock:
+    """Mock HMMModel whose HMM did NOT converge."""
+    # Configured with hmm.monitor_.converged = False
+```
+
+```python
+@pytest.fixture()
+def mock_garch_model() -> MagicMock:
+    """Mock GARCHModel with pre-fitted _arch_result."""
+    # Returns forecast variance mocked as 0.25
+```
+
+## Test Structure
+
+**Test Organization Pattern:**
+
+All tests in `tests/test_pipeline_quality.py` follow this structure:
+
+1. **Section headers with ASCII dividers:**
+   ```python
+   # ── PIPE-01: Critical FRED failure halts pipeline ─────────────────────
+   ```
+
+2. **Test function naming:** `test_<feature_description>`
+   ```python
+   def test_critical_fred_failure_halts(mock_fred_df, mock_market_df):
+   ```
+
+3. **Test anatomy:**
+   - Arrange: Set up fixtures and mock state
+   - Act: Call the function being tested
+   - Assert: Verify expected behavior
+
+**Example from `test_pipeline_quality.py`:**
+
+```python
+def test_critical_fred_failure_halts(mock_fred_df, mock_market_df):
+    """Pipeline returns status='halted' with stale_data=True when WALCL is all-NaN."""
+    # Arrange
+    mock_fred_df["WALCL"] = np.nan  # all-NaN critical series
+
+    # Act
+    with patch("data.pipelines.daily_pipeline.fetch_all_fred", return_value=mock_fred_df), \
+         patch("data.pipelines.daily_pipeline.fetch_market_data", return_value=mock_market_df), \
+         patch("data.pipelines.daily_pipeline.validate_raw_fred") as mock_val_fred, \
+         patch("data.pipelines.daily_pipeline.validate_market_data") as mock_val_mkt, \
+         patch("data.pipelines.daily_pipeline.queries.insert_pipeline_run"), \
+         patch("data.pipelines.daily_pipeline.alert_drift_warning"):
+        mock_val_fred.return_value = MagicMock(passed=True, errors=[])
+        mock_val_mkt.return_value = MagicMock(passed=True, errors=[])
+        from data.pipelines.daily_pipeline import run_daily_pipeline
+        result = run_daily_pipeline()
+
+    # Assert
+    assert result["status"] == "halted"
+    assert result.get("stale_data") is True
+```
+
+## Mocking Patterns
+
+**Framework:** unittest.mock (MagicMock, patch)
+
+**Imports:**
+```python
+from unittest.mock import MagicMock, patch
+```
 
 **What to Mock:**
 
-1. **External APIs:** FRED API, Anthropic API, Paddle billing
-   - Use mock responses for integration tests
-   - Example: mock `fredapi` client for data ingestion tests
+1. **External data sources:**
+   - `data.pipelines.daily_pipeline.fetch_all_fred()` → return mock FRED DataFrame
+   - `data.pipelines.daily_pipeline.fetch_market_data()` → return mock market DataFrame
+   - `data.pipelines.daily_pipeline.validate_raw_fred()` → return validation result mock
 
-2. **Database connections:** Mock `database.queries` functions
-   - Return test data fixtures instead of real DB queries
-   - Example: mock `fetch_current_regime()` to return test regime data
+2. **Database operations:**
+   - `data.pipelines.daily_pipeline.queries.insert_pipeline_run` → no-op mock
+   - `database.queries.get_api_key_by_hash()` → return key record or None
 
-3. **Service layers:** Mock heavy computation services
-   - Example: mock `RegimeInferenceService.infer()` to return pre-computed results
+3. **Services:**
+   - `data.pipelines.daily_pipeline.alert_drift_warning` → no-op mock
 
-4. **HTTP requests:** Mock `httpx` for external service calls
-   - Mock webhook notifications, email sends, Discord posts
+**Patch Pattern:**
+```python
+with patch("module.path.to.function", return_value=mock_value) as mock_obj:
+    # Test code
+    assert mock_obj.called
+```
 
 **What NOT to Mock:**
 
-1. **Core business logic:** Regime classification, HMM inference
-   - Test with real mathematical outputs
-   - Use fixtures of pre-computed model artifacts
+1. **Core business logic classes:** GARCHModel, HMMModel, PCAModel
+   - Test with real math operations (use fixtures for pre-computed states)
 
-2. **Route handlers:** Test full FastAPI endpoints with real dependency injection
-   - Mock only external services (DB, APIs)
+2. **Pydantic models and validators:** Settings, response schemas
+   - Test directly with real objects
 
-3. **React hooks:** Use actual React rendering in tests
-   - Test state transitions with userEvent/fireEvent, not mocking React
+3. **Python stdlib:** logging, datetime, etc.
+   - Test with real implementations
 
-## Test Fixtures and Factories
+## Test Types
 
-**Recommended patterns (not currently in use):**
+**Unit Tests:**
+- Located in: `tests/test_pipeline_quality.py`
+- Scope: Individual function/method behavior
+- Pattern: Mock dependencies, assert output
+- Example: `test_critical_fred_failure_halts()` — test pipeline halts when FRED data missing
 
+**Integration Tests:**
+- Not yet implemented
+- Would test: Database writes + reads, full pipeline end-to-end
+- Recommendation: Add with containerized PostgreSQL (testcontainers)
+
+**API Tests:**
+- Not yet implemented
+- Would use: `from fastapi.testclient import TestClient`
+- Recommendation: Test route handlers with mocked services
+
+## Settings & Configuration in Tests
+
+**Pattern:** Settings must be cleared between tests that modify environment
+
+**Example from `test_settings_env_override()`:**
 ```python
-# tests/fixtures.py
-import pytest
+def test_settings_env_override():
+    import os
+    from config.settings import get_settings
 
-@pytest.fixture
-def sample_regime_row():
-    """Sample regime record from database."""
-    return {
-        "time": "2024-03-15",
-        "regime": "expansion",
-        "risk_score": 45,
-        "prob_expansion": 0.8,
-        "prob_tightening": 0.1,
-        "prob_risk_off": 0.05,
-        "prob_recovery": 0.05,
-        "volatility_state": "normal",
-        "model_version": "v1",
-    }
-
-@pytest.fixture
-def sample_api_key():
-    """Valid API key record."""
-    return {
-        "user_id": 123,
-        "email": "test@example.com",
-        "tier": "pro",
-        "key_prefix": "mp_test1234",
-        "is_active": True,
-    }
-
-@pytest.fixture
-def free_tier_key():
-    """Free tier API key record."""
-    return {
-        "user_id": 456,
-        "email": "free@example.com",
-        "tier": "free",
-        "key_prefix": "mp_free5678",
-        "is_active": True,
-    }
+    # Must clear cache BEFORE setting env var
+    get_settings.cache_clear()
+    os.environ["GARCH_VOL_LOW"] = "0.3"
+    try:
+        s = get_settings()
+        assert s.garch_vol_low == pytest.approx(0.3)
+    finally:
+        # Restore: remove env var and clear cache
+        del os.environ["GARCH_VOL_LOW"]
+        get_settings.cache_clear()
 ```
 
-## Coverage Targets
+**Key Point:** Cached Settings singleton must be cleared to force re-initialization with new env vars
 
-**Current:** No coverage measurement configured
+## Test Coverage
 
-**Recommended targets (if testing added):**
-- API routes: 80%+ coverage
-- Authentication/authorization: 100% coverage (critical path)
-- Database queries: 70%+ coverage
-- Service layer: 75%+ coverage
-- Frontend components: 60%+ (emphasis on interactive components)
+**Current Status:**
+- No coverage measurement configured
+- Tests exist for: Pipeline quality thresholds, FRED/VIX failure modes, HMM convergence, GARCH refitting, Settings defaults
 
-**Critical paths requiring high coverage:**
-- `api/auth.py` - authentication logic
-- `api/deps.py` - tier gating
-- `database/queries.py` - data access layer
-- `frontend/src/components/ErrorBoundary.jsx` - error handling
+**Areas Tested:**
+- `models/hmm_model.py` — convergence validation
+- `models/garch_model.py` — no-refit behavior on inference
+- `config/settings.py` — threshold defaults and env var overrides
+- `data/pipelines/daily_pipeline.py` — failure modes (critical FRED, VIX, feature engineering)
 
-## Performance Testing Considerations
+**Areas NOT Yet Tested:**
+- API routes (auth, regime, analysis, etc.)
+- Frontend components
+- Database query correctness
+- Service orchestrator logic
+- Email/notification flows
 
-**Areas needing validation:**
+## Testing Phase 5 Features
 
-1. **Database connection pool behavior:**
-   - Min/max connections held
-   - Concurrent query handling
-   - Stress test with rate limits
+**Test Naming Convention:** Tests prefixed with domain (PIPE-01, PIPE-02, etc.)
 
-2. **Inference latency:**
-   - Model loading time
-   - PCA transform throughput
-   - HMM inference speed
+**PIPE-01: Critical FRED failure halts pipeline**
+- Test: `test_critical_fred_failure_halts()` — WALCL all-NaN halts with stale_data=True
+- Test: `test_optional_series_excluded_not_zeroed()` — d_gold, d_oil excluded when unavailable
 
-3. **Frontend performance:**
-   - WebSocket reconnection under poor network
-   - Large history data rendering (1000+ regime records)
-   - Concurrent API requests
+**PIPE-02: VIX failure halts pipeline**
+- Test: `test_vix_failure_halts_pipeline()` — VIX all-NaN halts with stale_data=True
 
-## Gaps and Recommendations
+**PIPE-03: HMM convergence guard**
+- Test: `test_hmm_convergence_check()` — Raises RuntimeError if monitor_.converged is False
 
-**Critical missing test infrastructure:**
+**PIPE-04: GARCH no-refit on inference**
+- Test: `test_garch_no_refit_on_inference()` — Verify _arch_result.forecast() called, not arch_model()
 
-1. **No unit testing framework**
-   - Recommendation: Add pytest to requirements.txt with fixtures and plugins
-   - Setup conftest.py with database test fixtures and mocking
+**PIPE-05: Thresholds in settings**
+- Test: `test_thresholds_in_settings()` — All Phase 5 threshold fields present with correct defaults
+- Test: `test_settings_env_override()` — GARCH_VOL_LOW env var overrides setting value
 
-2. **No integration test setup**
-   - Recommendation: Containerize PostgreSQL for integration tests
-   - Use testcontainers or docker-compose test profile
+## Recommended Test Additions
 
-3. **No API contract testing**
-   - Recommendation: Add Pydantic schema validation tests
-   - Test OpenAPI schema completeness
+**High Priority (Critical Paths):**
 
-4. **No frontend component tests**
-   - Recommendation: Add Vitest + React Testing Library
-   - Focus on user interactions and error states
+1. **Authentication tests (`tests/test_auth.py`):**
+   - Valid API key lookup
+   - Invalid key rejection
+   - Dev-mode bypass
+   - Owner key special access
+   - Rate limit headers
 
-5. **No end-to-end tests**
-   - Recommendation: Consider Playwright for critical user journeys
-   - Test auth flow, dashboard loading, WebSocket connection
+2. **Tier gating tests (`tests/test_deps.py`):**
+   - Free tier endpoint blocking
+   - Starter tier pass-through
+   - Pro tier unlimited access
 
-6. **No performance/load testing**
-   - Recommendation: Add locust or k6 for load testing
-   - Validate rate limits and concurrent connection handling
+3. **Route handler tests (`tests/test_api_routes.py`):**
+   - GET `/v1/regime/current` — returns signed response
+   - GET `/v1/analysis/composite` — orchestrator integration
+   - POST `/v1/backtest` — parameter validation
+
+**Medium Priority:**
+
+4. **Database query tests (`tests/test_queries.py`):**
+   - Upsert semantics verification
+   - Concurrent write handling
+   - Data retrieval completeness
+
+5. **Service tests (`tests/test_services.py`):**
+   - Orchestrator domain signal calculations
+   - Scorecard building
+   - Email template rendering
+
+6. **Frontend tests (`frontend/src/__tests__/`):**
+   - Component rendering with useFetch
+   - Error boundary error capture
+   - API key localStorage persistence
+
+## Test Execution
+
+**Run all tests:**
+```bash
+cd /path/to/macropulse
+pytest
+```
+
+**Run with verbose output:**
+```bash
+pytest -v
+```
+
+**Run single test file:**
+```bash
+pytest tests/test_pipeline_quality.py
+```
+
+**Run single test:**
+```bash
+pytest tests/test_pipeline_quality.py::test_critical_fred_failure_halts
+```
+
+**Run matching pattern:**
+```bash
+pytest -k "hmm_convergence"
+```
+
+**With coverage (if pytest-cov installed):**
+```bash
+pytest --cov=. --cov-report=html
+# Coverage report in htmlcov/index.html
+```
 
 ---
 
-*Testing analysis: 2026-03-18*
+*Testing analysis: 2026-03-28*

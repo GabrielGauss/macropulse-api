@@ -1,343 +1,352 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-03-18
+**Analysis Date:** 2026-03-28
 
 ## Directory Layout
 
 ```
 macropulse/
-├── api/                           # FastAPI application (REST + WebSocket)
-│   ├── main.py                    # App entry point with lifespan + middleware
-│   ├── auth.py                    # API key authentication logic
-│   ├── deps.py                    # Dependency injection (tier requirements)
+├── .planning/
+│   └── codebase/                      # Analysis documents (ARCHITECTURE.md, STRUCTURE.md, etc.)
+│
+├── api/                               # FastAPI application (REST + WebSocket)
+│   ├── main.py                        # App entry point with lifespan + middleware
+│   ├── auth.py                        # API key authentication (SHA-256 hash validation)
+│   ├── deps.py                        # Dependency injection (tier gating)
 │   ├── middleware/
-│   │   └── rate_limit.py          # Rate limiting middleware
-│   ├── routes/                    # 11 routers (regime, auth, billing, etc.)
-│   │   ├── regime.py              # GET /v1/regime/* endpoints
-│   │   ├── websocket.py           # WebSocket /ws/regime
-│   │   ├── auth.py                # Auth + user management
-│   │   ├── billing.py             # Paddle billing integration
-│   │   ├── backtest.py            # Historical regime backtest
-│   │   ├── commentary.py          # AI macro commentary (Anthropic API)
-│   │   ├── dashboard.py           # Dashboard data aggregation
-│   │   ├── forecast.py            # ARIMA forecast
-│   │   ├── analysis.py            # Composite analysis rules
-│   │   ├── performance.py         # Portfolio performance
-│   │   ├── signals.py             # Trading signal endpoints
-│   │   ├── model.py               # Model metadata
-│   │   ├── pipeline.py            # Pipeline trigger + logs
-│   │   ├── public.py              # Public landing page data
-│   │   ├── public_config.py       # Public config (currencies, holidays)
-│   │   └── webhook.py             # Paddle webhook receiver
+│   │   └── rate_limit.py              # Per-key/per-IP rate limiting middleware
+│   ├── routes/                        # 14 route modules
+│   │   ├── regime.py                  # GET /v1/regime/current, /regime/history
+│   │   ├── websocket.py               # GET /ws/regime
+│   │   ├── auth.py                    # POST /v1/auth/register, /verify, /rotate, etc.
+│   │   ├── billing.py                 # POST /v1/billing/checkout, /portal
+│   │   ├── backtest.py                # POST /v1/backtest
+│   │   ├── commentary.py              # GET /v1/regime/commentary
+│   │   ├── dashboard.py               # GET /v1/dashboard
+│   │   ├── forecast.py                # GET /v1/forecast
+│   │   ├── analysis.py                # GET /v1/analysis/composite
+│   │   ├── performance.py             # GET /v1/performance
+│   │   ├── signals.py                 # GET /v1/signals/latest
+│   │   ├── model.py                   # GET /v1/model/transition-matrix, /feature-loadings
+│   │   ├── pipeline.py                # GET /v1/pipeline/status, POST /trigger
+│   │   ├── public.py                  # GET /v1/public/* (unauthenticated)
+│   │   ├── public_config.py           # GET /v1/public/config (currencies, holidays)
+│   │   └── webhook.py                 # POST /v1/webhook/* (Paddle, generic webhooks)
 │   └── schemas/
-│       └── responses.py           # Pydantic models (RegimeResponse, etc.)
+│       └── responses.py               # Pydantic models (RegimeResponse, DriftResponse, etc.)
 │
-├── data/                          # Data ingestion + feature engineering
+├── config/
+│   └── settings.py                    # Centralized config (pydantic-settings with .env)
+│
+├── data/                              # Data ingestion + feature engineering
 │   ├── ingestion/
-│   │   ├── fred_client.py         # FRED API client (fetch_all_fred)
-│   │   └── market_client.py       # Yahoo Finance client (fetch_market_data)
+│   │   ├── fred_client.py             # FRED API client (fetch_all_fred)
+│   │   └── market_client.py           # Market data fetcher (fetch_market_data)
 │   ├── processing/
-│   │   └── feature_engineering.py # Stationary transforms (build_features)
+│   │   └── feature_engineering.py     # Feature transforms (build_features)
 │   └── pipelines/
-│       └── daily_pipeline.py      # Orchestrator (13-step flow, run_daily_pipeline)
+│       └── daily_pipeline.py          # Scheduled pipeline orchestrator
 │
-├── models/                        # ML models (frozen inference pattern)
-│   ├── artifacts/                 # Serialized joblib artifacts (gitignored)
-│   │   ├── v1/                    # Version 1 models
-│   │   │   ├── pca.pkl            # PCA + scaler
-│   │   │   ├── hmm.pkl            # Gaussian HMM
-│   │   │   ├── classifier.pkl     # Regime classifier
-│   │   │   └── garch.pkl          # GARCH volatility model
-│   │   └── v2/                    # Future versions
-│   ├── pca_model.py               # PCAModel class (fit + predict_proba)
-│   ├── hmm_model.py               # HMMModel class (fit + predict_proba)
-│   ├── garch_model.py             # GARCHModel class for volatility
-│   └── regime_classifier.py       # RegimeClassifier (state → label mapping)
+├── database/
+│   ├── connection.py                  # ThreadedConnectionPool + context managers
+│   ├── queries.py                     # Prepared SQL queries (fetch, insert, update)
+│   └── migrations/
+│       ├── 001_user_management.sql    # Users, roles
+│       ├── 002_paddle_billing.sql     # Paddle subscription tracking
+│       ├── 003_auth_and_usage.sql     # API keys, daily usage counters
+│       ├── 004_ip_lock.sql            # IP lock state
+│       ├── 005_otp_attempts.sql       # OTP attempt tracking
+│       ├── 006_lemonsqueezy_billing.sql # Alternative billing
+│       ├── 007_webhook_idempotency.sql # Webhook deduplication
+│       └── 008_schema_hardening.sql   # Security/integrity constraints
 │
-├── database/                      # Data persistence (TimescaleDB)
-│   ├── connection.py              # ThreadedConnectionPool manager
-│   ├── schema.sql                 # DDL (6 tables, hypertables)
-│   ├── queries.py                 # Parameterized SQL (upserts, reads)
-│   └── migrations/                # Future schema versioning
+├── models/                            # ML model classes + artifacts
+│   ├── pca_model.py                   # PCA wrapper (4 components, 80% variance)
+│   ├── hmm_model.py                   # Gaussian HMM wrapper (4 regimes)
+│   ├── garch_model.py                 # GARCH volatility model
+│   ├── regime_classifier.py           # State index → regime name mapping
+│   └── artifacts/
+│       └── v1/                        # Frozen model serializations
+│           ├── pca.pkl
+│           ├── hmm.pkl
+│           ├── classifier.pkl
+│           └── garch.pkl
 │
-├── services/                      # Business logic layer
-│   ├── inference.py               # RegimeInferenceService (frozen model wrapper)
-│   ├── drift_monitor.py           # Drift metrics (variance, persistence, shift)
-│   ├── alerting.py                # Email + webhook alerts
-│   ├── validation.py              # Data validation guards
-│   ├── backtest.py                # Historical regime replay
-│   ├── scheduler.py               # APScheduler cron runner
-│   └── scorecard.py               # Scorecard aggregation logic
+├── services/                          # Business logic + integrations
+│   ├── scheduler.py                   # APScheduler startup/shutdown
+│   ├── inference.py                   # Model loading + prediction
+│   ├── orchestrator.py                # Multi-domain signal aggregation
+│   ├── drift_monitor.py               # PCA variance, persistence, feature shift
+│   ├── backtest.py                    # Historical regime P&L
+│   ├── performance.py                 # Portfolio metrics
+│   ├── scorecard.py                   # Build composite scorecard
+│   ├── signals.py                     # Trading signal logic
+│   ├── alerts.py                      # Email/Slack alerting
+│   ├── email.py                       # Brevo email service
+│   ├── discord.py                     # Discord webhook posting
+│   ├── twitter.py                     # X (Twitter) posting
+│   ├── paddle.py                      # Paddle billing API client
+│   ├── mta_signer.py                  # Ed25519 signature (IRL Engine)
+│   ├── narrative.py                   # AI narrative generation
+│   ├── fomc_calendar.py               # FOMC meeting dates
+│   ├── validation.py                  # Data quality checks
+│   └── digest.py                      # Daily digest compilation
 │
-├── config/                        # Configuration
-│   └── settings.py                # Pydantic Settings (all env vars)
-│
-├── scripts/                       # CLI entry points
-│   ├── run_daily_pipeline.py      # Manual pipeline trigger
-│   ├── retrain_models.py          # Model training (PCA + HMM)
-│   └── init_db.py                 # Database initialization
-│
-├── frontend/                      # React dashboard (Vite)
+├── frontend/
 │   ├── src/
-│   │   ├── main.jsx               # React root entry
-│   │   ├── App.jsx                # Main app component (router logic)
-│   │   ├── index.css              # Global styles (Tailwind base)
-│   │   ├── components/            # React components (19 total)
-│   │   │   ├── Header.jsx         # Top navigation + auth
-│   │   │   ├── Sidebar.jsx        # Left sidebar (section switcher)
-│   │   │   ├── RegimeCard.jsx     # Current regime display
-│   │   │   ├── RegimeTimeline.jsx # Historical regime timeline
-│   │   │   ├── RegimeCalendar.jsx # Calendar heatmap
-│   │   │   ├── LiquidityChart.jsx # Liquidity proxy chart
-│   │   │   ├── FactorsChart.jsx   # PCA factors (4 lines)
-│   │   │   ├── DriftPanel.jsx     # Drift metrics display
-│   │   │   ├── ForecastCard.jsx   # ARIMA forecast
-│   │   │   ├── CommentaryCard.jsx # AI macro text + tags
-│   │   │   ├── MacroHeatmap.jsx   # Asset class heatmap
-│   │   │   ├── SignalGauges.jsx   # Signal gauges (analog dials)
-│   │   │   ├── AlertSettings.jsx  # Alert configuration UI
-│   │   │   ├── WebhookGuide.jsx   # Webhook integration guide
-│   │   │   ├── ErrorBoundary.jsx  # Error boundary (fallback)
-│   │   │   ├── ChartTooltip.jsx   # Recharts tooltip wrapper
-│   │   │   ├── AssetBias.jsx      # Asset bias visualization
-│   │   │   ├── CompositeAnalysisCard.jsx # Analysis results
-│   │   │   └── StatCard.jsx       # Small stat box
-│   │   ├── views/                 # Lazy-loaded page views (7 total)
-│   │   │   ├── InflationView.jsx  # Inflation analysis
-│   │   │   ├── GrowthView.jsx     # Growth analysis
-│   │   │   ├── RatesView.jsx      # Interest rates analysis
-│   │   │   ├── CommoditiesView.jsx # Commodities analysis
-│   │   │   ├── FXView.jsx         # Foreign exchange analysis
-│   │   │   ├── CryptoView.jsx     # Cryptocurrency analysis
-│   │   │   ├── QuantView.jsx      # Quantitative analysis
-│   │   │   ├── LiquidityView.jsx  # Liquidity detail
-│   │   │   ├── SignalsView.jsx    # Trading signals
-│   │   │   ├── BacktestView.jsx   # Backtest results
-│   │   │   └── PerformanceView.jsx # Portfolio performance
-│   │   ├── hooks/                 # React hooks
-│   │   │   ├── useFetch.js        # Fetch wrapper (caching + errors)
-│   │   │   └── useRegimeSocket.js # WebSocket connection hook
-│   │   └── lib/                   # Utilities
-│   │       ├── api.js             # API client (auth + endpoints)
-│   │       ├── guideMode.js       # Guide mode context
-│   │       └── utils.js           # Helpers (formatting, dates)
-│   ├── public/                    # Static assets
-│   │   ├── landing.html           # Marketing landing page
-│   │   └── (favicon, etc.)
-│   ├── dist/                      # Build output (Vite, gitignored)
-│   ├── node_modules/              # Dependencies (gitignored)
-│   ├── package.json               # Dependencies (React, Recharts, Vite)
-│   ├── vite.config.js             # Vite build config
-│   └── tailwind.config.js         # Tailwind CSS config
+│   │   ├── main.jsx                   # React app entry point
+│   │   ├── App.jsx                    # Main router + layout
+│   │   ├── index.css                  # Tailwind CSS imports
+│   │   ├── components/                # Reusable UI components
+│   │   │   ├── Header.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── RegimeCard.jsx
+│   │   │   ├── RegimeTimeline.jsx
+│   │   │   ├── LiquidityChart.jsx
+│   │   │   ├── FactorsChart.jsx
+│   │   │   ├── DriftPanel.jsx
+│   │   │   ├── SignalGauges.jsx
+│   │   │   ├── MacroHeatmap.jsx
+│   │   │   ├── RegimeCalendar.jsx
+│   │   │   ├── ForecastCard.jsx
+│   │   │   ├── CommentaryCard.jsx
+│   │   │   ├── CompositeAnalysisCard.jsx
+│   │   │   ├── AlertSettings.jsx
+│   │   │   ├── WebhookGuide.jsx
+│   │   │   ├── ApiKeyManager.jsx
+│   │   │   ├── RegisterModal.jsx
+│   │   │   ├── RecoverModal.jsx
+│   │   │   ├── ErrorBoundary.jsx
+│   │   │   ├── ChartTooltip.jsx
+│   │   │   └── AssetBias.jsx
+│   │   ├── views/                     # Page-level components (lazy-loaded)
+│   │   │   ├── InflationView.jsx
+│   │   │   ├── GrowthView.jsx
+│   │   │   ├── RatesView.jsx
+│   │   │   ├── CommoditiesView.jsx
+│   │   │   ├── FXView.jsx
+│   │   │   ├── CryptoView.jsx
+│   │   │   ├── QuantView.jsx
+│   │   │   ├── LiquidityView.jsx
+│   │   │   ├── SignalsView.jsx
+│   │   │   ├── BacktestView.jsx
+│   │   │   ├── PerformanceView.jsx
+│   │   │   └── AccountView.jsx
+│   │   ├── hooks/                     # Custom React hooks
+│   │   │   ├── useFetch.js            # Generic data fetching hook
+│   │   │   ├── useRegimeSocket.js     # WebSocket subscription hook
+│   │   │   └── useCountdown.js        # Timer hook
+│   │   └── lib/
+│   │       ├── api.js                 # Centralized API client methods
+│   │       ├── guideMode.js           # Guide mode context
+│   │       └── utils.js               # Utility functions
+│   ├── dist/                          # Built frontend (gitignored)
+│   ├── public/
+│   │   └── index.html                 # HTML entry point
+│   ├── package.json                   # Dependencies (React 18, Recharts, Vite)
+│   ├── vite.config.js                 # Vite build config
+│   └── tailwind.config.js             # Tailwind CSS config
 │
-├── nginx/                         # Reverse proxy config (production)
-│   └── nginx.conf                 # Routes to API + static frontend
+├── tests/
+│   ├── conftest.py                    # Pytest fixtures
+│   └── test_pipeline_quality.py       # Pipeline validation tests
 │
-├── Dockerfile                     # Python API image
-├── docker-compose.yml             # Full stack (TimescaleDB + API + nginx)
-├── .env.example                   # Example config
-├── .env                           # Actual config (gitignored)
-├── requirements.txt               # Python dependencies
-├── pyproject.toml                 # Project metadata + ruff + mypy config
-├── README.md                      # Documentation
-└── .planning/codebase/            # Documentation (this file)
-    ├── ARCHITECTURE.md
-    ├── STRUCTURE.md
-    ├── CONVENTIONS.md
-    ├── TESTING.md
-    ├── STACK.md
-    ├── INTEGRATIONS.md
-    └── CONCERNS.md
+├── scripts/                           # Utility scripts
+│   └── (maintenance scripts)
+│
+├── notebooks/
+│   └── (Jupyter notebooks for exploration)
+│
+├── content/
+│   └── (Static content files)
+│
+├── site/
+│   └── (Marketing site content)
+│
+├── nginx/
+│   └── (Nginx reverse proxy config)
+│
+├── docker-compose.yml                 # Local dev stack (API + PostgreSQL)
+├── Dockerfile                         # Docker image for API
+├── requirements.txt                   # Python dependencies
+├── pyproject.toml                     # Python project metadata
+├── .env.example                       # Template environment variables
+├── README.md                          # Project overview
+├── DEPLOYMENT.md                      # Deployment instructions
+└── pytest.ini                         # Pytest configuration
 ```
 
 ## Directory Purposes
 
-**api/:**
-- Purpose: FastAPI web service with REST endpoints and WebSocket streaming
-- Contains: Route definitions, authentication, middleware, Pydantic schemas
-- Key files: `main.py` (app object + lifespan), `routes/regime.py` (200 lines), `auth.py` (265 lines)
+**api/**
+- Purpose: FastAPI application with REST endpoints + WebSocket server
+- Contains: Route handlers, authentication, middleware, response schemas
+- Key files: `main.py` (entry point), `auth.py` (API key validation), `middleware/rate_limit.py`
 
-**data/:**
-- Purpose: Data ingestion, transformation, and pipeline orchestration
-- Contains: API clients (FRED, Yahoo Finance), feature engineering, daily pipeline
-- Key files: `pipelines/daily_pipeline.py` (13-step orchestrator)
+**config/**
+- Purpose: Centralized configuration management
+- Contains: Environment variable loading via pydantic-settings
+- Key files: `settings.py` (single source of truth for app config)
 
-**models/:**
-- Purpose: Machine learning model wrappers and serialized artifacts
-- Contains: PCA, HMM, GARCH, regime classifier; serialized joblib files
-- Artifact storage: `artifacts/{version}/` directory (generated, gitignored)
-- Key files: `hmm_model.py` (Gaussian HMM wrapper), `pca_model.py` (PCA + scaler)
+**data/**
+- Purpose: Data ingestion, feature engineering, and scheduled pipeline orchestration
+- Contains: External API clients (FRED, market data), feature transforms, daily pipeline orchestrator
+- Key files: `pipelines/daily_pipeline.py` (main workflow)
 
-**database/:**
-- Purpose: Database connection pool, schema, and parameterized queries
-- Contains: psycopg2 connection pool, TimescaleDB DDL, upsert helpers
-- Key files: `connection.py` (ThreadedConnectionPool), `schema.sql` (6 tables)
+**database/**
+- Purpose: Database connection pooling, query builders, schema migrations
+- Contains: ThreadedConnectionPool wrapper, SQL queries, migration files
+- Key files: `connection.py`, `queries.py`, `migrations/*.sql`
 
-**services/:**
-- Purpose: Business logic and infrastructure services
-- Contains: Model inference, drift monitoring, alerting, validation, scheduling
-- Key files: `inference.py` (RegimeInferenceService), `drift_monitor.py`, `scheduler.py`
+**models/**
+- Purpose: ML model classes and frozen artifact storage
+- Contains: PCA, HMM, GARCH, regime classifier wrappers
+- Key files: Serialized `.pkl` files in `artifacts/v1/` (gitignored but required at runtime)
 
-**config/:**
-- Purpose: Centralized configuration via Pydantic Settings
-- Contains: Single `settings.py` file with all env vars typed and validated
+**services/**
+- Purpose: Domain business logic (inference, drift detection, alerts, billing, etc.)
+- Contains: 20 service modules for different concerns
+- Key files: `scheduler.py` (pipeline scheduling), `inference.py` (model loading), `drift_monitor.py`
 
-**scripts/:**
-- Purpose: CLI entry points for one-time operations
-- Contains: Pipeline runner, model training, database initialization
-- Run as: `python scripts/retrain_models.py --version v2`
+**frontend/**
+- Purpose: React SPA user interface
+- Contains: Components, views, hooks, API client, state management
+- Key files: `src/main.jsx` (entry), `src/App.jsx` (router), `src/lib/api.js` (API client)
 
-**frontend/src/:**
-- Purpose: React single-page application
-- Contains: Components (RegimeCard, charts), views (InflationView, BacktestView), hooks, API client
-- Build: Vite → `frontend/dist/`, served by nginx in production
+**tests/**
+- Purpose: Automated testing for pipeline quality and data validation
+- Contains: Pytest test files and fixtures
+- Key files: `test_pipeline_quality.py`
 
-**nginx/:**
-- Purpose: Reverse proxy configuration (production only)
-- Contains: Routing rules (API to localhost:8000, static to frontend)
+**scripts/**
+- Purpose: Maintenance and administrative utilities
+- Contains: Model retraining, data backfill, schema migrations
+- Run manually or via CI/CD
 
 ## Key File Locations
 
 **Entry Points:**
-- `api/main.py` — FastAPI app (REST + WebSocket)
-- `data/pipelines/daily_pipeline.py` — Daily macro pipeline orchestrator
-- `frontend/src/main.jsx` — React root
-- `scripts/run_daily_pipeline.py` — CLI pipeline trigger
-- `scripts/retrain_models.py` — Model training script
+- Backend: `api/main.py` — FastAPI app creation, lifespan management, middleware mounting
+- Frontend: `frontend/src/main.jsx` — React DOM root, App component wrapper
+- Pipeline: `data/pipelines/daily_pipeline.py` → `run_daily_pipeline()` function
 
 **Configuration:**
-- `config/settings.py` — All environment variables (Pydantic Settings)
-- `.env` — Runtime config (FRED_API_KEY, DB credentials, etc.)
-- `docker-compose.yml` — Docker stack configuration
+- `config/settings.py` — Pydantic Settings object with .env loading
+- `frontend/vite.config.js` — Vite bundler configuration
+- `docker-compose.yml` — Local development stack (API + PostgreSQL)
 
 **Core Logic:**
-- `data/processing/feature_engineering.py` — Feature transforms (Net Liquidity, log returns, etc.)
-- `services/inference.py` — Model inference interface (RegimeInferenceService)
-- `data/pipelines/daily_pipeline.py` — 13-step pipeline orchestrator
+- `api/routes/regime.py` — `/v1/regime/*` endpoints (current signal, history, export)
+- `services/inference.py` — Load frozen models, run PCA/HMM inference
+- `services/scheduler.py` — APScheduler initialization and job definition
+- `api/auth.py` — API key hash validation and tier lookup
+- `api/middleware/rate_limit.py` — Per-key/per-IP daily quota enforcement
+
+**Testing:**
+- `tests/test_pipeline_quality.py` — Pipeline validation and quality checks
+- `tests/conftest.py` — Pytest fixtures (DB mocks, test data)
 
 **Database:**
-- `database/schema.sql` — TimescaleDB table definitions (6 tables)
-- `database/queries.py` — Parameterized SQL helpers (upserts, selects)
-- `database/connection.py` — Connection pool manager
-
-**API Endpoints:**
-- `api/routes/regime.py` — `/v1/regime/*` endpoints (190 lines)
-- `api/routes/backtest.py` — `/v1/backtest` endpoint
-- `api/routes/websocket.py` — `/ws/regime` WebSocket (73 lines)
-- `api/routes/commentary.py` — AI commentary endpoint (186 lines)
-
-**Frontend:**
-- `frontend/src/App.jsx` — Main component with router logic
-- `frontend/src/components/RegimeCard.jsx` — Current regime display
-- `frontend/src/components/RegimeTimeline.jsx` — Historical timeline
-- `frontend/src/lib/api.js` — API client wrapper
-
-**Models:**
-- `models/hmm_model.py` — Gaussian HMM wrapper
-- `models/pca_model.py` — PCA + StandardScaler wrapper
-- `models/regime_classifier.py` — State → regime name mapping
-- `models/artifacts/v1/` — Serialized model artifacts (pca.pkl, hmm.pkl, etc.)
-
-**Testing & Monitoring:**
-- `pipeline_runs` table — Pipeline execution logs
-- `drift_metrics` table — Model drift indicators
-- `model_versions` table — Trained model registry
+- `database/connection.py` — PostgreSQL connection pool management
+- `database/queries.py` — Prepared SQL queries for all entities
+- `database/migrations/*.sql` — Schema definitions (8 files, auto-applied on startup)
 
 ## Naming Conventions
 
 **Files:**
-- Snake case: `daily_pipeline.py`, `feature_engineering.py`, `regime_classifier.py`
-- Entry points suffixed `_py`: `main.py`, `init_db.py`
-- Route files match domain: `regime.py`, `billing.py`, `analysis.py`
-- React components: PascalCase: `RegimeCard.jsx`, `HeaderComponent.jsx`
-- React utilities: camelCase: `useFetch.js`, `guideMode.js`
+- Python modules: `snake_case.py` (e.g., `daily_pipeline.py`, `drift_monitor.py`)
+- React components: `PascalCase.jsx` (e.g., `RegimeCard.jsx`, `UserModal.jsx`)
+- Utilities/hooks: `camelCase.js` (e.g., `useFetch.js`, `api.js`)
+- Configuration: `lowercase_with_extension` (e.g., `vite.config.js`, `tailwind.config.js`)
 
 **Directories:**
-- Plural for collections: `routes/`, `services/`, `components/`, `schemas/`, `artifacts/`
-- Domain-focused: `ingestion/`, `processing/`, `pipelines/`
-- Lowercase with underscores: `macro_features`, `macro_regimes`
+- Plural nouns: `routes/`, `schemas/`, `services/`, `components/`, `migrations/`
+- Functional grouping: `ingestion/`, `processing/`, `pipelines/`, `artifacts/`
 
-**Classes:**
-- PascalCase: `RegimeInferenceService`, `HMMModel`, `RateLimitMiddleware`
-- Suffix descriptive: `*Model`, `*Service`, `*Middleware`, `*Router`
+**Python Functions:**
+- Async: prefix with `async def` (e.g., `async def dispatch(...)`)
+- Dependency injection: named as nouns/adjectives (e.g., `require_api_key`, `require_paid`)
+- Private helpers: prefix with `_` (e.g., `_run_migrations()`, `_resolve_limit()`)
 
-**Functions:**
-- Snake case: `run_daily_pipeline()`, `fetch_all_fred()`, `build_features()`
-- Verb-first for actions: `fetch_*`, `compute_*`, `validate_*`, `broadcast_*`
-
-**Variables:**
-- Snake case: `pipeline_cron_hour`, `net_liquidity`, `feature_matrix`
-- Constants UPPER_CASE: `_POOL_MIN`, `_DRIFT_VARIANCE_WARN`
-- Private prefixed underscore: `_pca`, `_hmm` (lazy-loaded model properties)
-
-**Tables:**
-- Plural snake case: `macro_features`, `macro_regimes`, `drift_metrics`, `pipeline_runs`, `model_versions`
-- Columns snake case: `prob_expansion`, `volatility_state`, `model_version`
+**Database:**
+- Tables: plural lowercase (e.g., `users`, `api_keys`, `regimes`, `pipeline_runs`)
+- Columns: snake_case (e.g., `created_at`, `updated_at`, `daily_requests`)
+- Migrations: `NNN_description.sql` (zero-padded, auto-ordered)
 
 ## Where to Add New Code
 
-**New Feature (e.g., add regime probability thresholds alert):**
-- Primary code: `services/alerting.py` (add alert function)
-- API endpoint: `api/routes/alerts.py` (new route file)
-- Database: `database/schema.sql` (add alerts table if needed)
-- Tests: `tests/test_alerting.py`
+**New REST Endpoint:**
+1. Create function in `api/routes/{domain}.py`
+2. Use FastAPI decorators: `@router.get()`, `@router.post()`
+3. Add dependencies: `Depends(require_api_key)`, `Depends(require_paid)` for gating
+4. Define Pydantic response model in `api/schemas/responses.py`
+5. Implement business logic in `services/` if it's domain-specific
 
-**New Component/Module (e.g., sentiment analysis):**
-- Implementation: `services/sentiment.py` (new service module)
-- Ingestion: `data/ingestion/sentiment_client.py` (new data source)
-- Integration point: Add to daily pipeline in `data/pipelines/daily_pipeline.py` step
-- Database: Update `database/schema.sql` and `database/queries.py`
-- API: Add endpoint in `api/routes/` (new router file)
+**New React Component:**
+1. Create file: `frontend/src/components/ComponentName.jsx`
+2. Use functional component with React hooks
+3. Import via: `import ComponentName from './components/ComponentName'`
+4. For lazy-loading (views): use `React.lazy(() => import('./views/ViewName'))`
+5. API calls via: `import { api } from '../lib/api'`
 
-**Utilities:**
-- Shared Python helpers: `services/` (if business logic) or `data/processing/` (if data transformation)
-- Frontend utilities: `frontend/src/lib/` (utilities.js, formatters, etc.) or `frontend/src/hooks/` (React hooks)
-- Common types: `api/schemas/responses.py` (Pydantic models)
+**New Service/Business Logic:**
+1. Create file: `services/service_name.py`
+2. Import at top: `from config.settings import get_settings`
+3. Add logging: `logger = logging.getLogger(__name__)`
+4. Export main function or class
+5. Import in routes/pipeline as needed
 
-**New View or Dashboard Section (e.g., volatility dashboard):**
-- React component: `frontend/src/components/VolatilityCard.jsx`
-- View file: `frontend/src/views/VolatilityView.jsx`
-- API endpoint: Add to existing route or create `api/routes/volatility.py`
-- Hook: Create `frontend/src/hooks/useVolatility.js` if custom fetch logic needed
+**New Database Migration:**
+1. Create file: `database/migrations/NNN_description.sql` (increment NNN)
+2. Use `IF NOT EXISTS` clauses for idempotency
+3. Migrations auto-run on API startup via `_run_migrations()` in `api/main.py`
 
-**New ML Model (e.g., LSTM regime forecast):**
-- Model class: `models/lstm_model.py`
-- Artifact directory: `models/artifacts/{version}/lstm.pkl`
-- Integration: Wrap in service layer, call from pipeline
-- Endpoint: Add to `api/routes/forecast.py` or new route file
+**New API Key Tier:**
+1. Update `TIER_LIMITS` dict in `api/middleware/rate_limit.py`
+2. Update `TIER_LIMITS` comment in `api/deps.py`
+3. Update database schema in migration if needed
+4. Endpoints check `key_record["tier"]` to gate features
+
+**New External Integration:**
+1. Create client class in `services/{service_name}.py`
+2. Load credentials from `config/settings.py` (add new env vars)
+3. Wrap errors with try/except, log failures
+4. Test with sandbox/dev credentials first
+5. Add integration doc to codebase notes
 
 ## Special Directories
 
-**models/artifacts/:**
-- Purpose: Stores serialized ML models (joblib format)
-- Generated: Yes (by `scripts/retrain_models.py`)
-- Committed: No (gitignored via `.gitignore`)
-- Naming: `{version}/pca.pkl`, `{version}/hmm.pkl`, `{version}/classifier.pkl`, `{version}/garch.pkl`
-- Access: Loaded by `RegimeInferenceService` on first use per process
-
 **frontend/dist/:**
-- Purpose: Built React SPA output from Vite
-- Generated: Yes (`npm run build`)
+- Purpose: Built frontend artifacts (index.html, JS bundles, CSS)
+- Generated: `npm run build` in `frontend/`
 - Committed: No (gitignored)
-- Served by: nginx in production (`/` → `frontend/dist/index.html`)
-- Development: Vite dev server watches `frontend/src/` for hot reload
+- Served: Mounted at `/` in API via `StaticFiles` middleware if present
 
-**frontend/node_modules/:**
-- Purpose: npm dependencies
-- Generated: Yes (`npm install`)
-- Committed: No (gitignored)
-- Size: Large (excluded from repo)
+**models/artifacts/:**
+- Purpose: Frozen model serializations (joblib pickle files)
+- Generated: Training script (not in repo) or manually
+- Committed: No (gitignored, required at runtime)
+- Structure: `v1/pca.pkl`, `v1/hmm.pkl`, `v1/classifier.pkl`, `v1/garch.pkl`
 
 **database/migrations/:**
-- Purpose: Future schema versioning (currently empty, migrations inline in schema.sql)
-- Reserved for: Alembic or similar migration tool integration
+- Purpose: Versioned schema definitions
+- Generated: Manually when schema changes
+- Committed: Yes (always committed to git)
+- Ordering: Numeric prefix (001, 002, etc.) ensures execution order
+- Idempotency: All DDL uses `IF NOT EXISTS` to allow safe re-runs
 
-**.planning/codebase/:**
-- Purpose: GSD documentation (this structure)
-- Generated: Yes (by GSD map-codebase command)
-- Committed: Yes (reference docs)
-- Contains: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, STACK.md, INTEGRATIONS.md, CONCERNS.md
+**tests/:**
+- Purpose: Automated test suite
+- Generated: Test files committed; test artifacts (fixtures) generated at runtime
+- Committed: Yes (test code committed)
+- Run: `pytest` or `pytest -v` from project root
+
+**scripts/:**
+- Purpose: Administrative utilities (backfill, retraining, schema repair)
+- Generated: Manually as needed
+- Committed: Yes (utilities committed to git)
+- Run: `python scripts/script_name.py` with appropriate args
 
 ---
 
-*Structure analysis: 2026-03-18*
+*Structure analysis: 2026-03-28*
