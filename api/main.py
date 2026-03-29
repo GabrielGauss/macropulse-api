@@ -89,6 +89,17 @@ def _validate_webhook_secrets() -> None:
             )
 
 
+def _validate_cors_origins() -> None:
+    """Raise at startup if CORS wildcard is configured in production (SEC-42)."""
+    settings = get_settings()
+    if settings.env == "production" and "*" in settings.cors_origins:
+        raise RuntimeError(
+            "CORS wildcard '*' is not allowed in production. "
+            "Set CORS_ORIGINS to explicit allowed origins (e.g., https://macropulse.live) "
+            "in .env or via environment injection before starting."
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start / stop the background scheduler and DB pool with the app lifecycle."""
@@ -100,6 +111,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     _run_migrations()
     init_signer(settings.mta_signing_key_hex)
     _validate_webhook_secrets()   # SEC-20: raise if production + LS_WEBHOOK_SECRET missing
+    _validate_cors_origins()      # SEC-42: raise if production + CORS wildcard
     start_scheduler()
     yield
     stop_scheduler()
