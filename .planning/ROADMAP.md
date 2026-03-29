@@ -148,7 +148,13 @@ v1.0 shipped a clean, visually consistent product with no known bugs. v1.1 close
   3. Sending a Lemon Squeezy webhook request with a tampered signature returns 401 and logs the rejection; the event handler is never called
   4. The `model_artifacts` Docker volume is mounted with the `ro` flag in `docker-compose.yml` — a write attempt from the API container is rejected by the OS
   5. The application refuses to start when `ENV=production` and `CORS_ORIGINS` contains a wildcard `*`
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 06-00-PLAN.md — Wave 0: test stubs for webhook and startup guard tests (SEC-20, SEC-21, SEC-22, SEC-42)
+- [ ] 06-01-PLAN.md — Purge .env from git history, complete .env.example, create deployment guide (SEC-10, SEC-11, SEC-12, SEC-13)
+- [ ] 06-02-PLAN.md — LS webhook fail-closed fix, startup guard for LS secret, Paddle replay verification (SEC-20, SEC-21, SEC-22)
+- [ ] 06-03-PLAN.md — model_artifacts :ro volume, Nginx CSP header, CORS wildcard startup guard (SEC-40, SEC-41, SEC-42)
 
 ### Phase 7: Auth Endpoint Rate Limiting
 **Goal**: Registration and OTP recovery flows reject brute-force attempts and survive process restarts without losing rate limit state
@@ -225,7 +231,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11 → 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Secrets, Webhooks, and Infrastructure Hardening | 0/? | Not started | - |
+| 6. Secrets, Webhooks, and Infrastructure Hardening | 0/4 | Planned | - |
 | 7. Auth Endpoint Rate Limiting | 0/? | Not started | - |
 | 8. Async Database Migration | 0/? | Not started | - |
 | 9. Observability and Alerting | 0/? | Not started | - |
