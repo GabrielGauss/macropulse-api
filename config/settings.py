@@ -93,6 +93,13 @@ class Settings(BaseSettings):
     # ── CORS ────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    # ── Deployment environment ───────────────────────────────────────────────
+    # Controls startup guards (LS_WEBHOOK_SECRET required, CORS wildcard blocked).
+    env: str = Field(
+        default="development",
+        validation_alias=AliasChoices("ENV", "env"),
+    )
+
     # ── Rate limiting ────────────────────────────────────────────────
     # Requests per API key per calendar day.  0 = unlimited (internal / Pro tier).
     # Free: 50  |  Starter: 500  |  Pro: 0

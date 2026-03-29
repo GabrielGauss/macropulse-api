@@ -255,10 +255,13 @@ def _ls_variant_map() -> dict[str, str]:
 
 
 def _ls_verify_signature(raw_body: bytes, signature: str) -> bool:
+    """Verify Lemon Squeezy HMAC-SHA256 signature. Fails closed if secret missing."""
     secret = os.getenv("LS_WEBHOOK_SECRET", "").strip()
     if not secret:
-        logger.warning("LS_WEBHOOK_SECRET not set — skipping signature check")
-        return True
+        # Startup guard (SEC-20) prevents reaching here in production.
+        # In dev/test, reject rather than silently accept.
+        logger.error("LS_WEBHOOK_SECRET not set — rejecting webhook event (fail closed)")
+        return False
     digest = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(digest, signature)
 
