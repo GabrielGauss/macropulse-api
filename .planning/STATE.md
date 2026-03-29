@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 06-secrets-webhooks-infra-hardening-06-00-PLAN.md
-last_updated: "2026-03-29T05:54:29.904Z"
+stopped_at: Completed 06-02-PLAN.md — webhook security hardening
+last_updated: "2026-03-29T05:58:47.348Z"
 last_activity: 2026-03-28 — v1.1 roadmap created (7 phases, 35 requirements mapped)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # MacroPulse — State
@@ -64,6 +64,7 @@ v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 
 *v1.1 metrics will be populated after plans execute*
 | Phase 06-secrets-webhooks-infra-hardening P00 | 1 | 2 tasks | 2 files |
+| Phase 06-secrets-webhooks-infra-hardening P02 | 6 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,9 @@ Recent decisions affecting current work:
 - [Phase 05-pipeline-quality-and-noise-reduction]: Function-local settings pattern: call get_settings() once at top of each function body — no module-level threshold constants — so env-var overrides in tests work correctly via cache_clear()
 - [Phase 06-secrets-webhooks-infra-hardening]: xfail stubs with strict=True give suite green exit while blocking accidental pass-through once implemented
 - [Phase 06-secrets-webhooks-infra-hardening]: No top-level app import in Phase 6 test stubs — lifespan triggers DB connection not available at test collection time
+- [Phase 06-02]: _ls_verify_signature logs error (not warning) when failing closed — distinguishes severity from dev-mode warning
+- [Phase 06-02]: test_paddle_replay_window patches PADDLE_WEBHOOK_SECRET to reach timestamp check — Paddle secret guard comes before timestamp check in verify_webhook()
+- [Phase 06-02]: Settings.env uses AliasChoices('ENV', 'env') consistent with all 27 existing threshold fields
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-29T05:54:29.899Z
-Stopped at: Completed 06-secrets-webhooks-infra-hardening-06-00-PLAN.md
+Last session: 2026-03-29T05:58:47.341Z
+Stopped at: Completed 06-02-PLAN.md — webhook security hardening
 Resume file: None
