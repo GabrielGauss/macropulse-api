@@ -41,8 +41,11 @@ services:
     depends_on:
       timescaledb:
         condition: service_healthy
+    # NOTE: model_artifacts is mounted :ro on the API container.
+    # To retrain models, run: docker-compose run --rm api python -m data.pipelines.retrain
+    # The API container (serving) never writes to this volume.
     volumes:
-      - model_artifacts:/app/models/artifacts  # writable so retrain works
+      - model_artifacts:/app/models/artifacts:ro  # read-only: prevents model substitution via API compromise
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 15s
