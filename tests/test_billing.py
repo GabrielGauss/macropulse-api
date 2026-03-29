@@ -9,10 +9,19 @@ import pytest
 from unittest.mock import patch
 
 
-@pytest.mark.xfail(reason="SEC-20: LS startup guard not yet implemented", strict=True)
 def test_ls_webhook_missing_secret():
-    """API raises RuntimeError at startup when ENV=production and LS_WEBHOOK_SECRET is unset."""
-    pytest.fail("not implemented")
+    """API raises RuntimeError at startup when ENV=production and LS_WEBHOOK_SECRET unset."""
+    from config.settings import get_settings
+    from api.main import _validate_webhook_secrets
+
+    get_settings.cache_clear()
+    with patch.dict(os.environ, {"ENV": "production"}, clear=False):
+        # Ensure LS_WEBHOOK_SECRET is absent
+        os.environ.pop("LS_WEBHOOK_SECRET", None)
+        get_settings.cache_clear()
+        with pytest.raises(RuntimeError, match="LS_WEBHOOK_SECRET must be set"):
+            _validate_webhook_secrets()
+    get_settings.cache_clear()
 
 
 def test_ls_webhook_invalid_signature():
@@ -30,7 +39,21 @@ def test_ls_webhook_invalid_signature():
     assert result is False
 
 
-@pytest.mark.xfail(reason="SEC-22: Paddle replay protection verified and tested", strict=True)
 def test_paddle_replay_window():
-    """Paddle webhook rejects events with timestamp outside 5-minute window."""
-    pytest.fail("not implemented")
+    """Paddle verify_webhook() rejects events with timestamp outside 5-minute window."""
+    import time
+    from config.settings import get_settings
+    from services.paddle import verify_webhook
+
+    # Build a fake Paddle-Signature header with old timestamp
+    old_ts = int(time.time()) - 400  # 400 seconds ago — outside 5-min window
+    fake_sig_header = f"ts={old_ts};h1=fakehash"
+
+    # Set a Paddle secret so verify_webhook proceeds past the "secret not set" early-return
+    # and reaches the timestamp check. Timestamp check fires before HMAC verification.
+    get_settings.cache_clear()
+    with patch.dict(os.environ, {"PADDLE_WEBHOOK_SECRET": "test-paddle-secret"}, clear=False):
+        get_settings.cache_clear()
+        result = verify_webhook(b'{"event_type": "test"}', fake_sig_header)
+    get_settings.cache_clear()
+    assert result is False

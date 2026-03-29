@@ -231,7 +231,7 @@ Phases execute in numeric order: 6 → 7 → 8 → 9 → 10 → 11 → 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Secrets, Webhooks, and Infrastructure Hardening | 0/4 | Planned | - |
+| 6. Secrets, Webhooks, and Infrastructure Hardening | 1/4 | In Progress|  |
 | 7. Auth Endpoint Rate Limiting | 0/? | Not started | - |
 | 8. Async Database Migration | 0/? | Not started | - |
 | 9. Observability and Alerting | 0/? | Not started | - |

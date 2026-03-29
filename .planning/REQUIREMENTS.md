@@ -14,9 +14,9 @@
 
 ### Security — Webhooks
 
-- [ ] **SEC-20**: Lemon Squeezy webhook handler rejects all events and returns 500 at startup if `LS_WEBHOOK_SECRET` is not set — silent accept removed
-- [ ] **SEC-21**: Lemon Squeezy webhook signature verification fails closed: any HMAC mismatch → 401, request logged, no event processed
-- [ ] **SEC-22**: Paddle webhook handler logs and rejects events with timestamp outside 5-minute replay window (existing guard verified and tested)
+- [x] **SEC-20**: Lemon Squeezy webhook handler rejects all events and returns 500 at startup if `LS_WEBHOOK_SECRET` is not set — silent accept removed
+- [x] **SEC-21**: Lemon Squeezy webhook signature verification fails closed: any HMAC mismatch → 401, request logged, no event processed
+- [x] **SEC-22**: Paddle webhook handler logs and rejects events with timestamp outside 5-minute replay window (existing guard verified and tested)
 
 ### Security — Auth Endpoints
 
@@ -29,7 +29,7 @@
 
 - [ ] **SEC-40**: `model_artifacts` Docker volume mounted read-only in the API container (`ro` flag in docker-compose.yml) — prevents model substitution via API compromise
 - [ ] **SEC-41**: Nginx CSP header configured: `Content-Security-Policy` blocks inline scripts, restricts sources to macropulse.live origin
-- [ ] **SEC-42**: `CORS_ORIGINS` validated at startup — app refuses to start if wildcard `*` is set in production (`ENV=production`)
+- [x] **SEC-42**: `CORS_ORIGINS` validated at startup — app refuses to start if wildcard `*` is set in production (`ENV=production`)
 
 ### Async Database
 
@@ -105,12 +105,12 @@
 | SEC-11 | Phase 6 | Pending |
 | SEC-12 | Phase 6 | Pending |
 | SEC-13 | Phase 6 | Pending |
-| SEC-20 | Phase 6 | Pending |
-| SEC-21 | Phase 6 | Pending |
-| SEC-22 | Phase 6 | Pending |
+| SEC-20 | Phase 6 | Complete |
+| SEC-21 | Phase 6 | Complete |
+| SEC-22 | Phase 6 | Complete |
 | SEC-40 | Phase 6 | Pending |
 | SEC-41 | Phase 6 | Pending |
-| SEC-42 | Phase 6 | Pending |
+| SEC-42 | Phase 6 | Complete |
 | SEC-30 | Phase 7 | Pending |
 | SEC-31 | Phase 7 | Pending |
 | SEC-32 | Phase 7 | Pending |

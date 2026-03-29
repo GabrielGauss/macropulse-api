@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: production-hardening
-status: roadmapped
-stopped_at: ~
-last_updated: "2026-03-28T00:00:00.000Z"
-last_activity: "2026-03-28 — v1.1 roadmap created (7 phases, 35 requirements)"
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: Completed 06-secrets-webhooks-infra-hardening-06-00-PLAN.md
+last_updated: "2026-03-29T05:54:29.904Z"
+last_activity: 2026-03-28 — v1.1 roadmap created (7 phases, 35 requirements mapped)
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 12
+  completed_phases: 5
+  total_plans: 19
+  completed_plans: 16
 ---
 
 # MacroPulse — State
@@ -64,6 +63,7 @@ v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 | 05-pipeline-quality-and-noise-reduction | 4 | ~55 min | ~14 min |
 
 *v1.1 metrics will be populated after plans execute*
+| Phase 06-secrets-webhooks-infra-hardening P00 | 1 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -102,6 +102,8 @@ Recent decisions affecting current work:
 - [Phase 05-pipeline-quality-and-noise-reduction]: Optional commodity columns (d_gold, d_oil, d_btc, d_eth) excluded from build_features() output when unavailable — not zero-filled — zero-fill corrupts signal with false stability (PIPE-02)
 - [Phase 05-pipeline-quality-and-noise-reduction]: All 27 threshold fields use Field(validation_alias) so env vars override at runtime without code changes or redeployment
 - [Phase 05-pipeline-quality-and-noise-reduction]: Function-local settings pattern: call get_settings() once at top of each function body — no module-level threshold constants — so env-var overrides in tests work correctly via cache_clear()
+- [Phase 06-secrets-webhooks-infra-hardening]: xfail stubs with strict=True give suite green exit while blocking accidental pass-through once implemented
+- [Phase 06-secrets-webhooks-infra-hardening]: No top-level app import in Phase 6 test stubs — lifespan triggers DB connection not available at test collection time
 
 ### Pending Todos
 
@@ -116,6 +118,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-28T00:00:00.000Z
-Stopped at: v1.1 roadmap created — ready to plan Phase 6
+Last session: 2026-03-29T05:54:29.899Z
+Stopped at: Completed 06-secrets-webhooks-infra-hardening-06-00-PLAN.md
 Resume file: None
