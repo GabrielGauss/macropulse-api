@@ -71,6 +71,24 @@ def _run_migrations() -> None:
             raise
 
 
+def _validate_webhook_secrets() -> None:
+    """Raise at startup if LS_WEBHOOK_SECRET is not set in production."""
+    import os
+    env = get_settings().env
+    secret = os.getenv("LS_WEBHOOK_SECRET", "").strip()
+    if not secret:
+        if env == "production":
+            raise RuntimeError(
+                "LS_WEBHOOK_SECRET must be set in production. "
+                "Configure it in .env or via environment injection before starting."
+            )
+        else:
+            logger.warning(
+                "LS_WEBHOOK_SECRET not set — Lemon Squeezy webhook validation disabled. "
+                "This must be set before deploying to production (ENV=production)."
+            )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start / stop the background scheduler and DB pool with the app lifecycle."""
@@ -81,6 +99,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting MacroPulse API v%s", settings.app_version)
     _run_migrations()
     init_signer(settings.mta_signing_key_hex)
+    _validate_webhook_secrets()   # SEC-20: raise if production + LS_WEBHOOK_SECRET missing
     start_scheduler()
     yield
     stop_scheduler()
