@@ -52,9 +52,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _run_migrations() -> None:
+async def _run_migrations() -> None:
     """Apply all SQL migration files in order. All DDL uses IF NOT EXISTS — safe to re-run."""
-    from database.connection import get_sync_cursor
+    from database.connection import get_db_conn
 
     migrations_dir = Path(__file__).parent.parent / "database" / "migrations"
     if not migrations_dir.is_dir():
@@ -63,8 +63,8 @@ def _run_migrations() -> None:
     for path in sql_files:
         sql = path.read_text(encoding="utf-8")
         try:
-            with get_sync_cursor() as cur:
-                cur.execute(sql)
+            async with get_db_conn() as conn:
+                await conn.execute(sql)
             logger.info("Migration applied: %s", path.name)
         except Exception as exc:
             logger.error("Migration failed (%s): %s", path.name, exc)
@@ -105,17 +105,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start / stop the background scheduler and DB pool with the app lifecycle."""
     from services.scheduler import start_scheduler, stop_scheduler
     from services.mta_signer import init_signer
-    from database.connection import close_pool
+    from database.connection import init_pool, close_pool
 
     logger.info("Starting MacroPulse API v%s", settings.app_version)
-    _run_migrations()
+    await init_pool(settings.database_url)
+    await _run_migrations()
     init_signer(settings.mta_signing_key_hex)
     _validate_webhook_secrets()   # SEC-20: raise if production + LS_WEBHOOK_SECRET missing
     _validate_cors_origins()      # SEC-42: raise if production + CORS wildcard
     start_scheduler()
     yield
     stop_scheduler()
-    close_pool()
+    await close_pool()
     logger.info("MacroPulse API shut down.")
 
 
@@ -173,14 +174,14 @@ def redirect_dashboard():
 
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
-def health_check() -> HealthResponse:
+async def health_check() -> HealthResponse:
     """Liveness probe — includes database connectivity check."""
-    from database.connection import get_sync_cursor
+    from database.connection import get_db_conn
 
     db_status = "ok"
     try:
-        with get_sync_cursor() as cur:
-            cur.execute("SELECT 1")
+        async with get_db_conn() as conn:
+            await conn.execute("SELECT 1")
     except Exception as exc:
         logger.warning("Health check DB ping failed: %s", exc)
         db_status = "error"

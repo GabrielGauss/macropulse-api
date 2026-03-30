@@ -1,94 +1,100 @@
 """
 Database connection helpers for MacroPulse.
 
-Uses a ThreadedConnectionPool (psycopg2) so the API layer reuses connections
-instead of opening a new one per query — prevents connection exhaustion under load.
+Uses an asyncpg connection pool so async route handlers can acquire connections
+without blocking the event loop — replaces the old psycopg2 ThreadedConnectionPool.
 
-Pool is initialized lazily on first use and shared across the process lifetime.
+Pool is initialised at application startup via init_pool() and shared across the
+process lifetime via the module-level _pool variable.
 """
 
 from __future__ import annotations
 
 import contextlib
+import json
 import logging
-import threading
-from typing import Generator
+import os
+from typing import AsyncGenerator
 
-import psycopg2
-import psycopg2.extras
-import psycopg2.pool
-
-from config.settings import get_settings
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
-_pool: psycopg2.pool.ThreadedConnectionPool | None = None
-_pool_lock = threading.Lock()
+_pool: asyncpg.Pool | None = None
 
-_POOL_MIN = 2
-_POOL_MAX = 10
+_POOL_MIN = int(os.getenv("DB_POOL_MIN", "5"))
+_POOL_MAX = int(os.getenv("DB_POOL_MAX", "20"))
+_CMD_TIMEOUT = 30
 
 
-def _get_pool() -> psycopg2.pool.ThreadedConnectionPool:
+async def _init_connection(conn: asyncpg.Connection) -> None:
+    """Register JSONB codec so dicts/lists round-trip transparently."""
+    await conn.set_type_codec(
+        "jsonb",
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema="pg_catalog",
+    )
+
+
+async def init_pool(dsn: str) -> None:
+    """Create the asyncpg connection pool and store it in the module-level _pool.
+
+    Must be called once at application startup before any request is served.
+    """
     global _pool
-    if _pool is not None:
-        return _pool
-    with _pool_lock:
-        if _pool is None:
-            settings = get_settings()
-            _pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=_POOL_MIN,
-                maxconn=_POOL_MAX,
-                dsn=settings.database_url,
-            )
-            logger.info("DB connection pool initialised (min=%d max=%d).", _POOL_MIN, _POOL_MAX)
-    return _pool
+    _pool = await asyncpg.create_pool(
+        dsn,
+        min_size=_POOL_MIN,
+        max_size=_POOL_MAX,
+        command_timeout=_CMD_TIMEOUT,
+        init=_init_connection,
+    )
+    logger.info(
+        "DB connection pool initialised (min=%d max=%d timeout=%ds).",
+        _POOL_MIN,
+        _POOL_MAX,
+        _CMD_TIMEOUT,
+    )
 
 
-def get_sync_connection() -> psycopg2.extensions.connection:
-    """Borrow a connection from the pool. Caller must return it via pool.putconn()."""
-    return _get_pool().getconn()
-
-
-@contextlib.contextmanager
-def get_sync_cursor(
-    autocommit: bool = False,
-) -> Generator[psycopg2.extras.RealDictCursor, None, None]:
-    """Context-managed cursor with automatic commit / rollback and pool return."""
-    pool = _get_pool()
-    conn = pool.getconn()
-    conn.autocommit = autocommit
-    try:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            yield cur
-            if not autocommit:
-                conn.commit()
-    except Exception:
-        if not autocommit:
-            try:
-                conn.rollback()
-            except Exception:
-                pass
-        raise
-    finally:
-        pool.putconn(conn)
-
-
-def close_pool() -> None:
+async def close_pool() -> None:
     """Drain and close the connection pool (called on app shutdown)."""
     global _pool
     if _pool is not None:
-        _pool.closeall()
+        await _pool.close()
         _pool = None
         logger.info("DB connection pool closed.")
 
 
-def init_schema() -> None:
-    """Execute the DDL schema against the connected database."""
-    from pathlib import Path
+@contextlib.asynccontextmanager
+async def get_db_conn() -> AsyncGenerator[asyncpg.Connection, None]:
+    """Async context manager that yields an asyncpg connection from the pool.
 
-    schema_path = Path(__file__).parent / "schema.sql"
-    sql = schema_path.read_text()
-    with get_sync_cursor(autocommit=True) as cur:
-        cur.execute(sql)
-    logger.info("Database schema initialised.")
+    Usage::
+
+        async with get_db_conn() as conn:
+            row = await conn.fetchrow("SELECT * FROM table WHERE id = $1", id)
+    """
+    assert _pool is not None, "Pool not initialised — call init_pool() first"
+    async with _pool.acquire() as conn:
+        yield conn
+
+
+# ---------------------------------------------------------------------------
+# Compatibility shim — REMOVE after plan 08-01 migrates database/queries.py
+# ---------------------------------------------------------------------------
+
+@contextlib.contextmanager
+def get_sync_cursor(*args, **kwargs):  # type: ignore[misc]
+    """Removed — psycopg2 has been replaced by asyncpg.
+
+    This stub exists only to keep modules that have not yet been migrated
+    importable at startup.  Calling it at runtime will raise RuntimeError.
+    Plan 08-01 will delete every call site and remove this stub.
+    """
+    raise RuntimeError(
+        "get_sync_cursor() was removed in plan 08-00. "
+        "Use 'async with get_db_conn() as conn:' instead."
+    )
+    yield  # make the type-checker happy
