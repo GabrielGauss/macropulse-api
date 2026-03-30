@@ -1,8 +1,8 @@
-"""Shared pytest fixtures for Phase 5 pipeline quality tests."""
+"""Shared pytest fixtures for MacroPulse test suite."""
 from __future__ import annotations
 
 import datetime as dt
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -73,3 +73,16 @@ def mock_garch_model() -> MagicMock:
     model._arch_result = mock_result
     model._long_run_vol = 1.0
     return model
+
+
+@pytest.fixture()
+def mock_auth_rl_cursor():
+    """Mock get_sync_cursor for auth_rate_limits queries."""
+    mock_row = {"attempt_count": 1, "locked_until": None}
+    mock_cur = MagicMock()
+    mock_cur.fetchone.return_value = mock_row
+    mock_ctx = MagicMock()
+    mock_ctx.__enter__ = MagicMock(return_value=mock_cur)
+    mock_ctx.__exit__ = MagicMock(return_value=False)
+    with patch("database.connection.get_sync_cursor", return_value=mock_ctx):
+        yield mock_cur

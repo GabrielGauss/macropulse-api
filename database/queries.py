@@ -645,3 +645,74 @@ def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
     with get_sync_cursor() as cur:
         cur.execute(sql, {"limit": limit})
         return cur.fetchall()  # type: ignore[return-value]
+
+
+# ── Auth endpoint rate limiting ────────────────────────────────────────
+
+
+def check_and_record_attempt(
+    identifier: str,
+    endpoint: str,
+    max_attempts: int,
+    window_minutes: int,
+) -> dict:
+    """
+    Atomically record an auth attempt and return current state.
+
+    Uses INSERT ... ON CONFLICT ... DO UPDATE so a single round-trip both
+    records the attempt and reads back the current window state.
+
+    Returns: {"attempt_count": int, "locked_until": datetime|None, "allowed": bool}
+    On DB error: raises — caller handles fail-open.
+
+    NOTE: WINDOW_INTERVAL is substituted via str.replace() before execution
+    because psycopg2 cannot parameterise %(var)s inside INTERVAL literals.
+    """
+    sql = """
+        INSERT INTO auth_rate_limits (identifier, endpoint, attempt_count, window_start, updated_at)
+        VALUES (%(identifier)s, %(endpoint)s, 1, now(), now())
+        ON CONFLICT (identifier, endpoint) DO UPDATE
+            SET attempt_count = CASE
+                                    WHEN auth_rate_limits.window_start < now() - INTERVAL 'WINDOW_INTERVAL'
+                                    THEN 1
+                                    ELSE auth_rate_limits.attempt_count + 1
+                                END,
+                window_start  = CASE
+                                    WHEN auth_rate_limits.window_start < now() - INTERVAL 'WINDOW_INTERVAL'
+                                    THEN now()
+                                    ELSE auth_rate_limits.window_start
+                                END,
+                locked_until  = CASE
+                                    WHEN auth_rate_limits.window_start < now() - INTERVAL 'WINDOW_INTERVAL'
+                                    THEN NULL
+                                    WHEN auth_rate_limits.locked_until IS NOT NULL
+                                         AND auth_rate_limits.locked_until > now()
+                                    THEN auth_rate_limits.locked_until
+                                    ELSE NULL
+                                END,
+                updated_at    = now()
+        RETURNING attempt_count, locked_until;
+    """
+    # psycopg2 cannot substitute %(var)s inside INTERVAL literals; use str.replace()
+    sql = sql.replace("WINDOW_INTERVAL", f"{window_minutes} minutes")
+    with get_sync_cursor() as cur:
+        cur.execute(sql, {"identifier": identifier, "endpoint": endpoint})
+        row = cur.fetchone()
+
+    if not row:
+        # Defensive fallback — should not happen with RETURNING on an upsert
+        return {"attempt_count": 1, "locked_until": None, "allowed": True}
+
+    attempt_count = int(row["attempt_count"])
+    locked_until = row["locked_until"]
+
+    # Determine allowed: blocked if still under an active lock OR attempt ceiling exceeded
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    if locked_until is not None and locked_until > now_utc:
+        allowed = False
+    elif attempt_count > max_attempts:
+        allowed = False
+    else:
+        allowed = True
+
+    return {"attempt_count": attempt_count, "locked_until": locked_until, "allowed": allowed}
