@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 07-01-PLAN.md — wire auth rate limits + tests (SEC-30–33)
-last_updated: "2026-03-30T00:00:00.000Z"
-last_activity: 2026-03-30 — Phase 7 Plan 01 complete (SEC-30–33 active)
+stopped_at: Completed 08-00-PLAN.md — asyncpg pool + async connection layer (DB-10, DB-12)
+last_updated: "2026-03-30T22:39:45Z"
+last_activity: 2026-03-30 — Phase 8 Plan 00 complete (DB-10, DB-12 active)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
 ---
 
 # MacroPulse — State
@@ -24,16 +24,17 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Phase: Phase 7 — Auth Endpoint Rate Limiting (complete)
-Plan: 07-01 (both plans complete)
-Status: Phase 7 complete — SEC-30 through SEC-33 active
-Last activity: 2026-03-30 — Phase 7 Plan 01 complete (auth rate limiting wired into all four handlers)
+Phase: Phase 8 — Async DB Migration (in progress)
+Plan: 08-00 complete (asyncpg pool + connection layer)
+Status: Phase 8 in progress — DB-10, DB-12 active; 08-01 (query migration) next
+Last activity: 2026-03-30 — Phase 8 Plan 00 complete (asyncpg pool, lifespan wired)
 
-Progress (v1.1): [██░░░░░░░░] 20%
+Progress (v1.1): [███░░░░░░░] 25%
 
 v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 Phase 6 complete: Secrets, Webhooks, Infra Hardening (2026-03-29)
 Phase 7 complete: Auth Rate Limiting — SEC-30–33 (2026-03-30)
+Phase 8 in progress: Plan 00 complete — asyncpg pool layer done
 
 ## v1.1 Phase Overview
 
@@ -41,7 +42,7 @@ Phase 7 complete: Auth Rate Limiting — SEC-30–33 (2026-03-30)
 |-------|------|--------------|--------|
 | 6. Secrets, Webhooks, Infra | Purge secrets, enforce webhooks, lock infra config | SEC-10–13, SEC-20–22, SEC-40–42 | Complete |
 | 7. Auth Rate Limiting | Brute-force protection for registration and OTP | SEC-30–33 | Complete |
-| 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | Not started |
+| 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | In progress (08-00 done) |
 | 9. Observability and Alerting | Prometheus metrics + pipeline failure alerts | OBS-01–05 | Not started |
 | 10. Paddle Billing | Checkout, webhooks, subscription lifecycle | BILL-01–05 | Not started |
 | 11. GDPR Compliance | User erasure endpoint, retention cleanup | GDPR-01–04 | Not started |
@@ -113,6 +114,8 @@ Recent decisions affecting current work:
 - [Phase 07-01]: Email extraction before check_auth_rate_limit in verify() and recover_verify() — email is the rate-limit identifier; this is not a side effect
 - [Phase 07-01]: Patch database.queries.get_sync_cursor not database.connection.get_sync_cursor — queries.py imports get_sync_cursor at module level; patch must target the binding site
 - [Phase 07-01]: recover() check fires before queries.get_user_by_email() — anti-enumeration: attacker must not learn if email exists before hitting the limit
+- [Phase 08-00]: get_sync_cursor() compatibility shim added to connection.py — importable but raises RuntimeError at call time; keeps unmigrated modules (queries.py, routes) loadable until plan 08-01 migrates every call site
+- [Phase 08-00]: JSONB codec registered per-connection via asyncpg create_pool init= callback — correct asyncpg pattern; set_type_codec must be called on each connection individually
 
 ### Pending Todos
 
@@ -127,6 +130,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-30T00:00:00.000Z
-Stopped at: Completed 07-01-PLAN.md — wire auth rate limits + tests (SEC-30–33 complete)
+Last session: 2026-03-30T22:39:45Z
+Stopped at: Completed 08-00-PLAN.md — asyncpg pool + async connection layer (DB-10, DB-12 complete)
 Resume file: None
