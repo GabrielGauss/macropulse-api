@@ -14,8 +14,10 @@ import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.requests import Request
 
 from api.auth import generate_api_key, hash_key, require_api_key
+from api.middleware.auth_rate_limit import check_auth_rate_limit, get_client_ip
 from api.middleware.rate_limit import TIER_LIMITS, _reset_ts, get_usage_today
 from api.schemas.responses import (
     KeyInfoResponse,
@@ -46,7 +48,7 @@ def _generate_code() -> str:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start registration — sends a verification code to your email",
 )
-def register(body: RegisterRequest) -> dict:
+def register(body: RegisterRequest, request: Request) -> dict:
     """
     Step 1 of 2: validate email format, send a 6-digit verification code.
 
@@ -54,6 +56,9 @@ def register(body: RegisterRequest) -> dict:
     Call `POST /v1/auth/verify` with the code to complete registration and
     receive your API key.
     """
+    client_ip = get_client_ip(request)
+    check_auth_rate_limit(identifier=client_ip, endpoint="register",
+                          max_attempts=5, window_minutes=60)
     email = str(body.email).strip().lower()  # EmailStr already validated by pydantic
 
     # Prevent duplicate registrations
@@ -96,6 +101,8 @@ def verify(body: VerifyRequest) -> RegisterResponse:
     On success creates your account and returns your API key **once only**.
     """
     email = body.email.strip().lower()
+    check_auth_rate_limit(identifier=email, endpoint="verify_otp",
+                          max_attempts=5, window_minutes=15)
     code  = body.code.strip()
 
     if not queries.verify_email_code(email=email, code=code):
@@ -159,7 +166,7 @@ def verify(body: VerifyRequest) -> RegisterResponse:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start key recovery — sends a verification code to your email",
 )
-def recover(body: RegisterRequest) -> dict:
+def recover(body: RegisterRequest, request: Request) -> dict:
     """
     Step 1 of 2: if the email has an account, send a 6-digit recovery code.
 
@@ -168,6 +175,8 @@ def recover(body: RegisterRequest) -> dict:
     the code to receive a new API key (old key is revoked on verify).
     """
     email = str(body.email).strip().lower()
+    check_auth_rate_limit(identifier=email, endpoint="recover",
+                          max_attempts=5, window_minutes=15, with_backoff=True)
 
     existing = queries.get_user_by_email(email)
     if existing:
@@ -198,6 +207,8 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     """
     email = body.email.strip().lower()
     code  = body.code.strip()
+    check_auth_rate_limit(identifier=email, endpoint="recover_verify",
+                          max_attempts=5, window_minutes=15, with_backoff=True)
 
     if not queries.verify_email_code(email=email, code=code):
         raise HTTPException(
