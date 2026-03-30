@@ -20,15 +20,15 @@
 
 ### Security — Auth Endpoints
 
-- [ ] **SEC-30**: `/v1/auth/register` rate-limited: max 5 registration attempts per IP per hour
-- [ ] **SEC-31**: `/v1/auth/recover` and `/v1/auth/recover/verify` rate-limited: max 5 OTP attempts per email per 15 minutes; exponential backoff after 3 failures
-- [ ] **SEC-32**: OTP verification lockout: after 5 failed OTP attempts the OTP is invalidated and a new one must be requested
-- [ ] **SEC-33**: Rate limit state for auth endpoints persists in DB (not in-memory) — survives process restart
+- [x] **SEC-30**: `/v1/auth/register` rate-limited: max 5 registration attempts per IP per hour
+- [x] **SEC-31**: `/v1/auth/recover` and `/v1/auth/recover/verify` rate-limited: max 5 OTP attempts per email per 15 minutes; exponential backoff after 3 failures
+- [x] **SEC-32**: OTP verification lockout: after 5 failed OTP attempts the OTP is invalidated and a new one must be requested
+- [x] **SEC-33**: Rate limit state for auth endpoints persists in DB (not in-memory) — survives process restart
 
 ### Security — Infrastructure
 
-- [ ] **SEC-40**: `model_artifacts` Docker volume mounted read-only in the API container (`ro` flag in docker-compose.yml) — prevents model substitution via API compromise
-- [ ] **SEC-41**: Nginx CSP header configured: `Content-Security-Policy` blocks inline scripts, restricts sources to macropulse.live origin
+- [x] **SEC-40**: `model_artifacts` Docker volume mounted read-only in the API container (`ro` flag in docker-compose.yml) — prevents model substitution via API compromise
+- [x] **SEC-41**: Nginx CSP header configured: `Content-Security-Policy` blocks inline scripts, restricts sources to macropulse.live origin
 - [x] **SEC-42**: `CORS_ORIGINS` validated at startup — app refuses to start if wildcard `*` is set in production (`ENV=production`)
 
 ### Async Database
@@ -108,13 +108,13 @@
 | SEC-20 | Phase 6 | Complete |
 | SEC-21 | Phase 6 | Complete |
 | SEC-22 | Phase 6 | Complete |
-| SEC-40 | Phase 6 | Pending |
-| SEC-41 | Phase 6 | Pending |
+| SEC-40 | Phase 6 | Complete (06-03) |
+| SEC-41 | Phase 6 | Complete (06-03) |
 | SEC-42 | Phase 6 | Complete |
-| SEC-30 | Phase 7 | Pending |
-| SEC-31 | Phase 7 | Pending |
-| SEC-32 | Phase 7 | Pending |
-| SEC-33 | Phase 7 | Pending |
+| SEC-30 | Phase 7 | Complete (07-01) |
+| SEC-31 | Phase 7 | Complete (07-01) |
+| SEC-32 | Phase 7 | Complete (07-01) |
+| SEC-33 | Phase 7 | Complete (07-01) |
 | DB-10 | Phase 8 | Pending |
 | DB-11 | Phase 8 | Pending |
 | DB-12 | Phase 8 | Pending |
