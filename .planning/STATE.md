@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-01-PLAN.md — rewrite all queries.py functions to asyncpg (DB-10, DB-11)
-last_updated: "2026-03-31T03:02:33Z"
-last_activity: 2026-03-31 — Phase 8 Plan 01 complete (DB-10, DB-11 — all 36 query functions migrated to asyncpg)
+stopped_at: Completed 08-02-PLAN.md — async route handlers + test suite asyncpg wiring (DB-10–DB-13 complete)
+last_updated: "2026-03-31T00:20:00Z"
+last_activity: 2026-03-31 — Phase 8 Plan 02 complete (DB-13 — async route handlers wired, all 19 tests pass)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # MacroPulse — State
@@ -24,17 +24,17 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Phase: Phase 8 — Async DB Migration (in progress)
-Plan: 08-01 complete (all queries.py functions migrated to asyncpg)
-Status: Phase 8 in progress — DB-10, DB-11 complete; 08-02 (route handler migration) next
-Last activity: 2026-03-31 — Phase 8 Plan 01 complete (all 36 query functions — asyncpg, positional $N params, dict-wrapped returns)
+Phase: Phase 8 — Async DB Migration (complete)
+Plan: 08-02 complete (route handlers + middleware async wired, tests updated)
+Status: Phase 8 complete — DB-10–DB-13 all satisfied; Phase 9 (Observability) next
+Last activity: 2026-03-31 — Phase 8 Plan 02 complete (async route handlers, no get_sync_cursor, 19 tests pass)
 
-Progress (v1.1): [███░░░░░░░] 25%
+Progress (v1.1): [████░░░░░░] 37%
 
 v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 Phase 6 complete: Secrets, Webhooks, Infra Hardening (2026-03-29)
 Phase 7 complete: Auth Rate Limiting — SEC-30–33 (2026-03-30)
-Phase 8 in progress: Plans 00–01 complete — asyncpg pool layer + all query functions migrated
+Phase 8 complete: asyncpg migration — pool, queries, route handlers, middleware (DB-10–DB-13)
 
 ## v1.1 Phase Overview
 
@@ -42,7 +42,7 @@ Phase 8 in progress: Plans 00–01 complete — asyncpg pool layer + all query f
 |-------|------|--------------|--------|
 | 6. Secrets, Webhooks, Infra | Purge secrets, enforce webhooks, lock infra config | SEC-10–13, SEC-20–22, SEC-40–42 | Complete |
 | 7. Auth Rate Limiting | Brute-force protection for registration and OTP | SEC-30–33 | Complete |
-| 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | In progress (08-00 done) |
+| 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | Complete (08-00, 08-01, 08-02) |
 | 9. Observability and Alerting | Prometheus metrics + pipeline failure alerts | OBS-01–05 | Not started |
 | 10. Paddle Billing | Checkout, webhooks, subscription lifecycle | BILL-01–05 | Not started |
 | 11. GDPR Compliance | User erasure endpoint, retention cleanup | GDPR-01–04 | Not started |
@@ -119,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 08-01]: str.replace INTERVAL pattern preserved for check_and_set_ip_lock and check_and_record_attempt — asyncpg cannot parameterise values inside INTERVAL literals
 - [Phase 08-01]: fetch_subscriber_emails returns list[str] not list[dict] — callers expect plain email strings, unwrapping done via [row["email"] for row in rows]
 - [Phase 08-01]: fetch_regime_history uses dynamic $N positional arg building (args.append + f"${len(args)}") to handle optional start/end date filters cleanly
+- [Phase 08-02]: Patch database.queries.get_db_conn not database.connection.get_db_conn in test_state_is_db_not_memory — queries.py binds get_db_conn to its own namespace via from-import
+- [Phase 08-02]: recover_verify tier fetch replaced get_sync_cursor block with await queries.get_active_keys_for_user() — existing function returns full key records including tier field
 
 ### Pending Todos
 
@@ -133,6 +135,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:02:33Z
-Stopped at: Completed 08-01-PLAN.md — all queries.py functions migrated to asyncpg (DB-10, DB-11 complete)
+Last session: 2026-03-31T00:20:00Z
+Stopped at: Completed 08-02-PLAN.md — async route handlers + test suite asyncpg wiring (DB-10–DB-13 complete)
 Resume file: None
