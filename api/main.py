@@ -22,6 +22,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import make_asgi_app
 
 from api.middleware.rate_limit import RateLimitMiddleware
 from api.routes.auth import router as auth_router
@@ -160,6 +161,13 @@ app.include_router(model_router)
 app.include_router(pipeline_router)
 app.include_router(public_router)
 app.include_router(webhook_router)
+
+# ── Prometheus metrics ────────────────────────────────────────────────
+# Mounted after all API routes so it doesn't shadow any route prefix.
+# Exempted from rate limiting in api/middleware/rate_limit.py.
+_metrics_app = make_asgi_app()
+app.mount("/metrics", _metrics_app)
+
 
 @app.get("/docs", include_in_schema=False)
 def redirect_docs():

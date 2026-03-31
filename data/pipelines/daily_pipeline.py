@@ -19,6 +19,7 @@ Orchestrates the end-to-end flow:
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import logging
 import time
@@ -64,14 +65,15 @@ def _missing_or_all_nan(df: pd.DataFrame, cols: frozenset[str]) -> set[str]:
     return missing
 
 
-def _log_run(
+async def _log_run(
     status: str,
     data_lag: bool,
     duration: float,
     error: str | None = None,
     model_version: str | None = None,
 ) -> None:
-    queries.insert_pipeline_run(
+    """Log a pipeline run to the database (async — must be awaited from async context)."""
+    await queries.insert_pipeline_run(
         {
             "run_ts": dt.datetime.now(dt.timezone.utc),
             "status": status,
@@ -83,22 +85,14 @@ def _log_run(
     )
 
 
-def run_daily_pipeline(
+async def _run_daily_pipeline_async(
     target_date: dt.date | None = None,
     model_version: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Execute the daily macro regime pipeline.
+    """Async implementation of the daily pipeline. Called via asyncio.run() from sync callers.
 
-    Parameters
-    ----------
-    target_date   : override for the pipeline date (default: today).
-    model_version : which frozen model artifacts to use.
-
-    Returns
-    -------
-    dict – The regime output for the target date, or a partial result
-           if data lag is detected.
+    All database query functions are async (asyncpg); this function awaits them directly.
+    The public sync entry point run_daily_pipeline() wraps this with asyncio.run().
     """
     settings = get_settings()
     version = model_version or settings.default_model_version
@@ -116,7 +110,7 @@ def run_daily_pipeline(
     except Exception as exc:
         duration = time.monotonic() - t0
         logger.error("Data fetch failed: %s", exc)
-        _log_run("failed", data_lag=False, duration=duration, error=str(exc), model_version=version)
+        await _log_run("failed", data_lag=False, duration=duration, error=str(exc), model_version=version)
         raise
 
     # ── 2. Validate raw data ─────────────────────────────────────
@@ -127,7 +121,7 @@ def run_daily_pipeline(
         errors = fred_report.errors + market_report.errors
         duration = time.monotonic() - t0
         msg = f"Raw data validation failed: {errors}"
-        _log_run("failed", data_lag=False, duration=duration, error=msg, model_version=version)
+        await _log_run("failed", data_lag=False, duration=duration, error=msg, model_version=version)
         raise RuntimeError(msg)
 
     # ── 2b. Critical series guard ────────────────────────────────
@@ -141,7 +135,7 @@ def run_daily_pipeline(
             f"FRED={missing_fred or 'none'} market={missing_market or 'none'}"
         )
         logger.error("PIPELINE HALT — %s", msg)
-        _log_run("halted", data_lag=False, duration=duration, error=msg, model_version=version)
+        await _log_run("halted", data_lag=False, duration=duration, error=msg, model_version=version)
         alert_drift_warning("pipeline_halt_critical_data", 1.0, 0.0, today.isoformat())
         return {"status": "halted", "stale_data": True, "reason": msg, "timestamp": today.isoformat()}
 
@@ -153,12 +147,12 @@ def run_daily_pipeline(
     if not feat_report.passed:
         duration = time.monotonic() - t0
         msg = f"Feature validation failed: {feat_report.errors}"
-        _log_run("failed", data_lag=False, duration=duration, error=msg, model_version=version)
+        await _log_run("failed", data_lag=False, duration=duration, error=msg, model_version=version)
         raise RuntimeError(msg)
 
     # ── 5. Store features ────────────────────────────────────────
     latest_row = features.iloc[-1]
-    queries.upsert_macro_features(
+    await queries.upsert_macro_features(
         {
             "time": features.index[-1].isoformat(),
             **{col: float(latest_row[col]) if pd.notna(latest_row[col]) else None for col in features.columns},
@@ -171,7 +165,7 @@ def run_daily_pipeline(
         data_lag = True
         logger.warning("FRED data lag: latest=%s, target=%s", latest_fred_date, today)
         duration = time.monotonic() - t0
-        _log_run("partial", data_lag=True, duration=duration, model_version=version)
+        await _log_run("partial", data_lag=True, duration=duration, model_version=version)
         return {"status": "data_lag", "timestamp": today.isoformat()}
 
     # ── 7. Load frozen models + PCA ──────────────────────────────
@@ -207,7 +201,7 @@ def run_daily_pipeline(
 
     # Store latest factor row
     lf = factors[-1]
-    queries.upsert_macro_factors(
+    await queries.upsert_macro_factors(
         {
             "time": features.index[-1].isoformat(),
             "factor_1": float(lf[0]),
@@ -245,13 +239,13 @@ def run_daily_pipeline(
         "volatility_state": result["volatility_state"],
         "model_version": version,
     }
-    queries.upsert_macro_regime(regime_row)
+    await queries.upsert_macro_regime(regime_row)
 
     # ── 10. Regime change detection + alerting ───────────────────
     # Regime change alert (email + webhook delivery to subscribers)
     try:
         from services.alerts import send_regime_change_alerts
-        history = queries.fetch_regime_history(limit=2)
+        history = await queries.fetch_regime_history(limit=2)
         if len(history) >= 2 and history[0]["regime"] != history[1]["regime"]:
             send_regime_change_alerts(
                 prev_regime=history[1]["regime"],
@@ -269,7 +263,7 @@ def run_daily_pipeline(
     persistence = compute_regime_persistence(regimes_seq)
     mean_shift, std_shift = compute_feature_shift(X[:-60], X[-60:])
 
-    queries.upsert_drift_metrics(
+    await queries.upsert_drift_metrics(
         {
             "time": ts_iso,
             "pca_explained_variance": float(pca_drift),
@@ -305,7 +299,7 @@ def run_daily_pipeline(
 
     # ── 13. Log success ──────────────────────────────────────────
     duration = time.monotonic() - t0
-    _log_run("success", data_lag=False, duration=duration, model_version=version)
+    await _log_run("success", data_lag=False, duration=duration, model_version=version)
 
     logger.info("═══ Pipeline complete in %.1fs ═══  %s", duration, output)
 
@@ -314,3 +308,27 @@ def run_daily_pipeline(
     pass
 
     return output
+
+
+def run_daily_pipeline(
+    target_date: dt.date | None = None,
+    model_version: str | None = None,
+) -> dict[str, Any]:
+    """
+    Execute the daily macro regime pipeline (sync entry point).
+
+    This wrapper exists because APScheduler BackgroundScheduler runs jobs in
+    threads where no event loop is active. It delegates to the async
+    implementation via asyncio.run().
+
+    Parameters
+    ----------
+    target_date   : override for the pipeline date (default: today).
+    model_version : which frozen model artifacts to use.
+
+    Returns
+    -------
+    dict – The regime output for the target date, or a partial result
+           if data lag is detected.
+    """
+    return asyncio.run(_run_daily_pipeline_async(target_date=target_date, model_version=model_version))

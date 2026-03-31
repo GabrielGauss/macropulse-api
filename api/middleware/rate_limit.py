@@ -36,12 +36,13 @@ from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 
-# Paths that are never rate-limited (health, public demo, docs, auth)
+# Paths that are never rate-limited (health, public demo, docs, auth, metrics)
 _EXEMPT_PATHS = {
     "/health", "/docs", "/openapi.json", "/redoc", "/dashboard",
     "/v1/auth/register", "/v1/auth/recover", "/v1/auth/recover/verify",
     "/v1/auth/verify",  # has its own auth rate limiting (SEC-32)
     "/v1/pipeline/status",
+    "/metrics", "/metrics/",  # Prometheus scraper — must not be rate-limited
 }
 
 # Path prefixes that bypass rate limiting (unauthenticated public routes)
