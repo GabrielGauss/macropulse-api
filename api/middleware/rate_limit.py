@@ -72,7 +72,7 @@ def _reset_ts() -> int:
     return int(dt.datetime.combine(tomorrow, dt.time(), tzinfo=dt.timezone.utc).timestamp())
 
 
-def _resolve_limit(raw_key: str | None, default_limit: int) -> tuple[int, str | None]:
+async def _resolve_limit(raw_key: str | None, default_limit: int) -> tuple[int, str | None]:
     """
     Return (daily_limit, key_hash) for a given raw API key.
 
@@ -90,7 +90,7 @@ def _resolve_limit(raw_key: str | None, default_limit: int) -> tuple[int, str | 
 
     try:
         from database.queries import get_api_key_by_hash
-        record = get_api_key_by_hash(key_hash)
+        record = await get_api_key_by_hash(key_hash)
         if record:
             tier = record.get("tier", "free")
             limit = TIER_LIMITS.get(tier, default_limit)
@@ -103,12 +103,12 @@ def _resolve_limit(raw_key: str | None, default_limit: int) -> tuple[int, str | 
     return limit, key_hash
 
 
-def get_usage_today(client_id: str) -> int:
+async def get_usage_today(client_id: str) -> int:
     """Return the request count for a client_id for today (used by /auth/usage)."""
     # client_id is a key_hash for authenticated users
     try:
         from database.queries import get_daily_usage
-        return get_daily_usage(client_id)
+        return await get_daily_usage(client_id)
     except Exception:
         return 0
 
@@ -140,7 +140,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             client_ip = direct_host or "unknown"
 
         # Resolve tier limit
-        limit, key_hash = _resolve_limit(raw_key, self.default_limit)
+        limit, key_hash = await _resolve_limit(raw_key, self.default_limit)
 
         # 0 = unlimited (pro / owner tier, or global bypass)
         if limit == 0:
@@ -154,7 +154,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # For free/starter, enforce single-IP binding.
             try:
                 from database.queries import check_and_set_ip_lock
-                allowed = check_and_set_ip_lock(key_hash, client_ip)
+                allowed = await check_and_set_ip_lock(key_hash, client_ip)
             except Exception as exc:
                 logger.error("IP lock DB error for key %s…: %s", key_hash[:8], exc)
                 allowed = True  # fail open — don't block on DB error
@@ -176,7 +176,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Increment first, then check — prevents TOCTOU race.
             try:
                 from database.queries import increment_daily_usage
-                count = increment_daily_usage(key_hash)
+                count = await increment_daily_usage(key_hash)
             except Exception as exc:
                 logger.error("Rate limit DB error for key %s…: %s", key_hash[:8], exc)
                 # On DB failure, fall through rather than blocking the user.
@@ -186,7 +186,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 # Already over — undo the increment so we don't inflate the counter
                 try:
                     from database.queries import get_daily_usage
-                    count = get_daily_usage(key_hash)
+                    count = await get_daily_usage(key_hash)
                 except Exception:
                     pass
                 logger.warning(

@@ -28,7 +28,6 @@ from api.schemas.responses import (
     VerifyRequest,
 )
 from database import queries
-from services.email import send_key_recovery_email, send_verification_email, send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def _generate_code() -> str:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start registration — sends a verification code to your email",
 )
-def register(body: RegisterRequest, request: Request) -> dict:
+async def register(body: RegisterRequest, request: Request) -> dict:
     """
     Step 1 of 2: validate email format, send a 6-digit verification code.
 
@@ -57,12 +56,12 @@ def register(body: RegisterRequest, request: Request) -> dict:
     receive your API key.
     """
     client_ip = get_client_ip(request)
-    check_auth_rate_limit(identifier=client_ip, endpoint="register",
-                          max_attempts=5, window_minutes=60)
+    await check_auth_rate_limit(identifier=client_ip, endpoint="register",
+                                max_attempts=5, window_minutes=60)
     email = str(body.email).strip().lower()  # EmailStr already validated by pydantic
 
     # Prevent duplicate registrations
-    existing = queries.get_user_by_email(email)
+    existing = await queries.get_user_by_email(email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -71,7 +70,7 @@ def register(body: RegisterRequest, request: Request) -> dict:
 
     code = _generate_code()
     try:
-        queries.create_email_verification(email=email, code=code)
+        await queries.create_email_verification(email=email, code=code)
     except Exception as exc:
         logger.error("Failed to create email verification: %s", exc)
         raise HTTPException(
@@ -80,6 +79,7 @@ def register(body: RegisterRequest, request: Request) -> dict:
         )
 
     try:
+        from services.email import send_verification_email
         send_verification_email(to=email, code=code)
     except Exception:
         logger.warning("Verification email dispatch error for %s (non-fatal)", email, exc_info=True)
@@ -94,25 +94,25 @@ def register(body: RegisterRequest, request: Request) -> dict:
     status_code=status.HTTP_201_CREATED,
     summary="Verify email code and receive your API key",
 )
-def verify(body: VerifyRequest) -> RegisterResponse:
+async def verify(body: VerifyRequest) -> RegisterResponse:
     """
     Step 2 of 2: submit the 6-digit code received by email.
 
     On success creates your account and returns your API key **once only**.
     """
     email = body.email.strip().lower()
-    check_auth_rate_limit(identifier=email, endpoint="verify_otp",
-                          max_attempts=5, window_minutes=15)
+    await check_auth_rate_limit(identifier=email, endpoint="verify_otp",
+                                max_attempts=5, window_minutes=15)
     code  = body.code.strip()
 
-    if not queries.verify_email_code(email=email, code=code):
+    if not await queries.verify_email_code(email=email, code=code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired verification code.",
         )
 
     # Guard against replay if user submits twice before record is cleaned up
-    existing = queries.get_user_by_email(email)
+    existing = await queries.get_user_by_email(email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -120,7 +120,7 @@ def verify(body: VerifyRequest) -> RegisterResponse:
         )
 
     try:
-        user = queries.create_user(email=email)
+        user = await queries.create_user(email=email)
     except Exception as exc:
         logger.error("Failed to create user: %s", exc)
         raise HTTPException(
@@ -131,7 +131,7 @@ def verify(body: VerifyRequest) -> RegisterResponse:
     plaintext_key = generate_api_key()
     key_prefix    = plaintext_key[:12]
     try:
-        queries.create_api_key(
+        await queries.create_api_key(
             user_id=user["id"],
             key_hash=hash_key(plaintext_key),
             key_prefix=key_prefix,
@@ -147,6 +147,7 @@ def verify(body: VerifyRequest) -> RegisterResponse:
     logger.info("New user verified and registered: email=%s tier=free", email)
 
     try:
+        from services.email import send_welcome_email
         send_welcome_email(to=email, api_key=plaintext_key, tier="free")
     except Exception:
         logger.warning("Welcome email dispatch error for %s (non-fatal)", email, exc_info=True)
@@ -166,7 +167,7 @@ def verify(body: VerifyRequest) -> RegisterResponse:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start key recovery — sends a verification code to your email",
 )
-def recover(body: RegisterRequest, request: Request) -> dict:
+async def recover(body: RegisterRequest, request: Request) -> dict:
     """
     Step 1 of 2: if the email has an account, send a 6-digit recovery code.
 
@@ -175,14 +176,15 @@ def recover(body: RegisterRequest, request: Request) -> dict:
     the code to receive a new API key (old key is revoked on verify).
     """
     email = str(body.email).strip().lower()
-    check_auth_rate_limit(identifier=email, endpoint="recover",
-                          max_attempts=5, window_minutes=15, with_backoff=True)
+    await check_auth_rate_limit(identifier=email, endpoint="recover",
+                                max_attempts=5, window_minutes=15, with_backoff=True)
 
-    existing = queries.get_user_by_email(email)
+    existing = await queries.get_user_by_email(email)
     if existing:
         code = _generate_code()
         try:
-            queries.create_email_verification(email=email, code=code)
+            await queries.create_email_verification(email=email, code=code)
+            from services.email import send_verification_email
             send_verification_email(to=email, code=code)
         except Exception as exc:
             logger.error("Key recovery initiation error for %s: %s", email, exc)
@@ -198,7 +200,7 @@ def recover(body: RegisterRequest, request: Request) -> dict:
     status_code=status.HTTP_200_OK,
     summary="Verify recovery code and receive a new API key",
 )
-def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
+async def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     """
     Step 2 of 2: submit the 6-digit code received by email.
 
@@ -207,16 +209,16 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     """
     email = body.email.strip().lower()
     code  = body.code.strip()
-    check_auth_rate_limit(identifier=email, endpoint="recover_verify",
-                          max_attempts=5, window_minutes=15, with_backoff=True)
+    await check_auth_rate_limit(identifier=email, endpoint="recover_verify",
+                                max_attempts=5, window_minutes=15, with_backoff=True)
 
-    if not queries.verify_email_code(email=email, code=code):
+    if not await queries.verify_email_code(email=email, code=code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired recovery code.",
         )
 
-    user = queries.get_user_by_email(email)
+    user = await queries.get_user_by_email(email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -225,19 +227,13 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
 
     user_id: int = user["id"]
 
-    # Determine current tier before revoking
-    from database.connection import get_sync_cursor
-    with get_sync_cursor() as cur:
-        cur.execute(
-            "SELECT tier FROM api_keys WHERE user_id = %s AND is_active = TRUE ORDER BY created_at DESC LIMIT 1;",
-            (user_id,),
-        )
-        row = cur.fetchone()
-        tier = row["tier"] if row else "free"
+    # Determine current tier before revoking (via async query)
+    existing_keys = await queries.get_active_keys_for_user(user_id)
+    tier = existing_keys[0]["tier"] if existing_keys else "free"
 
     # Revoke existing keys
     try:
-        queries.revoke_api_keys_for_user(user_id)
+        await queries.revoke_api_keys_for_user(user_id)
     except Exception as exc:
         logger.error("Failed to revoke keys during recovery user_id=%d: %s", user_id, exc)
         raise HTTPException(
@@ -249,7 +245,7 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     plaintext_key = generate_api_key()
     key_prefix = plaintext_key[:12]
     try:
-        queries.create_api_key(
+        await queries.create_api_key(
             user_id=user_id,
             key_hash=hash_key(plaintext_key),
             key_prefix=key_prefix,
@@ -265,6 +261,7 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     logger.info("Key recovered: user_id=%d tier=%s", user_id, tier)
 
     try:
+        from services.email import send_key_recovery_email
         send_key_recovery_email(to=email, api_key=plaintext_key, tier=tier)
     except Exception:
         logger.warning("Recovery email dispatch error for %s (non-fatal)", email, exc_info=True)
@@ -282,7 +279,7 @@ def recover_verify(body: VerifyRequest) -> RotateKeyResponse:
     response_model=RotateKeyResponse,
     summary="Rotate your API key",
 )
-def rotate_key(
+async def rotate_key(
     key_record: dict = Depends(require_api_key),
 ) -> RotateKeyResponse:
     """
@@ -295,7 +292,7 @@ def rotate_key(
 
     # Revoke existing keys for this user
     try:
-        queries.revoke_api_keys_for_user(user_id)
+        await queries.revoke_api_keys_for_user(user_id)
     except Exception as exc:
         logger.error("Failed to revoke keys for user_id=%d: %s", user_id, exc)
         raise HTTPException(
@@ -307,7 +304,7 @@ def rotate_key(
     plaintext_key = generate_api_key()
     key_prefix = plaintext_key[:12]
     try:
-        queries.create_api_key(
+        await queries.create_api_key(
             user_id=user_id,
             key_hash=hash_key(plaintext_key),
             key_prefix=key_prefix,
@@ -335,7 +332,7 @@ def rotate_key(
     response_model=KeyInfoResponse,
     summary="Your account and key info",
 )
-def get_me(
+async def get_me(
     key_record: dict = Depends(require_api_key),
 ) -> KeyInfoResponse:
     """Return account details and key metadata (no plaintext key)."""
@@ -356,7 +353,7 @@ def get_me(
     response_model=UsageResponse,
     summary="Today's API usage vs your tier limit",
 )
-def get_usage(
+async def get_usage(
     key_record: dict = Depends(require_api_key),
 ) -> UsageResponse:
     """
@@ -372,7 +369,7 @@ def get_usage(
     # We don't have the raw key here — use key_prefix as a proxy identifier
     # (the rate limiter keys on the raw key, but we can expose an approximation)
     key_prefix = key_record.get("key_prefix", "")
-    used = get_usage_today(key_prefix)  # best-effort (may undercount in multi-process)
+    used = await get_usage_today(key_prefix)  # best-effort (may undercount in multi-process)
 
     if limit == 0:
         remaining = -1

@@ -80,21 +80,3 @@ async def get_db_conn() -> AsyncGenerator[asyncpg.Connection, None]:
     async with _pool.acquire() as conn:
         yield conn
 
-
-# ---------------------------------------------------------------------------
-# Compatibility shim — REMOVE after plan 08-01 migrates database/queries.py
-# ---------------------------------------------------------------------------
-
-@contextlib.contextmanager
-def get_sync_cursor(*args, **kwargs):  # type: ignore[misc]
-    """Removed — psycopg2 has been replaced by asyncpg.
-
-    This stub exists only to keep modules that have not yet been migrated
-    importable at startup.  Calling it at runtime will raise RuntimeError.
-    Plan 08-01 will delete every call site and remove this stub.
-    """
-    raise RuntimeError(
-        "get_sync_cursor() was removed in plan 08-00. "
-        "Use 'async with get_db_conn() as conn:' instead."
-    )
-    yield  # make the type-checker happy

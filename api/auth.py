@@ -32,14 +32,14 @@ def hash_key(key: str) -> str:
     return hashlib.sha256(key.encode()).hexdigest()
 
 
-def _lookup_key(raw_key: str) -> dict[str, Any] | None:
+async def _lookup_key(raw_key: str) -> dict[str, Any] | None:
     """
     Look up a key in the database.  Returns the DB row or None.
 
     Import is deferred to avoid circular imports at module load time.
     """
     from database.queries import get_api_key_by_hash
-    return get_api_key_by_hash(hash_key(raw_key))
+    return await get_api_key_by_hash(hash_key(raw_key))
 
 
 async def require_api_key(
@@ -62,7 +62,7 @@ async def require_api_key(
         try:
             from database.queries import get_api_key_by_hash as _check
             # If we can't reach the DB, or no rows exist, stay in dev mode
-            _check("__probe__")
+            await _check("__probe__")
         except Exception:
             pass
         return {
@@ -102,7 +102,7 @@ async def require_api_key(
 
     # Primary path: DB lookup
     try:
-        record = _lookup_key(raw_key)
+        record = await _lookup_key(raw_key)
     except Exception as exc:
         logger.error("DB error during key lookup: %s", exc)
         raise HTTPException(
@@ -120,7 +120,7 @@ async def require_api_key(
     # Fire-and-forget last_used update (don't fail the request if this errors)
     try:
         from database.queries import touch_api_key
-        touch_api_key(hash_key(raw_key))
+        await touch_api_key(hash_key(raw_key))
     except Exception:
         pass
 

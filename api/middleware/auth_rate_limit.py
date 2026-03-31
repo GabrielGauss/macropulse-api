@@ -17,7 +17,7 @@ from fastapi import HTTPException, status
 from starlette.requests import Request
 
 from database import queries
-from database.connection import get_sync_cursor
+from database.connection import get_db_conn
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def get_client_ip(request: Request) -> str:
     return client_ip
 
 
-def _set_backoff_if_needed(
+async def _set_backoff_if_needed(
     identifier: str,
     endpoint: str,
     attempt_count: int,
@@ -71,12 +71,12 @@ def _set_backoff_if_needed(
     interval_literal = f"{backoff_seconds} seconds"
     sql = (
         "UPDATE auth_rate_limits "
-        "SET locked_until = now() + %s::interval "
-        "WHERE identifier = %s AND endpoint = %s"
+        "SET locked_until = now() + $1::interval "
+        "WHERE identifier = $2 AND endpoint = $3"
     )
     try:
-        with get_sync_cursor() as cur:
-            cur.execute(sql, (interval_literal, identifier, endpoint))
+        async with get_db_conn() as conn:
+            await conn.execute(sql, interval_literal, identifier, endpoint)
     except Exception as exc:
         logger.error(
             "auth_rate_limit: backoff UPDATE failed for %s/%s: %s",
@@ -87,7 +87,7 @@ def _set_backoff_if_needed(
         # Soft failure — do not re-raise; backoff is UX, not a hard guard
 
 
-def check_auth_rate_limit(
+async def check_auth_rate_limit(
     identifier: str,
     endpoint: str,
     max_attempts: int,
@@ -110,7 +110,7 @@ def check_auth_rate_limit(
         Returns None (no raise) on any DB error — fail-open policy.
     """
     try:
-        result = queries.check_and_record_attempt(
+        result = await queries.check_and_record_attempt(
             identifier=identifier,
             endpoint=endpoint,
             max_attempts=max_attempts,
@@ -131,7 +131,7 @@ def check_auth_rate_limit(
 
     # Apply progressive backoff while the request is still allowed
     if with_backoff and allowed and attempt_count >= 3:
-        _set_backoff_if_needed(identifier, endpoint, attempt_count)
+        await _set_backoff_if_needed(identifier, endpoint, attempt_count)
 
     if not allowed:
         now_utc = dt.datetime.now(dt.timezone.utc)

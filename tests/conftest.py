@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -77,12 +77,13 @@ def mock_garch_model() -> MagicMock:
 
 @pytest.fixture()
 def mock_auth_rl_cursor():
-    """Mock get_sync_cursor for auth_rate_limits queries."""
+    """Mock get_db_conn for auth_rate_limits queries (asyncpg)."""
     mock_row = {"attempt_count": 1, "locked_until": None}
-    mock_cur = MagicMock()
-    mock_cur.fetchone.return_value = mock_row
-    mock_ctx = MagicMock()
-    mock_ctx.__enter__ = MagicMock(return_value=mock_cur)
-    mock_ctx.__exit__ = MagicMock(return_value=False)
-    with patch("database.connection.get_sync_cursor", return_value=mock_ctx):
-        yield mock_cur
+    mock_conn = MagicMock()
+    mock_conn.fetchrow = AsyncMock(return_value=mock_row)
+    mock_conn.execute = AsyncMock(return_value=None)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("database.connection.get_db_conn", return_value=mock_cm):
+        yield mock_conn

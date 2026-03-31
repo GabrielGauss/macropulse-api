@@ -65,7 +65,7 @@ def _price_id_for_tier(tier: str) -> str:
     response_model=CheckoutResponse,
     summary="Create a Paddle checkout session",
 )
-def create_checkout(
+async def create_checkout(
     body: CheckoutRequest,
     key_record: dict = Depends(require_api_key),
 ) -> CheckoutResponse:
@@ -115,7 +115,7 @@ def create_checkout(
     response_model=PortalResponse,
     summary="Get Paddle customer portal URL",
 )
-def get_portal(
+async def get_portal(
     key_record: dict = Depends(require_api_key),
 ) -> PortalResponse:
     """
@@ -123,7 +123,7 @@ def get_portal(
     their subscription directly.
     """
     user_id: int = key_record["user_id"]
-    user = queries.get_user_by_id(user_id)
+    user = await queries.get_user_by_id(user_id)
 
     if not user or not user.get("paddle_customer_id"):
         raise HTTPException(
@@ -147,7 +147,7 @@ def get_portal(
     "/ls-portal",
     summary="Get Lemon Squeezy customer portal URL",
 )
-def get_ls_portal(key_record: dict = Depends(require_api_key)) -> dict:
+async def get_ls_portal(key_record: dict = Depends(require_api_key)) -> dict:
     """
     Returns the Lemon Squeezy customer portal URL for the authenticated user.
     Used by the dashboard to render a 'Manage subscription' link.
@@ -155,8 +155,7 @@ def get_ls_portal(key_record: dict = Depends(require_api_key)) -> dict:
     """
     user_id: int = key_record["user_id"]
     try:
-        from database.queries import get_user_by_id
-        user = get_user_by_id(user_id)
+        user = await queries.get_user_by_id(user_id)
     except Exception as exc:
         logger.error("ls-portal lookup error for user_id=%d: %s", user_id, exc)
         raise HTTPException(status_code=503, detail="Service temporarily unavailable.")
@@ -213,19 +212,19 @@ async def paddle_webhook(
         or request.headers.get("paddle-event-id")
     )
     if event_id:
-        from database.connection import get_sync_cursor
+        from database.connection import get_db_conn
         try:
-            with get_sync_cursor() as cur:
-                cur.execute(
-                    "SELECT 1 FROM webhook_idempotency WHERE event_id = %s",
-                    (event_id,),
+            async with get_db_conn() as conn:
+                row = await conn.fetchrow(
+                    "SELECT 1 FROM webhook_idempotency WHERE event_id = $1",
+                    event_id,
                 )
-                if cur.fetchone() is not None:
+                if row is not None:
                     logger.info("Paddle webhook duplicate skipped: event_id=%s", event_id)
                     return {"ok": True, "duplicate": True}
-                cur.execute(
-                    "INSERT INTO webhook_idempotency (event_id, provider) VALUES (%s, 'paddle') ON CONFLICT DO NOTHING",
-                    (event_id,),
+                await conn.execute(
+                    "INSERT INTO webhook_idempotency (event_id, provider) VALUES ($1, 'paddle') ON CONFLICT DO NOTHING",
+                    event_id,
                 )
         except Exception as exc:
             logger.error("Webhook idempotency check failed: %s", exc)
@@ -318,7 +317,7 @@ async def lemonsqueezy_webhook(request: Request) -> dict:
     logger.info("LS webhook event=%s", event)
 
     try:
-        result = _ls_handle(event, attrs)
+        result = await _ls_handle(event, attrs)
     except Exception as exc:
         # Always return 200 so LS doesn't retry on our internal errors
         logger.error("LS webhook handler error: %s", exc, exc_info=True)
@@ -327,7 +326,7 @@ async def lemonsqueezy_webhook(request: Request) -> dict:
     return {"ok": True, **result}
 
 
-def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
+async def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
     """
     Ensure a paid user has an account and an active API key at the given tier.
 
@@ -339,19 +338,19 @@ def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
     from services.email import send_welcome_email, send_upgrade_email
 
     # Get or create user
-    user = queries.get_user_by_email(email)
+    user = await queries.get_user_by_email(email)
     if user is None:
-        user = queries.create_user(email)
+        user = await queries.create_user(email)
 
     uid: int = user["id"]
 
     # Check for an existing active key
-    existing_keys = queries.get_active_keys_for_user(uid)
+    existing_keys = await queries.get_active_keys_for_user(uid)
 
     if not existing_keys:
         # New user (or one without a key) — generate and deliver a key
         raw_key = generate_api_key()
-        queries.create_api_key(
+        await queries.create_api_key(
             user_id=uid,
             key_hash=hash_key(raw_key),
             key_prefix=raw_key[:12],
@@ -364,7 +363,7 @@ def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
         return uid, raw_key[:12], True
     else:
         # Existing user — upgrade tier on all active keys and notify
-        queries.upgrade_user_tier(uid, tier)
+        await queries.upgrade_user_tier(uid, tier)
         key_prefix = existing_keys[0]["key_prefix"]
         try:
             send_upgrade_email(email, tier, key_prefix)
@@ -373,7 +372,7 @@ def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
         return uid, key_prefix, False
 
 
-def _ls_handle(event: str, attrs: dict) -> dict:
+async def _ls_handle(event: str, attrs: dict) -> dict:
     email     = (attrs.get("user_email") or "").lower().strip()
     cid       = str(attrs.get("customer_id") or "")
     sid       = str(attrs.get("subscription_id") or attrs.get("id") or "")
@@ -390,20 +389,20 @@ def _ls_handle(event: str, attrs: dict) -> dict:
             if not email:
                 logger.warning("LS %s: no email in payload, cid=%s", event, cid)
                 return {"result": "no_email", "cid": cid}
-            uid, key_prefix, key_is_new = _ls_provision(email, tier)
-            queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status, portal_url)
+            uid, key_prefix, key_is_new = await _ls_provision(email, tier)
+            await queries.upsert_ls_subscription(uid, cid, sid, str(vid or ""), ls_status, portal_url)
             action = f"{'created' if key_is_new else 'upgraded'}_to_{tier}"
             logger.info("LS %s: uid=%s email=%s action=%s", event, uid, email, action)
             return {"result": action, "user_id": uid}
 
         elif ls_status in ("expired", "unpaid", "paused"):
             # Downgrade path — user must already exist
-            user = queries.get_user_by_email(email) if email else None
+            user = await queries.get_user_by_email(email) if email else None
             if user is None and cid:
-                user = queries.get_user_by_ls_customer(cid)
+                user = await queries.get_user_by_ls_customer(cid)
             if user:
-                queries.upgrade_user_tier(user["id"], "free")
-                queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), ls_status)
+                await queries.upgrade_user_tier(user["id"], "free")
+                await queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), ls_status)
             return {"result": f"downgraded_to_free_status={ls_status}"}
 
         else:
@@ -411,20 +410,20 @@ def _ls_handle(event: str, attrs: dict) -> dict:
 
     elif event == "subscription_cancelled":
         # Access continues until period end — record cancellation, don't downgrade yet
-        user = queries.get_user_by_email(email) if email else None
+        user = await queries.get_user_by_email(email) if email else None
         if user is None and cid:
-            user = queries.get_user_by_ls_customer(cid)
+            user = await queries.get_user_by_ls_customer(cid)
         if user:
-            queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "cancelled")
+            await queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "cancelled")
         return {"result": "cancelled_access_retained"}
 
     elif event == "subscription_expired":
-        user = queries.get_user_by_email(email) if email else None
+        user = await queries.get_user_by_email(email) if email else None
         if user is None and cid:
-            user = queries.get_user_by_ls_customer(cid)
+            user = await queries.get_user_by_ls_customer(cid)
         if user:
-            queries.upgrade_user_tier(user["id"], "free")
-            queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "expired")
+            await queries.upgrade_user_tier(user["id"], "free")
+            await queries.upsert_ls_subscription(user["id"], cid, sid, str(vid or ""), "expired")
         return {"result": "expired_downgraded_to_free"}
 
     elif event == "subscription_payment_success":

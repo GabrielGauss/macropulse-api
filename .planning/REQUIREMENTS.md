@@ -36,7 +36,7 @@
 - [x] **DB-10**: `psycopg2.ThreadedConnectionPool` replaced with `asyncpg` connection pool throughout `database/connection.py` and `database/queries.py`
 - [x] **DB-11**: All database query functions are `async def` — no synchronous DB calls blocking FastAPI's event loop
 - [x] **DB-12**: Connection pool parameters configurable via env vars: `DB_POOL_MIN`, `DB_POOL_MAX` (defaults 2, 10)
-- [ ] **DB-13**: All existing tests pass with the async driver; no query regressions
+- [x] **DB-13**: All existing tests pass with the async driver; no query regressions
 
 ### Observability
 
@@ -118,7 +118,7 @@
 | DB-10 | Phase 8 | Complete (08-00, 08-01) |
 | DB-11 | Phase 8 | Complete (08-01) |
 | DB-12 | Phase 8 | Complete (08-00) |
-| DB-13 | Phase 8 | Pending |
+| DB-13 | Phase 8 | Complete (08-02) |
 | OBS-01 | Phase 9 | Pending |
 | OBS-02 | Phase 9 | Pending |
 | OBS-03 | Phase 9 | Pending |
