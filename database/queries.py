@@ -11,7 +11,7 @@ import datetime as dt
 import logging
 from typing import Any
 
-from database.connection import get_sync_cursor
+from database.connection import get_db_conn
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # ── Writes ───────────────────────────────────────────────────────────
 
 
-def upsert_macro_features(row: dict[str, Any]) -> None:
+async def upsert_macro_features(row: dict[str, Any]) -> None:
     """Insert or update a single row in macro_features."""
     sql = """
         INSERT INTO macro_features (
@@ -27,9 +27,9 @@ def upsert_macro_features(row: dict[str, Any]) -> None:
             d_dxy, d_hy_spread, d_yield_curve, d_10y, d_2y,
             d_gold, d_oil, d_btc, d_eth
         ) VALUES (
-            %(time)s, %(net_liquidity)s, %(d_liquidity)s, %(d_sp500)s, %(d_vix)s,
-            %(d_dxy)s, %(d_hy_spread)s, %(d_yield_curve)s, %(d_10y)s, %(d_2y)s,
-            %(d_gold)s, %(d_oil)s, %(d_btc)s, %(d_eth)s
+            $1, $2, $3, $4, $5,
+            $6, $7, $8, $9, $10,
+            $11, $12, $13, $14
         )
         ON CONFLICT (time) DO UPDATE SET
             net_liquidity  = EXCLUDED.net_liquidity,
@@ -51,18 +51,24 @@ def upsert_macro_features(row: dict[str, Any]) -> None:
     row.setdefault("d_oil", 0)
     row.setdefault("d_btc", 0)
     row.setdefault("d_eth", 0)
-    with get_sync_cursor() as cur:
-        cur.execute(sql, row)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            row["time"], row["net_liquidity"], row["d_liquidity"],
+            row["d_sp500"], row["d_vix"], row["d_dxy"],
+            row["d_hy_spread"], row["d_yield_curve"], row["d_10y"],
+            row["d_2y"], row["d_gold"], row["d_oil"],
+            row["d_btc"], row["d_eth"],
+        )
 
 
-def upsert_macro_factors(row: dict[str, Any]) -> None:
+async def upsert_macro_factors(row: dict[str, Any]) -> None:
     """Insert or update a single row in macro_factors."""
     sql = """
         INSERT INTO macro_factors (
             time, factor_1, factor_2, factor_3, factor_4, model_version
         ) VALUES (
-            %(time)s, %(factor_1)s, %(factor_2)s, %(factor_3)s,
-            %(factor_4)s, %(model_version)s
+            $1, $2, $3, $4, $5, $6
         )
         ON CONFLICT (time) DO UPDATE SET
             factor_1      = EXCLUDED.factor_1,
@@ -71,11 +77,15 @@ def upsert_macro_factors(row: dict[str, Any]) -> None:
             factor_4      = EXCLUDED.factor_4,
             model_version = EXCLUDED.model_version;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, row)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            row["time"], row["factor_1"], row["factor_2"],
+            row["factor_3"], row["factor_4"], row["model_version"],
+        )
 
 
-def upsert_macro_regime(row: dict[str, Any]) -> None:
+async def upsert_macro_regime(row: dict[str, Any]) -> None:
     """Insert or update a single row in macro_regimes."""
     sql = """
         INSERT INTO macro_regimes (
@@ -83,9 +93,7 @@ def upsert_macro_regime(row: dict[str, Any]) -> None:
             prob_risk_off, prob_recovery, risk_score,
             volatility_state, model_version
         ) VALUES (
-            %(time)s, %(regime)s, %(prob_expansion)s, %(prob_tightening)s,
-            %(prob_risk_off)s, %(prob_recovery)s, %(risk_score)s,
-            %(volatility_state)s, %(model_version)s
+            $1, $2, $3, $4, $5, $6, $7, $8, $9
         )
         ON CONFLICT (time) DO UPDATE SET
             regime           = EXCLUDED.regime,
@@ -97,19 +105,23 @@ def upsert_macro_regime(row: dict[str, Any]) -> None:
             volatility_state = EXCLUDED.volatility_state,
             model_version    = EXCLUDED.model_version;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, row)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            row["time"], row["regime"], row["prob_expansion"],
+            row["prob_tightening"], row["prob_risk_off"], row["prob_recovery"],
+            row["risk_score"], row["volatility_state"], row["model_version"],
+        )
 
 
-def upsert_drift_metrics(row: dict[str, Any]) -> None:
+async def upsert_drift_metrics(row: dict[str, Any]) -> None:
     """Insert or update a single row in model_drift_metrics."""
     sql = """
         INSERT INTO model_drift_metrics (
             time, pca_explained_variance, regime_persistence,
             feature_mean_shift, feature_std_shift, model_version
         ) VALUES (
-            %(time)s, %(pca_explained_variance)s, %(regime_persistence)s,
-            %(feature_mean_shift)s, %(feature_std_shift)s, %(model_version)s
+            $1, $2, $3, $4, $5, $6
         )
         ON CONFLICT (time) DO UPDATE SET
             pca_explained_variance = EXCLUDED.pca_explained_variance,
@@ -118,11 +130,15 @@ def upsert_drift_metrics(row: dict[str, Any]) -> None:
             feature_std_shift      = EXCLUDED.feature_std_shift,
             model_version          = EXCLUDED.model_version;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, row)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            row["time"], row["pca_explained_variance"], row["regime_persistence"],
+            row["feature_mean_shift"], row["feature_std_shift"], row["model_version"],
+        )
 
 
-def fetch_latest_pipeline_run() -> dict[str, Any] | None:
+async def fetch_latest_pipeline_run() -> dict[str, Any] | None:
     """Return the most recent pipeline_runs row, or None if no runs recorded."""
     sql = """
         SELECT run_ts, status, data_lag, duration_sec, error_message, model_version
@@ -130,69 +146,72 @@ def fetch_latest_pipeline_run() -> dict[str, Any] | None:
         ORDER BY run_ts DESC
         LIMIT 1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql)
-        row = cur.fetchone()
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql)
         return dict(row) if row else None
 
 
-def insert_pipeline_run(row: dict[str, Any]) -> None:
+async def insert_pipeline_run(row: dict[str, Any]) -> None:
     """Log a pipeline execution."""
     sql = """
         INSERT INTO pipeline_runs (
             run_ts, status, data_lag, duration_sec,
             error_message, model_version
         ) VALUES (
-            %(run_ts)s, %(status)s, %(data_lag)s, %(duration_sec)s,
-            %(error_message)s, %(model_version)s
+            $1, $2, $3, $4, $5, $6
         );
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, row)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            row["run_ts"], row["status"], row["data_lag"],
+            row["duration_sec"], row["error_message"], row["model_version"],
+        )
 
 
 # ── Reads ────────────────────────────────────────────────────────────
 
 
-def fetch_current_regime() -> dict[str, Any] | None:
+async def fetch_current_regime() -> dict[str, Any] | None:
     """Return the most recent regime row."""
     sql = """
         SELECT * FROM macro_regimes
         ORDER BY time DESC
         LIMIT 1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql)
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql)
+        return dict(row) if row else None
 
 
-def fetch_regime_history(
+async def fetch_regime_history(
     start: dt.date | None = None,
     end: dt.date | None = None,
     limit: int = 90,
 ) -> list[dict[str, Any]]:
     """Return regime history within an optional date window."""
     conditions: list[str] = []
-    params: dict[str, Any] = {"limit": limit}
+    args: list[Any] = []
     if start:
-        conditions.append("time >= %(start)s")
-        params["start"] = start
+        args.append(start)
+        conditions.append(f"time >= ${len(args)}")
     if end:
-        conditions.append("time <= %(end)s")
-        params["end"] = end
+        args.append(end)
+        conditions.append(f"time <= ${len(args)}")
+    args.append(limit)
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"""
         SELECT * FROM macro_regimes
         {where}
         ORDER BY time DESC
-        LIMIT %(limit)s;
+        LIMIT ${len(args)};
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, params)
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, *args)
+        return [dict(r) for r in rows]
 
 
-def fetch_public_chart_data(limit: int = 730) -> list[dict[str, Any]]:
+async def fetch_public_chart_data(limit: int = 730) -> list[dict[str, Any]]:
     """
     Return regime history + SP500/Gold daily returns for the public chart.
     LEFT JOINs macro_features so regime rows without feature data still appear.
@@ -207,126 +226,126 @@ def fetch_public_chart_data(limit: int = 730) -> list[dict[str, Any]]:
         FROM macro_regimes r
         LEFT JOIN macro_features f ON f.time::date = r.time::date
         ORDER BY r.time DESC
-        LIMIT %(limit)s;
+        LIMIT $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"limit": limit})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, limit)
+        return [dict(r) for r in rows]
 
 
-def create_newsletter_subscriber(email: str) -> None:
+async def create_newsletter_subscriber(email: str) -> None:
     """Insert a newsletter subscriber, silently ignoring duplicates."""
     sql = """
         INSERT INTO newsletter_subscribers (email)
-        VALUES (%(email)s)
+        VALUES ($1)
         ON CONFLICT (email) DO NOTHING;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"email": email})
+    async with get_db_conn() as conn:
+        await conn.execute(sql, email)
 
 
-def fetch_latest_liquidity(limit: int = 30) -> list[dict[str, Any]]:
+async def fetch_latest_liquidity(limit: int = 30) -> list[dict[str, Any]]:
     """Return recent net liquidity values."""
     sql = """
         SELECT time, net_liquidity, d_liquidity
         FROM macro_features
         ORDER BY time DESC
-        LIMIT %(limit)s;
+        LIMIT $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"limit": limit})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, limit)
+        return [dict(r) for r in rows]
 
 
-def fetch_latest_factors(limit: int = 30) -> list[dict[str, Any]]:
+async def fetch_latest_factors(limit: int = 30) -> list[dict[str, Any]]:
     """Return recent PCA factors."""
     sql = """
         SELECT * FROM macro_factors
         ORDER BY time DESC
-        LIMIT %(limit)s;
+        LIMIT $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"limit": limit})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, limit)
+        return [dict(r) for r in rows]
 
 
-def fetch_latest_drift(limit: int = 30) -> list[dict[str, Any]]:
+async def fetch_latest_drift(limit: int = 30) -> list[dict[str, Any]]:
     """Return recent drift metrics."""
     sql = """
         SELECT * FROM model_drift_metrics
         ORDER BY time DESC
-        LIMIT %(limit)s;
+        LIMIT $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"limit": limit})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, limit)
+        return [dict(r) for r in rows]
 
 
 # ── User management ──────────────────────────────────────────────────
 
 
-def create_user(email: str, name: str | None = None) -> dict[str, Any]:
+async def create_user(email: str, name: str | None = None) -> dict[str, Any]:
     """Insert a new user row. Raises if email already exists."""
     sql = """
         INSERT INTO users (email, name)
-        VALUES (%(email)s, %(name)s)
+        VALUES ($1, $2)
         RETURNING id, email, name, created_at;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"email": email, "name": name})
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, email, name)
+        return dict(row)
 
 
-def get_user_by_email(email: str) -> dict[str, Any] | None:
-    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id FROM users WHERE email = %(email)s;"
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"email": email})
-        return cur.fetchone()  # type: ignore[return-value]
+async def get_user_by_email(email: str) -> dict[str, Any] | None:
+    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id FROM users WHERE email = $1;"
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, email)
+        return dict(row) if row else None
 
 
-def get_user_by_id(user_id: int) -> dict[str, Any] | None:
-    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id, ls_portal_url, ls_status FROM users WHERE id = %(id)s;"
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"id": user_id})
-        return cur.fetchone()  # type: ignore[return-value]
+async def get_user_by_id(user_id: int) -> dict[str, Any] | None:
+    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id, ls_portal_url, ls_status FROM users WHERE id = $1;"
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, user_id)
+        return dict(row) if row else None
 
 
-def update_paddle_customer(
+async def update_paddle_customer(
     user_id: int,
     paddle_customer_id: str,
     paddle_subscription_id: str | None = None,
 ) -> None:
     sql = """
         UPDATE users
-        SET paddle_customer_id     = %(cid)s,
-            paddle_subscription_id = COALESCE(%(sid)s, paddle_subscription_id)
-        WHERE id = %(uid)s;
+        SET paddle_customer_id     = $1,
+            paddle_subscription_id = COALESCE($2, paddle_subscription_id)
+        WHERE id = $3;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"cid": paddle_customer_id, "sid": paddle_subscription_id, "uid": user_id})
+    async with get_db_conn() as conn:
+        await conn.execute(sql, paddle_customer_id, paddle_subscription_id, user_id)
 
 
-def get_user_by_paddle_customer(paddle_customer_id: str) -> dict[str, Any] | None:
+async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict[str, Any] | None:
     sql = """
         SELECT id, email, name, paddle_customer_id, paddle_subscription_id
-        FROM users WHERE paddle_customer_id = %(cid)s;
+        FROM users WHERE paddle_customer_id = $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"cid": paddle_customer_id})
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, paddle_customer_id)
+        return dict(row) if row else None
 
 
-def get_user_by_ls_customer(ls_customer_id: str) -> dict[str, Any] | None:
+async def get_user_by_ls_customer(ls_customer_id: str) -> dict[str, Any] | None:
     sql = """
         SELECT id, email, name, ls_customer_id, ls_subscription_id, ls_status
-        FROM users WHERE ls_customer_id = %(cid)s;
+        FROM users WHERE ls_customer_id = $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"cid": ls_customer_id})
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, ls_customer_id)
+        return dict(row) if row else None
 
 
-def upsert_ls_subscription(
+async def upsert_ls_subscription(
     user_id: int,
     ls_customer_id: str,
     ls_subscription_id: str,
@@ -337,32 +356,29 @@ def upsert_ls_subscription(
     """Persist Lemon Squeezy subscription data on the user row."""
     sql = """
         UPDATE users
-        SET ls_customer_id     = %(cid)s,
-            ls_subscription_id = %(sid)s,
-            ls_variant_id      = %(vid)s,
-            ls_status          = %(status)s,
-            ls_portal_url      = COALESCE(%(portal)s, ls_portal_url)
-        WHERE id = %(uid)s;
+        SET ls_customer_id     = $1,
+            ls_subscription_id = $2,
+            ls_variant_id      = $3,
+            ls_status          = $4,
+            ls_portal_url      = COALESCE($5, ls_portal_url)
+        WHERE id = $6;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {
-            "cid": ls_customer_id,
-            "sid": ls_subscription_id,
-            "vid": ls_variant_id,
-            "status": ls_status,
-            "portal": ls_portal_url,
-            "uid": user_id,
-        })
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            ls_customer_id, ls_subscription_id, ls_variant_id,
+            ls_status, ls_portal_url, user_id,
+        )
 
 
-def upgrade_user_tier(user_id: int, tier: str) -> None:
+async def upgrade_user_tier(user_id: int, tier: str) -> None:
     """Set the tier on all active API keys for a user."""
-    sql = "UPDATE api_keys SET tier = %(tier)s WHERE user_id = %(uid)s AND is_active = TRUE;"
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"tier": tier, "uid": user_id})
+    sql = "UPDATE api_keys SET tier = $1 WHERE user_id = $2 AND is_active = TRUE;"
+    async with get_db_conn() as conn:
+        await conn.execute(sql, tier, user_id)
 
 
-def create_api_key(
+async def create_api_key(
     user_id: int,
     key_hash: str,
     key_prefix: str,
@@ -371,20 +387,15 @@ def create_api_key(
     """Store a hashed API key. Returns the created row (no plaintext)."""
     sql = """
         INSERT INTO api_keys (user_id, key_hash, key_prefix, tier)
-        VALUES (%(user_id)s, %(key_hash)s, %(key_prefix)s, %(tier)s)
+        VALUES ($1, $2, $3, $4)
         RETURNING id, user_id, key_prefix, tier, is_active, created_at;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {
-            "user_id": user_id,
-            "key_hash": key_hash,
-            "key_prefix": key_prefix,
-            "tier": tier,
-        })
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, user_id, key_hash, key_prefix, tier)
+        return dict(row)
 
 
-def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
+async def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
     """
     Look up a key by its SHA-256 hash.
 
@@ -396,49 +407,49 @@ def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
                k.created_at, k.last_used_at, u.email, u.name
         FROM api_keys k
         JOIN users u ON u.id = k.user_id
-        WHERE k.key_hash = %(hash)s
+        WHERE k.key_hash = $1
           AND k.is_active = TRUE;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"hash": key_hash})
-        return cur.fetchone()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, key_hash)
+        return dict(row) if row else None
 
 
-def get_active_keys_for_user(user_id: int) -> list[dict[str, Any]]:
+async def get_active_keys_for_user(user_id: int) -> list[dict[str, Any]]:
     """Return all active API key rows for a user (key_hash not exposed)."""
     sql = """
         SELECT id, user_id, key_prefix, tier, is_active, created_at
         FROM api_keys
-        WHERE user_id = %(uid)s AND is_active = TRUE
+        WHERE user_id = $1 AND is_active = TRUE
         ORDER BY created_at ASC;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"uid": user_id})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, user_id)
+        return [dict(r) for r in rows]
 
 
-def revoke_api_keys_for_user(user_id: int) -> None:
+async def revoke_api_keys_for_user(user_id: int) -> None:
     """Deactivate all active keys for a user (used during rotation)."""
     sql = """
         UPDATE api_keys
         SET is_active = FALSE, revoked_at = now()
-        WHERE user_id = %(user_id)s AND is_active = TRUE;
+        WHERE user_id = $1 AND is_active = TRUE;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"user_id": user_id})
+    async with get_db_conn() as conn:
+        await conn.execute(sql, user_id)
 
 
-def touch_api_key(key_hash: str) -> None:
+async def touch_api_key(key_hash: str) -> None:
     """Update last_used_at for a key (fire-and-forget, best effort)."""
-    sql = "UPDATE api_keys SET last_used_at = now() WHERE key_hash = %(hash)s;"
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"hash": key_hash})
+    sql = "UPDATE api_keys SET last_used_at = now() WHERE key_hash = $1;"
+    async with get_db_conn() as conn:
+        await conn.execute(sql, key_hash)
 
 
 _IP_LOCK_MINUTES = 15
 
 
-def check_and_set_ip_lock(key_hash: str, client_ip: str) -> bool:
+async def check_and_set_ip_lock(key_hash: str, client_ip: str) -> bool:
     """
     Enforce single-location key usage.
 
@@ -453,35 +464,34 @@ def check_and_set_ip_lock(key_hash: str, client_ip: str) -> bool:
         WITH current AS (
             SELECT last_ip, ip_locked_at
             FROM api_keys
-            WHERE key_hash = %(hash)s
+            WHERE key_hash = $1
         ),
         updated AS (
             UPDATE api_keys
             SET last_ip      = CASE
                                   WHEN (SELECT last_ip FROM current) IS NULL
-                                    OR (SELECT last_ip FROM current) = %(ip)s
-                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL '%(mins)s minutes'
-                                  THEN %(ip)s
+                                    OR (SELECT last_ip FROM current) = $2
+                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL 'WINDOW_INTERVAL'
+                                  THEN $2
                                   ELSE (SELECT last_ip FROM current)
                                 END,
                 ip_locked_at = CASE
                                   WHEN (SELECT last_ip FROM current) IS NULL
-                                    OR (SELECT last_ip FROM current) = %(ip)s
-                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL '%(mins)s minutes'
+                                    OR (SELECT last_ip FROM current) = $2
+                                    OR (SELECT ip_locked_at FROM current) < NOW() - INTERVAL 'WINDOW_INTERVAL'
                                   THEN NOW()
                                   ELSE (SELECT ip_locked_at FROM current)
                                 END
-            WHERE key_hash = %(hash)s
+            WHERE key_hash = $1
             RETURNING last_ip
         )
         SELECT (SELECT last_ip FROM current) AS old_ip,
                (SELECT last_ip FROM updated) AS new_ip;
     """
-    # psycopg2 doesn't support %(var)s inside INTERVAL literals; use format
-    sql = sql.replace("%(mins)s", str(_IP_LOCK_MINUTES))
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"hash": key_hash, "ip": client_ip})
-        row = cur.fetchone()
+    # asyncpg cannot parameterise values inside INTERVAL literals; use str.replace()
+    sql = sql.replace("WINDOW_INTERVAL", f"{_IP_LOCK_MINUTES} minutes")
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, key_hash, client_ip)
     if not row:
         return True  # key not found — let auth handle it
     old_ip = row["old_ip"]
@@ -490,7 +500,7 @@ def check_and_set_ip_lock(key_hash: str, client_ip: str) -> bool:
     return new_ip == client_ip or old_ip is None
 
 
-def increment_daily_usage(key_hash: str) -> int:
+async def increment_daily_usage(key_hash: str) -> int:
     """
     Atomically increment the daily request counter for a key.
 
@@ -507,56 +517,55 @@ def increment_daily_usage(key_hash: str) -> int:
                                 ELSE 1
                               END,
             last_used_at    = now()
-        WHERE key_hash = %(hash)s
+        WHERE key_hash = $1
         RETURNING daily_requests;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"hash": key_hash})
-        row = cur.fetchone()
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, key_hash)
         return int(row["daily_requests"]) if row else 1
 
 
-def get_daily_usage(key_hash: str) -> int:
+async def get_daily_usage(key_hash: str) -> int:
     """Return today's request count for a key (0 if not found or date differs)."""
     sql = """
         SELECT daily_requests
         FROM api_keys
-        WHERE key_hash = %(hash)s
+        WHERE key_hash = $1
           AND usage_date = CURRENT_DATE
           AND is_active = TRUE;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"hash": key_hash})
-        row = cur.fetchone()
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, key_hash)
         return int(row["daily_requests"]) if row else 0
 
 
-def get_alert_recipients() -> list[dict]:
+async def get_alert_recipients() -> list[dict]:
     """Return all active users on starter/pro tier for regime change alerts (owner excluded)."""
-    with get_sync_cursor() as cur:
-        cur.execute("""
-            SELECT DISTINCT ON (u.id)
-                u.id, u.email, k.tier, u.webhook_url, u.alerts_enabled
-            FROM users u
-            JOIN api_keys k ON k.user_id = u.id
-            WHERE k.is_active = TRUE
-              AND k.tier IN ('starter', 'pro')
-              AND u.alerts_enabled = TRUE
-            ORDER BY u.id, k.created_at DESC
-        """)
-        return [dict(r) for r in cur.fetchall()]
+    sql = """
+        SELECT DISTINCT ON (u.id)
+            u.id, u.email, k.tier, u.webhook_url, u.alerts_enabled
+        FROM users u
+        JOIN api_keys k ON k.user_id = u.id
+        WHERE k.is_active = TRUE
+          AND k.tier IN ('starter', 'pro')
+          AND u.alerts_enabled = TRUE
+        ORDER BY u.id, k.created_at DESC
+    """
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql)
+        return [dict(r) for r in rows]
 
 
-def update_webhook_url(user_id: int, webhook_url: str | None) -> None:
+async def update_webhook_url(user_id: int, webhook_url: str | None) -> None:
     """Set or clear a user's webhook URL."""
-    with get_sync_cursor() as cur:
-        cur.execute(
-            "UPDATE users SET webhook_url = %s WHERE id = %s",
-            (webhook_url, user_id)
+    async with get_db_conn() as conn:
+        await conn.execute(
+            "UPDATE users SET webhook_url = $1 WHERE id = $2",
+            webhook_url, user_id,
         )
 
 
-def fetch_subscriber_emails() -> list[str]:
+async def fetch_subscriber_emails() -> list[str]:
     """Return emails of all Starter/Pro users with an active API key (paid digest only)."""
     sql = """
         SELECT DISTINCT u.email
@@ -565,71 +574,75 @@ def fetch_subscriber_emails() -> list[str]:
         WHERE k.is_active = TRUE AND k.tier IN ('starter', 'pro')
         ORDER BY u.email;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return [r["email"] for r in rows]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql)
+        return [row["email"] for row in rows]
 
 
 # ── Email verification ─────────────────────────────────────────────────
 
-def create_email_verification(email: str, code: str) -> None:
+async def create_email_verification(email: str, code: str) -> None:
     """Delete any existing pending code for this email and insert a fresh one."""
-    with get_sync_cursor() as cur:
-        cur.execute("DELETE FROM email_verifications WHERE email = %(email)s;", {"email": email})
-        cur.execute(
-            """
-            INSERT INTO email_verifications (email, code, expires_at)
-            VALUES (%(email)s, %(code)s, NOW() + INTERVAL '15 minutes');
-            """,
-            {"email": email, "code": code},
-        )
+    async with get_db_conn() as conn:
+        async with conn.transaction():
+            await conn.execute(
+                "DELETE FROM email_verifications WHERE email = $1;",
+                email,
+            )
+            await conn.execute(
+                """
+                INSERT INTO email_verifications (email, code, expires_at)
+                VALUES ($1, $2, NOW() + INTERVAL '15 minutes');
+                """,
+                email, code,
+            )
 
 
 _OTP_MAX_ATTEMPTS = 5
 
 
-def verify_email_code(email: str, code: str) -> bool:
+async def verify_email_code(email: str, code: str) -> bool:
     """
     Mark code used and return True if valid + unexpired, False otherwise.
 
     Wrong guesses increment an attempt counter; after 5 failures the row is
     exhausted (marked used) so further guesses are impossible.
     """
-    with get_sync_cursor() as cur:
-        # Attempt exact match — also guards on attempt ceiling
-        cur.execute(
-            """
-            UPDATE email_verifications
-            SET used = TRUE
-            WHERE email = %(email)s
-              AND code  = %(code)s
-              AND expires_at > NOW()
-              AND used = FALSE
-              AND attempts < %(max_attempts)s
-            RETURNING id;
-            """,
-            {"email": email, "code": code, "max_attempts": _OTP_MAX_ATTEMPTS},
-        )
-        if cur.fetchone():
-            return True
+    async with get_db_conn() as conn:
+        async with conn.transaction():
+            # Attempt exact match — also guards on attempt ceiling
+            row = await conn.fetchrow(
+                """
+                UPDATE email_verifications
+                SET used = TRUE
+                WHERE email = $1
+                  AND code  = $2
+                  AND expires_at > NOW()
+                  AND used = FALSE
+                  AND attempts < $3
+                RETURNING id;
+                """,
+                email, code, _OTP_MAX_ATTEMPTS,
+            )
+            if row:
+                return True
 
-        # Wrong code — increment attempts; exhaust row if ceiling reached
-        cur.execute(
-            """
-            UPDATE email_verifications
-            SET attempts = attempts + 1,
-                used = (attempts + 1 >= %(max_attempts)s)
-            WHERE email = %(email)s
-              AND expires_at > NOW()
-              AND used = FALSE;
-            """,
-            {"email": email, "max_attempts": _OTP_MAX_ATTEMPTS},
-        )
-        return False
+            # Wrong code — increment attempts; exhaust row if ceiling reached
+            await conn.execute(
+                """
+                UPDATE email_verifications
+                SET attempts = attempts + 1,
+                    used = (attempts + 1 >= $1)
+                WHERE email = $2
+                  AND expires_at > NOW()
+                  AND used = FALSE;
+                """,
+                _OTP_MAX_ATTEMPTS, email,
+            )
+            return False
 
 
-def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
+async def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
     """Return recent macro feature rows (used by domain views and performance attribution)."""
     sql = """
         SELECT time, d_sp500, d_vix, d_dxy, d_hy_spread,
@@ -640,17 +653,17 @@ def fetch_latest_features(limit: int = 252) -> list[dict[str, Any]]:
                COALESCE(d_eth,  0) AS d_eth
         FROM macro_features
         ORDER BY time DESC
-        LIMIT %(limit)s;
+        LIMIT $1;
     """
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"limit": limit})
-        return cur.fetchall()  # type: ignore[return-value]
+    async with get_db_conn() as conn:
+        rows = await conn.fetch(sql, limit)
+        return [dict(r) for r in rows]
 
 
 # ── Auth endpoint rate limiting ────────────────────────────────────────
 
 
-def check_and_record_attempt(
+async def check_and_record_attempt(
     identifier: str,
     endpoint: str,
     max_attempts: int,
@@ -666,11 +679,11 @@ def check_and_record_attempt(
     On DB error: raises — caller handles fail-open.
 
     NOTE: WINDOW_INTERVAL is substituted via str.replace() before execution
-    because psycopg2 cannot parameterise %(var)s inside INTERVAL literals.
+    because asyncpg cannot parameterise values inside INTERVAL literals.
     """
     sql = """
         INSERT INTO auth_rate_limits (identifier, endpoint, attempt_count, window_start, updated_at)
-        VALUES (%(identifier)s, %(endpoint)s, 1, now(), now())
+        VALUES ($1, $2, 1, now(), now())
         ON CONFLICT (identifier, endpoint) DO UPDATE
             SET attempt_count = CASE
                                     WHEN auth_rate_limits.window_start < now() - INTERVAL 'WINDOW_INTERVAL'
@@ -693,11 +706,10 @@ def check_and_record_attempt(
                 updated_at    = now()
         RETURNING attempt_count, locked_until;
     """
-    # psycopg2 cannot substitute %(var)s inside INTERVAL literals; use str.replace()
+    # asyncpg cannot substitute values inside INTERVAL literals; use str.replace()
     sql = sql.replace("WINDOW_INTERVAL", f"{window_minutes} minutes")
-    with get_sync_cursor() as cur:
-        cur.execute(sql, {"identifier": identifier, "endpoint": endpoint})
-        row = cur.fetchone()
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, identifier, endpoint)
 
     if not row:
         # Defensive fallback — should not happen with RETURNING on an upsert
