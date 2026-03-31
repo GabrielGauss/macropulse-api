@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-00-PLAN.md — asyncpg pool + async connection layer (DB-10, DB-12)
-last_updated: "2026-03-30T22:39:45Z"
-last_activity: 2026-03-30 — Phase 8 Plan 00 complete (DB-10, DB-12 active)
+stopped_at: Completed 08-01-PLAN.md — rewrite all queries.py functions to asyncpg (DB-10, DB-11)
+last_updated: "2026-03-31T03:02:33Z"
+last_activity: 2026-03-31 — Phase 8 Plan 01 complete (DB-10, DB-11 — all 36 query functions migrated to asyncpg)
 progress:
   total_phases: 12
   completed_phases: 5
@@ -25,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: Phase 8 — Async DB Migration (in progress)
-Plan: 08-00 complete (asyncpg pool + connection layer)
-Status: Phase 8 in progress — DB-10, DB-12 active; 08-01 (query migration) next
-Last activity: 2026-03-30 — Phase 8 Plan 00 complete (asyncpg pool, lifespan wired)
+Plan: 08-01 complete (all queries.py functions migrated to asyncpg)
+Status: Phase 8 in progress — DB-10, DB-11 complete; 08-02 (route handler migration) next
+Last activity: 2026-03-31 — Phase 8 Plan 01 complete (all 36 query functions — asyncpg, positional $N params, dict-wrapped returns)
 
 Progress (v1.1): [███░░░░░░░] 25%
 
 v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 Phase 6 complete: Secrets, Webhooks, Infra Hardening (2026-03-29)
 Phase 7 complete: Auth Rate Limiting — SEC-30–33 (2026-03-30)
-Phase 8 in progress: Plan 00 complete — asyncpg pool layer done
+Phase 8 in progress: Plans 00–01 complete — asyncpg pool layer + all query functions migrated
 
 ## v1.1 Phase Overview
 
@@ -116,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 07-01]: recover() check fires before queries.get_user_by_email() — anti-enumeration: attacker must not learn if email exists before hitting the limit
 - [Phase 08-00]: get_sync_cursor() compatibility shim added to connection.py — importable but raises RuntimeError at call time; keeps unmigrated modules (queries.py, routes) loadable until plan 08-01 migrates every call site
 - [Phase 08-00]: JSONB codec registered per-connection via asyncpg create_pool init= callback — correct asyncpg pattern; set_type_codec must be called on each connection individually
+- [Phase 08-01]: str.replace INTERVAL pattern preserved for check_and_set_ip_lock and check_and_record_attempt — asyncpg cannot parameterise values inside INTERVAL literals
+- [Phase 08-01]: fetch_subscriber_emails returns list[str] not list[dict] — callers expect plain email strings, unwrapping done via [row["email"] for row in rows]
+- [Phase 08-01]: fetch_regime_history uses dynamic $N positional arg building (args.append + f"${len(args)}") to handle optional start/end date filters cleanly
 
 ### Pending Todos
 
@@ -130,6 +133,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-30T22:39:45Z
-Stopped at: Completed 08-00-PLAN.md — asyncpg pool + async connection layer (DB-10, DB-12 complete)
+Last session: 2026-03-31T03:02:33Z
+Stopped at: Completed 08-01-PLAN.md — all queries.py functions migrated to asyncpg (DB-10, DB-11 complete)
 Resume file: None
