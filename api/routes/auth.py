@@ -383,3 +383,55 @@ async def get_usage(
         remaining=remaining,
         reset_at=_reset_ts(),
     )
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Permanently delete your account (GDPR right to erasure)",
+)
+async def delete_me(
+    key_record: dict = Depends(require_api_key),
+) -> None:
+    """
+    Irrevocably anonymise the authenticated user's account.
+
+    The users row is retained (preserving audit trail FK integrity) but all
+    PII columns are overwritten with NULL or a non-reversible placeholder email.
+    All API keys for the account are deactivated in the same transaction, making
+    this request the last one any of them can authorise.
+
+    CSRF note: API key auth (header-based) is not susceptible to CSRF — no
+    browser session cookie is involved. No OTP re-verification is required.
+
+    Subscription note: if the user has an active LemonSqueezy subscription, a
+    warning is logged but deletion proceeds. The user should cancel via the
+    billing portal first.
+    """
+    user_id: int = key_record["user_id"]
+
+    # Reject synthetic records: owner key and legacy env-key paths both return
+    # user_id=0, which has no corresponding row in the users table.
+    if user_id == 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This key type does not support account deletion.",
+        )
+
+    try:
+        found = await queries.anonymise_user(user_id)
+    except Exception as exc:
+        logger.error("GDPR deletion failed for user_id=%d: %s", user_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not process deletion request. Please try again.",
+        )
+
+    if not found:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    logger.info("GDPR account deletion completed: user_id=%d", user_id)
+    # Returns HTTP 204 No Content — no response body

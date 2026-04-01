@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
+from api.routes.auth import delete_me
 from database.queries import anonymise_user
 
 
@@ -108,3 +109,43 @@ async def test_anonymise_user_not_found():
 
     assert result is False
     assert mock_conn.execute.call_count == 0
+
+
+# ── Task 2: DELETE /v1/auth/me endpoint tests ─────────────────────────
+
+
+async def test_delete_me_returns_204():
+    """
+    GDPR-01: DELETE /v1/auth/me with a valid user API key calls anonymise_user()
+    and returns None (HTTP 204 No Content — FastAPI renders None as 204).
+    """
+    key_record = {
+        "user_id": 42,
+        "tier": "free",
+        "email": "user@example.com",
+        "key_prefix": "mp_abc123",
+    }
+    with patch("database.queries.anonymise_user", new=AsyncMock(return_value=True)):
+        result = await delete_me(key_record=key_record)
+
+    assert result is None  # 204 No Content
+
+
+async def test_delete_me_rejects_owner_key():
+    """
+    GDPR-01 guard: DELETE /v1/auth/me with user_id=0 (owner/env key) must
+    raise HTTP 403 without ever calling anonymise_user().
+    """
+    key_record = {
+        "user_id": 0,
+        "tier": "owner",
+        "email": "owner@macropulse.live",
+        "key_prefix": "mp_owner",
+    }
+    mock_anonymise = AsyncMock(return_value=True)
+    with patch("database.queries.anonymise_user", new=mock_anonymise):
+        with pytest.raises(HTTPException) as exc_info:
+            await delete_me(key_record=key_record)
+
+    assert exc_info.value.status_code == 403
+    assert mock_anonymise.call_count == 0
