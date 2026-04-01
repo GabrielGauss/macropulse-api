@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import uuid
 from typing import Any
 
 from database.connection import get_db_conn
@@ -738,3 +739,116 @@ async def check_and_record_attempt(
         allowed = True
 
     return {"attempt_count": attempt_count, "locked_until": locked_until, "allowed": allowed}
+
+
+# ── GDPR right-to-erasure ─────────────────────────────────────────────
+
+
+async def anonymise_user(user_id: int) -> bool:
+    """
+    GDPR right-to-erasure (Article 17). Anonymise the user row, deactivate all
+    API keys, nullify PII in audit tables, and remove the newsletter subscription.
+    All five operations run in one atomic transaction.
+
+    Authentication note: deletion is authorised by possession of a valid API key
+    (the X-MacroPulse-Key header). No email OTP re-verification is required —
+    API key auth is not susceptible to CSRF (no browser cookies involved).
+
+    Re-registration note: after anonymisation get_user_by_email() returns None
+    for the original address, so the same email may register a new account.
+    This is correct GDPR behaviour — data is erased, not just hidden.
+
+    Subscription note: if ls_status = 'active', we proceed with erasure and log
+    a warning. The user is expected to cancel via the billing portal beforehand.
+    Subscription management is out of scope for Phase 11.
+
+    Returns True if a users row was found and anonymised, False if user_id not found.
+    """
+    anon_email = f"deleted_{uuid.uuid4()}@deleted.invalid"
+    async with get_db_conn() as conn:
+        async with conn.transaction():
+            # Step 1: Capture real email BEFORE overwriting (needed for newsletter DELETE)
+            row = await conn.fetchrow("SELECT email, ls_status FROM users WHERE id = $1", user_id)
+            if row is None:
+                return False
+            real_email = row["email"]
+            if row["ls_status"] == "active":
+                logger.warning(
+                    "GDPR deletion for user_id=%d with active LS subscription. "
+                    "Subscription was not cancelled automatically.",
+                    user_id,
+                )
+
+            # Step 2: Anonymise the users row
+            result = await conn.execute(
+                """
+                UPDATE users
+                SET
+                    email                      = $1,
+                    name                       = NULL,
+                    paddle_customer_id         = NULL,
+                    paddle_subscription_id     = NULL,
+                    paddle_subscription_status = NULL,
+                    webhook_url                = NULL,
+                    alerts_enabled             = FALSE,
+                    ls_customer_id             = NULL,
+                    ls_subscription_id         = NULL,
+                    ls_variant_id              = NULL,
+                    ls_status                  = NULL,
+                    ls_portal_url              = NULL,
+                    deleted_at                 = now()
+                WHERE id = $2
+                """,
+                anon_email,
+                user_id,
+            )
+            if result == "UPDATE 0":
+                return False
+
+            # Step 3: Deactivate all API keys and wipe historical IP data
+            await conn.execute(
+                """
+                UPDATE api_keys
+                SET
+                    is_active    = FALSE,
+                    revoked_at   = now(),
+                    last_ip      = NULL,
+                    ip_locked_at = NULL
+                WHERE user_id = $1
+                """,
+                user_id,
+            )
+
+            # Step 4: Nullify PII in webhook_deliveries
+            # payload JSONB commonly contains raw Paddle/LS event bodies with customer email
+            await conn.execute(
+                """
+                UPDATE webhook_deliveries
+                SET user_id = NULL,
+                    payload  = NULL
+                WHERE user_id = $1
+                """,
+                user_id,
+            )
+
+            # Step 5: Nullify PII in api_key_audit_log
+            # Neither webhook_deliveries nor api_key_audit_log has a FK on user_id
+            # (confirmed migration 008) — explicit nullification required
+            await conn.execute(
+                """
+                UPDATE api_key_audit_log
+                SET user_id    = NULL,
+                    ip_addr    = NULL,
+                    user_agent = NULL
+                WHERE user_id = $1
+                """,
+                user_id,
+            )
+
+            # Step 6: Remove newsletter subscription using real email (captured above)
+            await conn.execute(
+                "DELETE FROM newsletter_subscribers WHERE email = $1",
+                real_email,
+            )
+
+    return True
