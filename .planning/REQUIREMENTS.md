@@ -48,11 +48,11 @@
 
 ### Billing — Paddle
 
-- [ ] **BILL-01**: Paddle checkout session created via `POST /v1/billing/paddle/checkout` for starter and pro tiers
-- [ ] **BILL-02**: Paddle webhook handler processes `subscription.activated`, `subscription.cancelled`, `subscription.updated` events and updates `users.paddle_subscription_status` and `api_keys.tier`
-- [ ] **BILL-03**: Paddle webhook idempotency: duplicate event IDs are deduplicated via `webhook_idempotency` table (same pattern as existing Lemon Squeezy dedup)
-- [ ] **BILL-04**: `GET /v1/billing/paddle/portal` returns Paddle customer portal URL for subscription management
-- [ ] **BILL-05**: Tier downgrade on `subscription.cancelled`: user's API key tier reverted to `free` within one webhook processing cycle
+- [x] **BILL-01**: Paddle checkout session created via `POST /v1/billing/paddle/checkout` for starter and pro tiers
+- [x] **BILL-02**: Paddle webhook handler processes `subscription.activated`, `subscription.cancelled`, `subscription.updated` events and updates `users.paddle_subscription_status` and `api_keys.tier`
+- [x] **BILL-03**: Paddle webhook idempotency: duplicate event IDs are deduplicated via `webhook_idempotency` table (same pattern as existing Lemon Squeezy dedup)
+- [x] **BILL-04**: `GET /v1/billing/paddle/portal` returns Paddle customer portal URL for subscription management
+- [x] **BILL-05**: Tier downgrade on `subscription.cancelled`: user's API key tier reverted to `free` within one webhook processing cycle
 
 ### Compliance — GDPR
 
@@ -64,7 +64,7 @@
 ### Testing
 
 - [ ] **TEST-01**: Auth route tests: registration, OTP verification, recovery, key rotation — using FastAPI TestClient with DB fixtures
-- [ ] **TEST-02**: Billing webhook tests: Paddle `subscription.activated` and `subscription.cancelled` with valid and invalid signatures
+- [x] **TEST-02**: Billing webhook tests: Paddle `subscription.activated` and `subscription.cancelled` with valid and invalid signatures
 - [ ] **TEST-03**: Lemon Squeezy webhook tests: valid signature, invalid signature, missing secret (must return 500)
 - [ ] **TEST-04**: Rate limit middleware tests: OTP endpoint lockout after 5 attempts; auth endpoint per-IP throttle
 - [ ] **TEST-05**: DB migration tests: all migrations in `database/migrations/` apply cleanly to a fresh TimescaleDB schema in CI
@@ -124,17 +124,17 @@
 | OBS-03 | Phase 9 | Complete (09-00) |
 | OBS-04 | Phase 9 | Complete (09-01) |
 | OBS-05 | Phase 9 | Pending |
-| BILL-01 | Phase 10 | Pending |
-| BILL-02 | Phase 10 | Pending |
-| BILL-03 | Phase 10 | Pending |
-| BILL-04 | Phase 10 | Pending |
-| BILL-05 | Phase 10 | Pending |
+| BILL-01 | Phase 10 | Complete (10-00, 10-01) |
+| BILL-02 | Phase 10 | Complete (10-00, 10-01) |
+| BILL-03 | Phase 10 | Complete (10-00, 10-01) |
+| BILL-04 | Phase 10 | Complete (10-00, 10-01) |
+| BILL-05 | Phase 10 | Complete (10-00, 10-01) |
 | GDPR-01 | Phase 11 | Pending |
 | GDPR-02 | Phase 11 | Pending |
 | GDPR-03 | Phase 11 | Pending |
 | GDPR-04 | Phase 11 | Pending |
 | TEST-01 | Phase 12 | Pending |
-| TEST-02 | Phase 12 | Pending |
+| TEST-02 | Phase 10 | Complete (10-01) |
 | TEST-03 | Phase 12 | Pending |
 | TEST-04 | Phase 12 | Pending |
 | TEST-05 | Phase 12 | Pending |

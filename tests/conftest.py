@@ -87,3 +87,16 @@ def mock_auth_rl_cursor():
     mock_cm.__aexit__ = AsyncMock(return_value=False)
     with patch("database.connection.get_db_conn", return_value=mock_cm):
         yield mock_conn
+
+
+@pytest.fixture()
+def mock_paddle_conn():
+    """Mock get_db_conn for Paddle billing queries (asyncpg pattern)."""
+    mock_conn = MagicMock()
+    mock_conn.fetchrow = AsyncMock(return_value=None)   # no existing idempotency row
+    mock_conn.execute = AsyncMock(return_value=None)
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+    with patch("database.connection.get_db_conn", return_value=mock_cm):
+        yield mock_conn
