@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 09-00-PLAN.md — Prometheus /metrics endpoint + pipeline instrumentation (OBS-01–OBS-03)
-last_updated: "2026-04-01T06:05:00Z"
-last_activity: 2026-04-01 — Phase 9 Plan 00 complete (OBS-01–03 — Prometheus metrics, pipeline instrumentation, async/sync fix)
+stopped_at: Completed 09-01-PLAN.md — OBS-04 staleness alerting + tests + OBS-01–04 requirements marked complete
+last_updated: "2026-04-01T12:00:00Z"
+last_activity: 2026-04-01 — Phase 9 Plan 01 complete (OBS-04 — staleness alerting job, Prometheus alerting rules, metrics tests)
 progress:
   total_phases: 12
   completed_phases: 5
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Phase: Phase 9 — Observability and Alerting (in progress)
-Plan: 09-00 complete (Prometheus metrics endpoint, pipeline instrumentation, async/sync fix)
-Status: Phase 9 in progress — OBS-01–03 satisfied; 09-01 next
-Last activity: 2026-04-01 — Phase 9 Plan 00 complete (Prometheus /metrics, pipeline counter/histogram/gauge, asyncio.run() wrapper)
+Phase: Phase 9 — Observability and Alerting (complete: 09-00, 09-01)
+Plan: 09-01 complete (staleness alerting job, Prometheus alerting rules, metrics tests, OBS-01–04 marked complete)
+Status: Phase 9 complete for OBS-01–04; OBS-05 (Grafana dashboard) still pending
+Last activity: 2026-04-01 — Phase 9 Plan 01 complete (staleness alerting, metrics tests, OBS requirements done)
 
 Progress (v1.1): [████░░░░░░] 40%
 
@@ -124,6 +124,9 @@ Recent decisions affecting current work:
 - [Phase 09-00]: Converted run_daily_pipeline to async inner function (_run_daily_pipeline_async) with a sync wrapper — avoids nested asyncio.run() and keeps all DB awaits in one async context (OBS-01)
 - [Phase 09-00]: Module-level metric singletons in api/metrics.py prevent ValueError on duplicate registration during hot reload or multi-import test runs (OBS-02)
 - [Phase 09-00]: _update_pool_metrics deferred-imports _pool from database.connection to avoid circular import at module load time (OBS-03)
+- [Phase 09-01]: Used asyncio.run() inside BackgroundScheduler job for staleness check — BackgroundScheduler runs jobs in threads (no running event loop), so asyncio.run() is the correct pattern
+- [Phase 09-01]: Made api/metrics.py reload-safe with _get_or_create_* helpers that check REGISTRY._names_to_collectors before registering — prevents ValueError on importlib.reload() in tests
+- [Phase 09-01]: Staleness check queries fetch_latest_pipeline_run() and filters for status='success' in Python — avoids needing a separate DB query for last successful run
 
 ### Pending Todos
 
@@ -138,6 +141,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-01T06:05:00Z
-Stopped at: Completed 09-00-PLAN.md — Prometheus /metrics endpoint + pipeline instrumentation (OBS-01–OBS-03)
+Last session: 2026-04-01T12:00:00Z
+Stopped at: Completed 09-01-PLAN.md — OBS-04 staleness alerting + tests + OBS-01–04 requirements marked complete
 Resume file: None
