@@ -1,9 +1,9 @@
 """
 Billing endpoints for MacroPulse.
 
-  POST /v1/billing/checkout          — create a Paddle checkout session (auth required)
-  POST /v1/billing/portal            — get Paddle customer portal URL (auth required)
-  POST /v1/billing/webhook           — Paddle webhook receiver (no auth, signature verified)
+  POST /v1/billing/paddle/checkout   — create a Paddle checkout session (auth required)
+  GET  /v1/billing/paddle/portal     — get Paddle customer portal URL (auth required)
+  POST /v1/billing/paddle/webhook    — Paddle webhook receiver (no auth, signature verified)
   POST /v1/billing/lemonsqueezy      — Lemon Squeezy webhook receiver (no auth, HMAC verified)
 """
 
@@ -61,7 +61,7 @@ def _price_id_for_tier(tier: str) -> str:
 
 
 @router.post(
-    "/checkout",
+    "/paddle/checkout",
     response_model=CheckoutResponse,
     summary="Create a Paddle checkout session",
 )
@@ -94,7 +94,7 @@ async def create_checkout(
     price_id = _price_id_for_tier(tier)
 
     try:
-        checkout_url = create_checkout_url(
+        checkout_url = await create_checkout_url(
             price_id=price_id,
             user_id=user_id,
             email=email,
@@ -110,8 +110,8 @@ async def create_checkout(
     return CheckoutResponse(checkout_url=checkout_url, tier=tier)
 
 
-@router.post(
-    "/portal",
+@router.get(
+    "/paddle/portal",
     response_model=PortalResponse,
     summary="Get Paddle customer portal URL",
 )
@@ -132,7 +132,7 @@ async def get_portal(
         )
 
     try:
-        portal_url = create_portal_url(user["paddle_customer_id"])
+        portal_url = await create_portal_url(user["paddle_customer_id"])
     except Exception as exc:
         logger.error("Paddle portal error for user_id=%d: %s", user_id, exc)
         raise HTTPException(
@@ -166,7 +166,7 @@ async def get_ls_portal(key_record: dict = Depends(require_api_key)) -> dict:
 
 
 @router.post(
-    "/webhook",
+    "/paddle/webhook",
     status_code=status.HTTP_200_OK,
     summary="Paddle webhook receiver",
     include_in_schema=False,   # hide from public docs
@@ -231,7 +231,7 @@ async def paddle_webhook(
             # Fall through and process anyway — better to double-process than reject
 
     try:
-        result = handle_webhook_event(event)
+        result = await handle_webhook_event(event)
         logger.info("Webhook processed: %s → %s", event.get("event_type"), result)
     except Exception as exc:
         # Log but return 200 — don't let Paddle retry on our DB errors

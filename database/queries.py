@@ -304,7 +304,7 @@ async def get_user_by_email(email: str) -> dict[str, Any] | None:
 
 
 async def get_user_by_id(user_id: int) -> dict[str, Any] | None:
-    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id, ls_portal_url, ls_status FROM users WHERE id = $1;"
+    sql = "SELECT id, email, name, created_at, paddle_customer_id, paddle_subscription_id, paddle_subscription_status, ls_portal_url, ls_status FROM users WHERE id = $1;"
     async with get_db_conn() as conn:
         row = await conn.fetchrow(sql, user_id)
         return dict(row) if row else None
@@ -333,6 +333,16 @@ async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict[str, Any]
     async with get_db_conn() as conn:
         row = await conn.fetchrow(sql, paddle_customer_id)
         return dict(row) if row else None
+
+
+async def update_paddle_subscription_status(user_id: int, status: str) -> None:
+    """Persist Paddle subscription status on the users row (BILL-02)."""
+    async with get_db_conn() as conn:
+        await conn.execute(
+            "UPDATE users SET paddle_subscription_status = $1 WHERE id = $2",
+            status,
+            user_id,
+        )
 
 
 async def get_user_by_ls_customer(ls_customer_id: str) -> dict[str, Any] | None:

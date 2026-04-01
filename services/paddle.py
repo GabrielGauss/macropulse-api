@@ -49,7 +49,7 @@ def _headers() -> dict[str, str]:
 # ── Checkout ─────────────────────────────────────────────────────────
 
 
-def create_checkout_url(
+async def create_checkout_url(
     price_id: str,
     user_id: int,
     email: str,
@@ -71,12 +71,12 @@ def create_checkout_url(
             "tier": tier,
         },
     }
-    resp = httpx.post(
-        f"{_api_base()}/transactions",
-        json=payload,
-        headers=_headers(),
-        timeout=15,
-    )
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{_api_base()}/transactions",
+            json=payload,
+            headers=_headers(),
+        )
     resp.raise_for_status()
     data = resp.json()
     checkout_url: str = data["data"]["checkout"]["url"]
@@ -84,14 +84,14 @@ def create_checkout_url(
     return checkout_url
 
 
-def create_portal_url(paddle_customer_id: str) -> str:
+async def create_portal_url(paddle_customer_id: str) -> str:
     """Generate a Paddle customer portal URL for subscription management."""
-    resp = httpx.post(
-        f"{_api_base()}/customers/{paddle_customer_id}/portal-sessions",
-        json={},
-        headers=_headers(),
-        timeout=15,
-    )
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{_api_base()}/customers/{paddle_customer_id}/portal-sessions",
+            json={},
+            headers=_headers(),
+        )
     resp.raise_for_status()
     data = resp.json()
     return data["data"]["urls"]["general"]["overview"]
@@ -176,16 +176,16 @@ def _user_id_from_event(event: dict[str, Any]) -> int | None:
     return None
 
 
-def handle_webhook_event(event: dict[str, Any]) -> str:
+async def handle_webhook_event(event: dict[str, Any]) -> str:
     """
     Process a verified Paddle webhook event.
 
     Returns a short status string for logging.
     """
     from database.queries import (
-        get_user_by_email,
         get_user_by_paddle_customer,
         update_paddle_customer,
+        update_paddle_subscription_status,
         upgrade_user_tier,
     )
 
@@ -194,41 +194,46 @@ def handle_webhook_event(event: dict[str, Any]) -> str:
 
     logger.info("Paddle webhook: event_type=%s", event_type)
 
-    # ── subscription.activated / subscription.updated ─────────────
-    if event_type in ("subscription.activated", "subscription.updated"):
+    # ── subscription.activated / subscription.updated / subscription.resumed ──
+    if event_type in ("subscription.activated", "subscription.updated", "subscription.resumed"):
         tier = _tier_from_event(event)
         user_id = _user_id_from_event(event)
         customer_id: str = data.get("customer_id", "")
         subscription_id: str = data.get("id", "")
+        status: str = data.get("status", "")
 
         if not tier:
             logger.warning("Could not determine tier from event: %s", event_type)
             return "no_tier"
 
-        # Resolve user: prefer user_id from custom_data, fall back to customer lookup
         if user_id:
-            update_paddle_customer(user_id, customer_id, subscription_id)
-            upgrade_user_tier(user_id, tier)
+            await update_paddle_customer(user_id, customer_id, subscription_id)
+            await upgrade_user_tier(user_id, tier)
+            await update_paddle_subscription_status(user_id, status)
             logger.info("Upgraded user_id=%d to tier=%s", user_id, tier)
             return f"upgraded:{tier}"
 
-        # Fall back: look up by paddle_customer_id
-        existing = get_user_by_paddle_customer(customer_id)
+        existing = await get_user_by_paddle_customer(customer_id)
         if existing:
-            upgrade_user_tier(existing["id"], tier)
+            await upgrade_user_tier(existing["id"], tier)
+            await update_paddle_subscription_status(existing["id"], status)
             logger.info("Upgraded user email=%s to tier=%s", existing["email"], tier)
             return f"upgraded:{tier}"
 
         logger.warning("No user found for paddle_customer_id=%s", customer_id)
         return "user_not_found"
 
-    # ── subscription.canceled / subscription.paused ───────────────
+    # ── subscription.canceled / subscription.paused ───────────────────────────
     if event_type in ("subscription.canceled", "subscription.paused"):
         customer_id = data.get("customer_id", "")
-        user = get_user_by_paddle_customer(customer_id)
+        status = data.get("status", event_type.split(".")[1])
+        user = await get_user_by_paddle_customer(customer_id)
         if user:
-            upgrade_user_tier(user["id"], "free")
-            logger.info("Downgraded user email=%s to free (event=%s)", user["email"], event_type)
+            await upgrade_user_tier(user["id"], "free")
+            await update_paddle_subscription_status(user["id"], status)
+            logger.info(
+                "Downgraded user email=%s to free (event=%s)", user["email"], event_type
+            )
             return "downgraded:free"
         return "user_not_found"
 
