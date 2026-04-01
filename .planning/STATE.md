@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 09-01-PLAN.md — OBS-04 staleness alerting + tests + OBS-01–04 requirements marked complete
-last_updated: "2026-04-01T12:00:00Z"
-last_activity: 2026-04-01 — Phase 9 Plan 01 complete (OBS-04 — staleness alerting job, Prometheus alerting rules, metrics tests)
+stopped_at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
+last_updated: "2026-04-01T23:45:00Z"
+last_activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR-01–04 — DELETE /v1/auth/me, anonymise_user(), migration 011, 5 new tests)
 progress:
   total_phases: 12
   completed_phases: 5
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Phase: Phase 9 — Observability and Alerting (complete: 09-00, 09-01)
-Plan: 09-01 complete (staleness alerting job, Prometheus alerting rules, metrics tests, OBS-01–04 marked complete)
-Status: Phase 9 complete for OBS-01–04; OBS-05 (Grafana dashboard) still pending
-Last activity: 2026-04-01 — Phase 9 Plan 01 complete (staleness alerting, metrics tests, OBS requirements done)
+Phase: Phase 11 — GDPR Compliance (complete: 11-01)
+Plan: 11-01 complete (GDPR right-to-erasure: DELETE /v1/auth/me, anonymise_user(), migration 011, 5 new tests — 33 total passing)
+Status: Phase 11 complete (GDPR-01–04 all covered)
+Last activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR erasure endpoint, atomic anonymisation, full test suite green)
 
-Progress (v1.1): [████░░░░░░] 40%
+Progress (v1.1): [██████░░░░] 60%
 
 v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 Phase 6 complete: Secrets, Webhooks, Infra Hardening (2026-03-29)
@@ -45,7 +45,7 @@ Phase 8 complete: asyncpg migration — pool, queries, route handlers, middlewar
 | 8. Async DB Migration | Replace psycopg2 with asyncpg | DB-10–13 | Complete (08-00, 08-01, 08-02) |
 | 9. Observability and Alerting | Prometheus metrics + pipeline failure alerts | OBS-01–05 | In progress (09-00 complete) |
 | 10. Paddle Billing | Checkout, webhooks, subscription lifecycle | BILL-01–05 | Not started |
-| 11. GDPR Compliance | User erasure endpoint, retention cleanup | GDPR-01–04 | Not started |
+| 11. GDPR Compliance | User erasure endpoint, retention cleanup | GDPR-01–04 | Complete |
 | 12. Test Coverage | Automated tests for auth, billing, rate limiting, migrations | TEST-01–05 | Not started |
 
 ## Performance Metrics
@@ -127,6 +127,9 @@ Recent decisions affecting current work:
 - [Phase 09-01]: Used asyncio.run() inside BackgroundScheduler job for staleness check — BackgroundScheduler runs jobs in threads (no running event loop), so asyncio.run() is the correct pattern
 - [Phase 09-01]: Made api/metrics.py reload-safe with _get_or_create_* helpers that check REGISTRY._names_to_collectors before registering — prevents ValueError on importlib.reload() in tests
 - [Phase 09-01]: Staleness check queries fetch_latest_pipeline_run() and filters for status='success' in Python — avoids needing a separate DB query for last successful run
+- [Phase 11-01]: anonymise_user() fetches real email via fetchrow BEFORE users UPDATE — newsletter DELETE needs the pre-anonymisation email (captured in same transaction)
+- [Phase 11-01]: Patch target for asyncpg mock in GDPR tests is database.queries.get_db_conn not database.connection.get_db_conn — module-level import binding (same pattern as Phase 08-02)
+- [Phase 11-01]: user_id==0 guard placed before any DB call in delete_me() — owner/env-key synthetic records must return 403, not leak 404 to caller
 
 ### Pending Todos
 
@@ -141,6 +144,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-01T12:00:00Z
-Stopped at: Completed 09-01-PLAN.md — OBS-04 staleness alerting + tests + OBS-01–04 requirements marked complete
+Last session: 2026-04-01T23:45:00Z
+Stopped at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
 Resume file: None
