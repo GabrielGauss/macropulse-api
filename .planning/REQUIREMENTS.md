@@ -40,10 +40,10 @@
 
 ### Observability
 
-- [ ] **OBS-01**: `GET /metrics` endpoint exposes Prometheus metrics in text exposition format (no auth required; document to firewall to internal only)
-- [ ] **OBS-02**: Key metrics exposed: `macropulse_api_requests_total` (by endpoint, status), `macropulse_pipeline_runs_total` (by status), `macropulse_pipeline_last_success_timestamp`, `macropulse_active_api_keys` (by tier), `macropulse_db_pool_size`
-- [ ] **OBS-03**: Pipeline failure alerting: when `pipeline_runs.status = 'failed'`, an alert fires within 5 minutes via email (Brevo) to the owner address configured in env
-- [ ] **OBS-04**: Pipeline staleness alert: if `macropulse_pipeline_last_success_timestamp` is >26 hours old (missed daily run), alert fires
+- [x] **OBS-01**: `GET /metrics` endpoint exposes Prometheus metrics in text exposition format (no auth required; document to firewall to internal only)
+- [x] **OBS-02**: Key metrics exposed: `macropulse_api_requests_total` (by endpoint, status), `macropulse_pipeline_runs_total` (by status), `macropulse_pipeline_last_success_timestamp`, `macropulse_active_api_keys` (by tier), `macropulse_db_pool_size`
+- [x] **OBS-03**: Pipeline failure alerting: when `pipeline_runs.status = 'failed'`, an alert fires within 5 minutes via email (Brevo) to the owner address configured in env
+- [x] **OBS-04**: Pipeline staleness alert: if `macropulse_pipeline_last_success_timestamp` is >26 hours old (missed daily run), alert fires
 - [ ] **OBS-05**: Grafana dashboard JSON file committed to `infrastructure/grafana/macropulse-dashboard.json` — importable to any Grafana instance
 
 ### Billing — Paddle
@@ -119,10 +119,10 @@
 | DB-11 | Phase 8 | Complete (08-01) |
 | DB-12 | Phase 8 | Complete (08-00) |
 | DB-13 | Phase 8 | Complete (08-02) |
-| OBS-01 | Phase 9 | Pending |
-| OBS-02 | Phase 9 | Pending |
-| OBS-03 | Phase 9 | Pending |
-| OBS-04 | Phase 9 | Pending |
+| OBS-01 | Phase 9 | Complete (09-00) |
+| OBS-02 | Phase 9 | Complete (09-00) |
+| OBS-03 | Phase 9 | Complete (09-00) |
+| OBS-04 | Phase 9 | Complete (09-01) |
 | OBS-05 | Phase 9 | Pending |
 | BILL-01 | Phase 10 | Pending |
 | BILL-02 | Phase 10 | Pending |

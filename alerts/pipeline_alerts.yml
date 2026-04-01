@@ -1,0 +1,20 @@
+groups:
+  - name: macropulse_pipeline
+    rules:
+      - alert: PipelineNotRunRecently
+        expr: time() - macropulse_pipeline_last_success_timestamp > 93600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MacroPulse pipeline has not run successfully in >26h"
+          description: "Last successful pipeline run was {{ $value | humanizeDuration }} ago."
+
+      - alert: PipelineHighFailureRate
+        expr: rate(macropulse_pipeline_runs_total{status="failure"}[1h]) > 0.5
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MacroPulse pipeline failure rate is high"
+          description: "More than 50% of pipeline runs in the last hour have failed."
