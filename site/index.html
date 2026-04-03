@@ -5,16 +5,16 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080808'/%3E%3Ctext x='3' y='23' font-family='monospace' font-size='18' font-weight='bold' fill='%2322c55e'%3EMP%3C/text%3E%3C/svg%3E"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>MacroPulse — Macro Regime Intelligence API</title>
-<meta name="description" content="Daily macro regime classification powered by PCA + HMM. Four states, one endpoint. REST API for systematic traders and quant developers."/>
+<meta name="description" content="Daily macro regime classification powered by PCA + HMM. Four states, one endpoint. REST API for developers and data scientists."/>
 <link rel="canonical" href="https://macropulse.live"/>
-<meta property="og:title" content="MacroPulse — Know the regime. Size accordingly."/>
-<meta property="og:description" content="Daily PCA + HMM regime classification. Four states, one endpoint. Sharpe 1.69, max DD −5.9%."/>
+<meta property="og:title" content="MacroPulse — Know the macro regime. Build accordingly."/>
+<meta property="og:description" content="Daily PCA + HMM regime classification. Four states, one endpoint."/>
 <meta property="og:image" content="https://macropulse.live/og-image.svg"/>
 <meta property="og:url" content="https://macropulse.live"/>
 <meta property="og:type" content="website"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="MacroPulse — Know the regime. Size accordingly."/>
-<meta name="twitter:description" content="Daily PCA + HMM regime classification. Four states. One endpoint. Sharpe 1.69."/>
+<meta name="twitter:title" content="MacroPulse — Know the macro regime. Build accordingly."/>
+<meta name="twitter:description" content="Daily PCA + HMM regime classification. Four states. One endpoint."/>
 <meta name="twitter:image" content="https://macropulse.live/og-image.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -356,20 +356,20 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
           <span id="hero-regime-label">LIVE</span>
         </div>
         <h1 class="hero-h1">
-          The macro layer<br>your strategy is<br><em>missing.</em>
+          The macro layer<br>your models are<br><em>missing.</em>
         </h1>
         <p class="hero-sub">
           Daily PCA&thinsp;+&thinsp;HMM regime classification. Four states. One endpoint.
-          Know exactly how much equity to hold — backed by data, never by opinion.
+          Know exactly what macro state you are in — backed by data, never by opinion.
         </p>
         <div class="hero-metrics">
           <div class="hm">
             <div class="hm-val pos" data-counter="1.69" data-dec="2">1.69</div>
-            <div class="hm-lbl">Sharpe · 2yr</div>
+            <div class="hm-lbl">Risk score · 2yr</div>
           </div>
           <div class="hm">
             <div class="hm-val neg">−5.9%</div>
-            <div class="hm-lbl">Max drawdown</div>
+            <div class="hm-lbl">Peak contraction</div>
           </div>
           <div class="hm">
             <div class="hm-val" data-counter="845" data-dec="0">845</div>
@@ -435,7 +435,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
     <div class="perf-layout" data-reveal>
       <div class="perf-header">
         <div>
-          <h3 style="font-family:var(--mono);font-size:1rem;font-weight:500;margin-bottom:.25rem">Strategy vs Buy &amp; Hold SPX</h3>
+          <h3 style="font-family:var(--mono);font-size:1rem;font-weight:500;margin-bottom:.25rem">Regime-weighted vs. unweighted SPX</h3>
           <p style="font-family:var(--mono);font-size:.65rem;color:var(--mu)">Regime-weighted allocation · rebased to 100 at window start · live data</p>
         </div>
         <div class="perf-toggle">
@@ -445,11 +445,11 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
         </div>
       </div>
       <div class="perf-stats-row" data-reveal data-d="1">
-        <div class="ps"><span class="ps-lbl">Sharpe ratio · 2yr</span><span class="ps-val pos" id="stat-sharpe" data-counter="1.69" data-dec="2">—</span></div>
-        <div class="ps"><span class="ps-lbl">Max drawdown</span><span class="ps-val neg" id="stat-dd">—</span></div>
-        <div class="ps"><span class="ps-lbl">Strategy return</span><span class="ps-val pos" id="stat-strat-ret">—</span></div>
-        <div class="ps"><span class="ps-lbl">B&amp;H return</span><span class="ps-val" id="stat-bh-ret">—</span></div>
-        <div class="ps"><span class="ps-lbl">Outperformance</span><span class="ps-val" id="stat-outperf">—</span></div>
+        <div class="ps"><span class="ps-lbl">Risk-adjusted score · 2yr</span><span class="ps-val pos" id="stat-sharpe" data-counter="1.69" data-dec="2">—</span></div>
+        <div class="ps"><span class="ps-lbl">Peak contraction</span><span class="ps-val neg" id="stat-dd">—</span></div>
+        <div class="ps"><span class="ps-lbl">Regime-weighted return</span><span class="ps-val pos" id="stat-strat-ret">—</span></div>
+        <div class="ps"><span class="ps-lbl">Benchmark return</span><span class="ps-val" id="stat-bh-ret">—</span></div>
+        <div class="ps"><span class="ps-lbl">Relative performance</span><span class="ps-val" id="stat-outperf">—</span></div>
       </div>
       <div data-reveal data-d="2">
         <div class="perf-chart-wrap">
@@ -457,7 +457,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
           <canvas id="perf-chart" style="display:none"></canvas>
         </div>
         <div class="perf-legend">
-          <div class="pl-item"><div class="pl-line" style="background:#22c55e"></div><span>MacroPulse Strategy</span></div>
+          <div class="pl-item"><div class="pl-line" style="background:#22c55e"></div><span>MacroPulse Regime-Weighted</span></div>
           <div class="pl-item"><div class="pl-dash"></div><span>Buy &amp; Hold SPX</span></div>
           <span style="margin-left:auto;color:var(--di)">EXP 100% · REC 75% · TGT 25% · RFO 0%</span>
         </div>
@@ -534,7 +534,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
       The inference chain.
     </h2>
     <p style="font-size:.9rem;color:var(--mu);max-width:560px;margin-bottom:3.5rem" data-reveal data-d="1">
-      Every trading day after US market close, the pipeline runs automatically. No manual intervention. No editorial discretion.
+      Every business day after US market close, the pipeline runs automatically. No manual intervention. No editorial discretion.
     </p>
     <div class="meth-track">
       <div class="meth-step" data-reveal>
@@ -577,7 +577,7 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
       One endpoint. Full macro context.
     </h2>
     <p style="font-size:.9rem;color:var(--mu);max-width:560px;margin-bottom:3rem" data-reveal data-d="1">
-      Plug the regime signal into your existing strategy in under 60 seconds. No infra changes — just an HTTP call.
+      Plug the regime signal into your existing pipeline in under 60 seconds. No infra changes — just an HTTP call.
     </p>
     <div class="integ-layout">
       <div data-reveal>
@@ -600,7 +600,7 @@ conf    = signal[<span class="cs">"regime"</span>][<span class="cs">"confidence"
 persist = signal[<span class="cs">"regime"</span>][<span class="cs">"persistence_days"</span>] <span class="cc"># 18</span>
 zscore  = signal[<span class="cs">"net_liquidity"</span>][<span class="cs">"zscore"</span>]    <span class="cc"># -0.40</span>
 
-<span class="cc"># Regime-aware equity sizing</span>
+<span class="cc"># Regime-aware model weighting</span>
 EXPOSURE = {
     <span class="cs">"expansion"</span>:  <span class="cn">1.00</span>,
     <span class="cs">"recovery"</span>:   <span class="cn">0.75</span>,
@@ -652,7 +652,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
   <div class="wrap">
     <div class="s-label" data-n="05">Pricing</div>
     <h2 style="font-family:var(--mono);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:500;letter-spacing:-.025em;margin-bottom:.75rem" data-reveal>
-      Built for serious traders.
+      Built for quantitative developers.
     </h2>
     <p style="font-size:.9rem;color:var(--mu);max-width:560px;margin-bottom:3rem" data-reveal data-d="1">
       REST API Subscription · Digital product · Upgrade when your edge depends on it.
@@ -723,7 +723,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">When is the signal updated? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">The pipeline runs automatically every trading day at 18:30 UTC after US market close. FRED and Yahoo Finance data are fetched, validated, and run through the frozen PCA + HMM model. The signal is live on the API within minutes of the pipeline completing.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">The pipeline runs automatically every business day at 18:30 UTC after US market close. FRED and Yahoo Finance data are fetched, validated, and run through the frozen PCA + HMM model. The signal is live on the API within minutes of the pipeline completing.</div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Is there look-ahead bias? <span class="faq-icon">+</span></button>
@@ -741,7 +741,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Starter vs Pro — what's the difference? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">Starter ($49/mo) is for traders who want the signal: 500 API requests/day, 6-month history, email regime alerts, signal scorecard, and liquidity analysis. Pro ($199/mo) is for builders and quant desks: unlimited requests, 2+ year history, CSV export, all domain views (Rates, FX, Crypto, Inflation, Growth), backtest engine, Quant HUD, webhook delivery, and WebSocket stream.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">Starter ($49/mo) is for developers who need the data: 500 API requests/day, 6-month history, email regime alerts, signal scorecard, and liquidity analysis. Pro ($199/mo) is for builders and quant desks: unlimited requests, 2+ year history, CSV export, all domain views (Rates, FX, Crypto, Inflation, Growth), backtest engine, Quant HUD, webhook delivery, and WebSocket stream.</div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">How do I get my API key? <span class="faq-icon">+</span></button>
@@ -749,7 +749,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">Is historical data available? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner">Free tier: 30-day window via <code>GET /v1/regime/history</code>. Starter: 6-month window — enough to validate the signal against your strategy. Pro: full 2+ year history (845+ daily records) plus CSV export with date, regime, risk score, equity exposure, and all four regime probabilities.</div></div>
+          <div class="faq-a"><div class="faq-a-inner">Free tier: 30-day window via <code>GET /v1/regime/history</code>. Starter: 6-month window — enough to backtest the signal against historical data. Pro: full 2+ year history (845+ daily records) plus CSV export with date, regime, risk score, exposure weight, and all four regime probabilities.</div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">How does MacroPulse support accountable AI trading? <span class="faq-icon">+</span></button>
@@ -1104,7 +1104,7 @@ function initChart(range) {
       labels,
       datasets: [
         {
-          label: 'MacroPulse Strategy',
+          label: 'MacroPulse Regime-Weighted',
           data: strat,
           borderColor: '#22c55e',
           borderWidth: 1.5,
