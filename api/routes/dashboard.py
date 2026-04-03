@@ -423,7 +423,7 @@ def _build_dashboard_html(
 
 
 @router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
-def dashboard() -> HTMLResponse:
+async def dashboard() -> HTMLResponse:
     """
     Serve the MacroPulse interactive Plotly dashboard.
 
@@ -432,15 +432,15 @@ def dashboard() -> HTMLResponse:
     """
     import pandas as pd  # local import to keep module-level imports lean
 
-    current   = queries.fetch_current_regime()
-    history   = queries.fetch_regime_history(limit=252)   # ~1 year
-    liquidity = queries.fetch_latest_liquidity(limit=252)
-    factors   = queries.fetch_latest_factors(limit=252)
+    current   = await queries.fetch_current_regime()
+    history   = await queries.fetch_regime_history(limit=252)   # ~1 year
+    liquidity = await queries.fetch_latest_liquidity(limit=252)
+    factors   = await queries.fetch_latest_factors(limit=252)
 
     # ── Generate 5-day forecast (best-effort; dashboard still loads on failure) ──
     forecast_rows: list[dict] | None = None
     try:
-        recent_history = queries.fetch_regime_history(limit=60)
+        recent_history = await queries.fetch_regime_history(limit=60)
         if recent_history and len(recent_history) >= 10:
             hist_df = pd.DataFrame(list(reversed(recent_history)))
             hist_df = hist_df.set_index("time").sort_index()

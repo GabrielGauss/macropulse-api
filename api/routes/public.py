@@ -79,14 +79,14 @@ def _compute_stats(series: list[dict]) -> dict:
 
 
 @router.get("/chart-data")
-def get_chart_data():
+async def get_chart_data():
     """
     Last 730 days of regime history for the marketing-site interactive chart.
     No API key required.
     """
     try:
         from database.queries import fetch_public_chart_data
-        rows = fetch_public_chart_data(limit=730)
+        rows = await fetch_public_chart_data(limit=730)
     except Exception as exc:
         logger.error("public chart-data DB error: %s", exc)
         raise HTTPException(status_code=503, detail="Data temporarily unavailable")
@@ -148,14 +148,14 @@ def get_chart_data():
 
 
 @router.get("/latest")
-def get_public_latest():
+async def get_public_latest():
     """
     Current regime snapshot for the marketing site terminal display.
     Returns a subset of the full signal package — no API key required.
     """
     try:
         from services.signals import build_signal_package
-        pkg = build_signal_package()
+        pkg = await build_signal_package()
     except Exception as exc:
         logger.error("public latest DB error: %s", exc)
         raise HTTPException(status_code=503, detail="Data temporarily unavailable")

@@ -130,7 +130,7 @@ Generate a professional macro commentary for institutional clients.
 
 
 @router.get("/regime/commentary", response_model=CommentaryResponse)
-def get_regime_commentary() -> CommentaryResponse:
+async def get_regime_commentary() -> CommentaryResponse:
     """
     Generate a Claude AI macro narrative for the current regime signal.
 
@@ -149,7 +149,7 @@ def get_regime_commentary() -> CommentaryResponse:
             ),
         )
 
-    regime_row = queries.fetch_current_regime()
+    regime_row = await queries.fetch_current_regime()
     if regime_row is None:
         raise HTTPException(status_code=404, detail="No regime data available. Run the pipeline first.")
 

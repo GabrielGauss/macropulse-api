@@ -27,7 +27,7 @@ router = APIRouter(prefix="/v1/analysis", tags=["Analysis"])
     response_model=CompositeAnalysisResponse,
     summary="Multi-domain composite macro analysis",
 )
-def get_composite_analysis() -> CompositeAnalysisResponse:
+async def get_composite_analysis() -> CompositeAnalysisResponse:
     """
     Return a rule-based composite macro analysis across four domains:
     equity, rates, credit, and liquidity.
@@ -45,18 +45,18 @@ def get_composite_analysis() -> CompositeAnalysisResponse:
     logger.info("GET /v1/analysis/composite")
 
     # ── Fetch data ────────────────────────────────────────────────────
-    regime_row = queries.fetch_current_regime()
+    regime_row = await queries.fetch_current_regime()
     if regime_row is None:
         raise HTTPException(
             status_code=503,
             detail="No regime data available. Run the daily pipeline first.",
         )
 
-    history = queries.fetch_regime_history(limit=60)
-    features = queries.fetch_latest_liquidity(limit=60)  # includes d_liquidity
+    history = await queries.fetch_regime_history(limit=60)
+    features = await queries.fetch_latest_liquidity(limit=60)  # includes d_liquidity
     # For rates and credit analysis we need d_yield_curve, d_10y, d_hy_spread.
     # fetch_latest_liquidity returns macro_features rows which contain all feature cols.
-    liquidity = queries.fetch_latest_liquidity(limit=30)
+    liquidity = await queries.fetch_latest_liquidity(limit=30)
 
     # ── Run orchestrator ──────────────────────────────────────────────
     try:

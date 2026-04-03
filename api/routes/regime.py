@@ -36,9 +36,9 @@ router = APIRouter(prefix="/v1", tags=["MacroPulse"])
 
 
 @router.get("/regime/current", response_model=RegimeResponse)
-def get_current_regime() -> RegimeResponse:
+async def get_current_regime() -> RegimeResponse:
     """Return the most recent macro regime signal."""
-    row = queries.fetch_current_regime()
+    row = await queries.fetch_current_regime()
     if row is None:
         raise HTTPException(status_code=404, detail="No regime data available.")
 
@@ -84,7 +84,7 @@ _UPGRADE_URL = "https://macropulse.live/#pricing"
 
 
 @router.get("/regime/history", response_model=list[RegimeResponse])
-def get_regime_history(
+async def get_regime_history(
     start: Optional[dt.date] = Query(None, description="Start date (inclusive)"),
     end: Optional[dt.date] = Query(None, description="End date (inclusive)"),
     limit: int = Query(90, ge=1, le=1000),
@@ -94,7 +94,7 @@ def get_regime_history(
     tier = key_record.get("tier", "free")
     if tier == "free":
         limit = min(limit, _FREE_HISTORY_LIMIT)
-    rows = queries.fetch_regime_history(start=start, end=end, limit=limit)
+    rows = await queries.fetch_regime_history(start=start, end=end, limit=limit)
     return [
         RegimeResponse(
             timestamp=r["time"],
@@ -117,7 +117,7 @@ _CSV_MAX_ROWS = 10_000
 
 
 @router.get("/regime/export")
-def export_regime_history(
+async def export_regime_history(
     limit: int = Query(730, ge=1, le=10_000),
     key_record: dict = Depends(require_api_key),
 ):
@@ -132,7 +132,7 @@ def export_regime_history(
     # Safety cap: never return more than 10,000 rows regardless of tier or query param
     limit = min(limit or _CSV_MAX_ROWS, _CSV_MAX_ROWS)
 
-    rows = queries.fetch_regime_history(limit=limit)
+    rows = await queries.fetch_regime_history(limit=limit)
     rows_asc = list(reversed(rows))
 
     _EXPOSURE = {"expansion": 1.00, "recovery": 0.75, "tightening": 0.25, "risk_off": 0.00}
@@ -165,45 +165,45 @@ def export_regime_history(
 
 
 @router.get("/liquidity", response_model=LiquidityResponse)
-def get_liquidity(
+async def get_liquidity(
     limit: int = Query(30, ge=1, le=500),
 ) -> LiquidityResponse:
     """Return recent net liquidity values."""
-    rows = queries.fetch_latest_liquidity(limit=limit)
+    rows = await queries.fetch_latest_liquidity(limit=limit)
     return LiquidityResponse(
         data=[LiquidityRow(**r) for r in rows]
     )
 
 
 @router.get("/factors", response_model=FactorsResponse)
-def get_factors(
+async def get_factors(
     limit: int = Query(30, ge=1, le=500),
 ) -> FactorsResponse:
     """Return recent PCA latent factors."""
-    rows = queries.fetch_latest_factors(limit=limit)
+    rows = await queries.fetch_latest_factors(limit=limit)
     return FactorsResponse(
         data=[FactorRow(**r) for r in rows]
     )
 
 
 @router.get("/drift", response_model=DriftResponse)
-def get_drift(
+async def get_drift(
     limit: int = Query(30, ge=1, le=500),
 ) -> DriftResponse:
     """Return recent model drift metrics."""
-    rows = queries.fetch_latest_drift(limit=limit)
+    rows = await queries.fetch_latest_drift(limit=limit)
     return DriftResponse(
         data=[DriftRow(**r) for r in rows]
     )
 
 
 @router.get("/features", tags=["MacroPulse"])
-def get_features(
+async def get_features(
     limit: int = Query(90, ge=1, le=500),
     key_record: dict = Depends(require_paid),
 ) -> list[dict]:
     """Return recent macro feature time series (d_10y, d_2y, d_yield_curve, d_sp500, etc.)"""
-    rows = queries.fetch_latest_features(limit=limit)
+    rows = await queries.fetch_latest_features(limit=limit)
     # Convert datetime objects to ISO strings for JSON serialisation
     return [
         {**row, "time": row["time"].isoformat() if hasattr(row.get("time"), "isoformat") else row["time"]}

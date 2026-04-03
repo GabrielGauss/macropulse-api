@@ -164,7 +164,7 @@ def _net_liquidity_signals(
 # ── Public API ───────────────────────────────────────────────────────
 
 
-def build_signal_package(
+async def build_signal_package(
     target_date: dt.date | None = None,
     version: str | None = None,
 ) -> dict[str, Any] | None:
@@ -179,7 +179,7 @@ def build_signal_package(
 
     # ── Load regime data ──────────────────────────────────────────
     if target_date is None:
-        regime_row = queries.fetch_current_regime()
+        regime_row = await queries.fetch_current_regime()
         if regime_row is None:
             return None
         target_date = (
@@ -189,7 +189,7 @@ def build_signal_package(
         )
     else:
         # Look for an exact date match in history
-        rows = queries.fetch_regime_history(
+        rows = await queries.fetch_regime_history(
             start=target_date,
             end=target_date + dt.timedelta(days=1),
             limit=1,
@@ -199,10 +199,10 @@ def build_signal_package(
         regime_row = rows[0]
 
     # ── Load trailing regime history for persistence ─────────────
-    trailing_regimes = queries.fetch_regime_history(limit=200)
+    trailing_regimes = await queries.fetch_regime_history(limit=200)
 
     # ── Load trailing features for liquidity signals ─────────────
-    feature_rows = queries.fetch_latest_features(limit=504)
+    feature_rows = await queries.fetch_latest_features(limit=504)
 
     # ── Load frozen models ────────────────────────────────────────
     try:
@@ -245,7 +245,7 @@ def build_signal_package(
     }
 
     # ── PCA factors signal ────────────────────────────────────────
-    factor_rows = queries.fetch_latest_factors(limit=1)
+    factor_rows = await queries.fetch_latest_factors(limit=1)
     if factor_rows:
         fr = factor_rows[0]
         pca_factors: dict[str, Any] = {
@@ -283,7 +283,7 @@ def build_signal_package(
     }
 
 
-def build_signal_range(
+async def build_signal_range(
     start: dt.date,
     end: dt.date,
     version: str | None = None,
@@ -310,7 +310,7 @@ def build_signal_range(
     if delta > 365:
         start = end - dt.timedelta(days=365)
 
-    rows = queries.fetch_regime_history(start=start, end=end, limit=400)
+    rows = await queries.fetch_regime_history(start=start, end=end, limit=400)
     if not rows:
         return []
 
@@ -320,8 +320,8 @@ def build_signal_range(
         rows_by_date[d.isoformat()] = r
 
     # ── Load trailing features and factors once ───────────────────
-    feature_rows = queries.fetch_latest_features(limit=504)
-    factor_rows_all = queries.fetch_latest_factors(limit=400)
+    feature_rows = await queries.fetch_latest_features(limit=504)
+    factor_rows_all = await queries.fetch_latest_factors(limit=400)
     factor_by_date: dict[str, dict] = {}
     for fr in factor_rows_all:
         d = fr["time"].date() if hasattr(fr["time"], "date") else fr["time"]

@@ -29,7 +29,7 @@ router = APIRouter(prefix="/v1/signals", tags=["Signals"])
     response_model=SignalPackageResponse,
     summary="Latest unified signal package",
 )
-def get_latest_signal(
+async def get_latest_signal(
     key_record: dict = Depends(require_paid),
 ) -> SignalPackageResponse:
     """
@@ -38,7 +38,7 @@ def get_latest_signal(
     Combines HMM regime, net liquidity state, PCA factors, and model metadata
     into a single response.  This is the primary integration endpoint for clients.
     """
-    pkg = build_signal_package()
+    pkg = await build_signal_package()
     if pkg is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -52,7 +52,7 @@ def get_latest_signal(
     response_model=list[SignalPackageResponse],
     summary="Signal time series over a date range",
 )
-def get_signal_range(
+async def get_signal_range(
     start: dt.date = Query(..., description="Start date (YYYY-MM-DD)"),
     end: dt.date = Query(..., description="End date (YYYY-MM-DD)"),
     key_record: dict = Depends(require_paid),
@@ -67,7 +67,7 @@ def get_signal_range(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="end must be >= start.",
         )
-    results = build_signal_range(start=start, end=end)
+    results = await build_signal_range(start=start, end=end)
     return [SignalPackageResponse(**r) for r in results]
 
 
@@ -76,7 +76,7 @@ def get_signal_range(
     response_model=SignalPackageResponse,
     summary="Signal package for a specific date",
 )
-def get_signal_by_date(
+async def get_signal_by_date(
     date: dt.date,
     key_record: dict = Depends(require_paid),
 ) -> SignalPackageResponse:
@@ -85,7 +85,7 @@ def get_signal_by_date(
 
     Returns 404 if no regime data exists for that date.
     """
-    pkg = build_signal_package(target_date=date)
+    pkg = await build_signal_package(target_date=date)
     if pkg is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
