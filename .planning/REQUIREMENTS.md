@@ -7,10 +7,10 @@
 
 ### Security — Secrets
 
-- [ ] **SEC-10**: All secrets (BREVO_API_KEY, MTA_SIGNING_KEY_HEX, FRED_API_KEY, OWNER_API_KEY) removed from `.env` committed to git history via `git filter-repo`; `.env` added to `.gitignore`
-- [ ] **SEC-11**: All previously committed secrets rotated: new Brevo API key, new MTA Ed25519 key pair, new owner API key issued
-- [ ] **SEC-12**: `.env.example` documents every required environment variable with description and format; no real values present
-- [ ] **SEC-13**: Production secrets managed via environment injection (not committed files) — deployment guide updated
+- [x] **SEC-10**: All secrets (BREVO_API_KEY, MTA_SIGNING_KEY_HEX, FRED_API_KEY, OWNER_API_KEY) removed from `.env` committed to git history via `git filter-repo`; `.env` added to `.gitignore`
+- [x] **SEC-11**: All previously committed secrets rotated: new Brevo API key, new MTA Ed25519 key pair, new owner API key issued
+- [x] **SEC-12**: `.env.example` documents every required environment variable with description and format; no real values present
+- [x] **SEC-13**: Production secrets managed via environment injection (not committed files) — deployment guide updated
 
 ### Security — Webhooks
 
@@ -101,10 +101,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-10 | Phase 6 | Pending |
-| SEC-11 | Phase 6 | Pending |
-| SEC-12 | Phase 6 | Pending |
-| SEC-13 | Phase 6 | Pending |
+| SEC-10 | Phase 6 | Complete|
+| SEC-11 | Phase 6 | Complete|
+| SEC-12 | Phase 6 | Complete|
+| SEC-13 | Phase 6 | Complete|
 | SEC-20 | Phase 6 | Complete |
 | SEC-21 | Phase 6 | Complete |
 | SEC-22 | Phase 6 | Complete |

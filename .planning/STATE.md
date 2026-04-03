@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
+milestone: v1.0
 milestone_name: milestone
-status: in-progress
+status: completed
 stopped_at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
-last_updated: "2026-04-01T23:45:00Z"
-last_activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR-01–04 — DELETE /v1/auth/me, anonymise_user(), migration 011, 5 new tests)
+last_updated: "2026-04-03T14:27:06.017Z"
+last_activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR erasure endpoint, atomic anonymisation, full test suite green)
 progress:
   total_phases: 12
-  completed_phases: 5
-  total_plans: 22
-  completed_plans: 22
+  completed_phases: 10
+  total_plans: 28
+  completed_plans: 29
 ---
 
 # MacroPulse — State
