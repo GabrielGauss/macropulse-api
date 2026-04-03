@@ -244,7 +244,7 @@
     </table>
   </div>
 
-  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Lemon Squeezy</div>
+  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</div>
 </div>
 
 <footer>
@@ -318,30 +318,22 @@
 </div>
 
 <script>
-  /* ── Lemon Squeezy checkout ── */
-  /* Replace these with your actual Lemon Squeezy variant checkout URLs */
-  /* Found in: LS Dashboard → Products → [Product] → Variants → Share → Checkout URL */
-  const LS_URLS = {
-    starter: 'https://macropulselive.lemonsqueezy.com/checkout/buy/4bfe855d-3b17-47f0-8288-2586f9a1d7e2?embed=1',
-    pro:     'https://macropulselive.lemonsqueezy.com/checkout/buy/85a3945f-b532-4703-baad-786f9da8951e?embed=1',
+  /* ── Paddle checkout ── */
+  /* TODO: replace placeholders once Paddle merchant account is approved  */
+  /* Paddle Dashboard → Catalog → Products → [Product] → Prices → copy price ID */
+  const PADDLE_PRICE_IDS = {
+    starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER',
+    pro:     'PADDLE_PRO_PRICE_ID_PLACEHOLDER',
   };
-  let _lsReady = false;
+  /* Paddle.js is loaded via <script> tag in <head> once CLIENT_TOKEN is set */
+  /* <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>     */
+  /* Paddle.Setup({ token: 'PADDLE_CLIENT_TOKEN_PLACEHOLDER' });             */
   function openCheckout(tier) {
-    const url = LS_URLS[tier];
-    if (!_lsReady) {
-      const s = document.createElement('script');
-      s.src = 'https://assets.lemonsqueezy.com/lemon.js';
-      s.defer = true;
-      s.onload = () => { _lsReady = true; window.createLemonSqueezy && window.createLemonSqueezy(); };
-      document.head.appendChild(s);
+    if (typeof Paddle === 'undefined') {
+      alert('Checkout coming soon. Email support@macropulse.live to subscribe.');
+      return;
     }
-    const a = document.createElement('a');
-    a.href = url;
-    a.className = 'lemonsqueezy-button';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => a.remove(), 1000);
+    Paddle.Checkout.open({ items: [{ priceId: PADDLE_PRICE_IDS[tier], quantity: 1 }] });
   }
 
   /* ── Free registration modal ── */

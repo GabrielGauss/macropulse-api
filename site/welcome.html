@@ -104,9 +104,28 @@
     .cs-g { color: var(--green); }
     .cs-b { color: var(--blue); }
     .cs-c { color: var(--di); }
+      nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 56px; border-bottom: 1px solid var(--border, #1f1f1f); background: rgba(10,10,10,0.92); backdrop-filter: blur(16px); }
+    .nav-logo { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text, #f0f0f0); }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a { font-size: 0.82rem; color: #555; text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: #888; }
+    footer { border-top: 1px solid var(--border, #1f1f1f); padding: 2rem; text-align: center; }
+    footer p { color: #555; font-size: 0.78rem; }
+    footer a { color: #555; }
+    footer a:hover { color: #888; }
   </style>
 </head>
 <body>
+<nav>
+  <a href="/" class="nav-logo"><div class="logo-dot"></div>MacroPulse</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/api-docs">API Docs</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
+  </div>
+</nav>
 
 <a href="/" class="logo">
   <div class="logo-dot"></div>
@@ -168,5 +187,6 @@ r = requests.get(
 
 <p class="footer-note">Questions? <a href="mailto:gabriel.veron134@gmail.com">gabriel.veron134@gmail.com</a> · <a href="https://discord.gg/YxTH5hPaeN">Discord</a></p>
 
+<footer><p>&copy; 2026 MacroPulse &middot; <a href="/terms">Terms</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/refund">Refund Policy</a> &middot; <a href="mailto:support@macropulse.live">support@macropulse.live</a></p></footer>
 </body>
 </html>
