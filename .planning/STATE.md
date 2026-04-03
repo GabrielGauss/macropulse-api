@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
-last_updated: "2026-04-03T14:27:06.017Z"
+last_updated: "2026-04-03T14:31:31.846Z"
 last_activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR erasure endpoint, atomic anonymisation, full test suite green)
 progress:
   total_phases: 12
