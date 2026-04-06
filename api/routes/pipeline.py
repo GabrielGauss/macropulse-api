@@ -1,15 +1,17 @@
 """
-Pipeline status endpoint.
+Pipeline endpoints.
 
-GET /v1/pipeline/status  — returns last run timestamp, status, and data_lag flag.
-Public (no auth required) — this is confidence/transparency infrastructure for users.
+GET  /v1/pipeline/status   — last run timestamp, status, data_lag flag. Public.
+POST /v1/pipeline/trigger  — kick off an immediate run. Owner key required.
 """
 
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
+
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +42,27 @@ def get_pipeline_status() -> dict:
         "data_lag": bool(row.get("data_lag", False)),
         "model_version": row.get("model_version"),
     }
+
+
+@router.post("/trigger")
+def trigger_pipeline(x_api_key: str = Header(...)) -> dict:
+    """
+    Trigger an immediate pipeline run outside the normal schedule.
+
+    Requires the owner API key in the X-Api-Key header.
+    Runs asynchronously in the background — returns immediately.
+    """
+    settings = get_settings()
+    if not settings.owner_api_key or x_api_key != settings.owner_api_key:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    import threading
+    from services.scheduler import _loop, _run_pipeline_with_alert
+
+    if _loop is None:
+        raise HTTPException(status_code=503, detail="Scheduler not initialised")
+
+    t = threading.Thread(target=_run_pipeline_with_alert, daemon=True, name="manual-pipeline-trigger")
+    t.start()
+    logger.info("Pipeline triggered manually via API")
+    return {"status": "triggered"}
