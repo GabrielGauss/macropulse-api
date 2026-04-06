@@ -19,7 +19,7 @@ router = APIRouter(prefix="/v1/pipeline", tags=["System"])
 
 
 @router.get("/status")
-def get_pipeline_status() -> dict:
+async def get_pipeline_status() -> dict:
     """
     Return the most recent pipeline run metadata.
 
@@ -28,7 +28,7 @@ def get_pipeline_status() -> dict:
     """
     try:
         from database.queries import fetch_latest_pipeline_run
-        row = fetch_latest_pipeline_run()
+        row = await fetch_latest_pipeline_run()
     except Exception as exc:
         logger.error("pipeline/status DB error: %s", exc)
         raise HTTPException(status_code=503, detail="Status temporarily unavailable")
