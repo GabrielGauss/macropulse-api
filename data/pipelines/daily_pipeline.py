@@ -154,7 +154,7 @@ async def _run_daily_pipeline_async(
     latest_row = features.iloc[-1]
     await queries.upsert_macro_features(
         {
-            "time": features.index[-1].isoformat(),
+            "time": features.index[-1].to_pydatetime(),
             **{col: float(latest_row[col]) if pd.notna(latest_row[col]) else None for col in features.columns},
         }
     )
@@ -203,7 +203,7 @@ async def _run_daily_pipeline_async(
     lf = factors[-1]
     await queries.upsert_macro_factors(
         {
-            "time": features.index[-1].isoformat(),
+            "time": features.index[-1].to_pydatetime(),
             "factor_1": float(lf[0]),
             "factor_2": float(lf[1]),
             "factor_3": float(lf[2]) if len(lf) > 2 else None,
@@ -227,9 +227,10 @@ async def _run_daily_pipeline_async(
         result = classifier.classify(latest_probs, vix_diff=vix_diff)
 
     # ── 9. Store regime ──────────────────────────────────────────
+    ts_dt = features.index[-1].to_pydatetime()
     ts_iso = features.index[-1].isoformat()
     regime_row = {
-        "time": ts_iso,
+        "time": ts_dt,
         "regime": result["regime"],
         "prob_expansion": result["probabilities"].get("expansion", 0),
         "prob_tightening": result["probabilities"].get("tightening", 0),
@@ -265,7 +266,7 @@ async def _run_daily_pipeline_async(
 
     await queries.upsert_drift_metrics(
         {
-            "time": ts_iso,
+            "time": ts_dt,
             "pca_explained_variance": float(pca_drift),
             "regime_persistence": float(persistence),
             "feature_mean_shift": float(mean_shift),
