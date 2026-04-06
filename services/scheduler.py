@@ -24,7 +24,7 @@ from api.metrics import (
     PIPELINE_RUNS_TOTAL,
 )
 from config.settings import get_settings
-from data.pipelines.daily_pipeline import run_daily_pipeline
+from data.pipelines.daily_pipeline import _run_daily_pipeline_async
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ def _run_pipeline_with_alert() -> None:
     """Run the daily pipeline, emit Prometheus metrics, and email the owner if it fails."""
     t0 = time.monotonic()
     try:
-        run_daily_pipeline()
+        asyncio.run_coroutine_threadsafe(
+            _run_daily_pipeline_async(), _loop
+        ).result()
         PIPELINE_RUNS_TOTAL.labels(status="success").inc()
         PIPELINE_LAST_SUCCESS_TIMESTAMP.set(time.time())
     except Exception as exc:
@@ -103,7 +105,9 @@ def _check_pipeline_staleness() -> None:
     execute in threads (no running event loop).
     """
     try:
-        last_success = asyncio.run(_fetch_last_successful_run_ts())
+        last_success = asyncio.run_coroutine_threadsafe(
+            _fetch_last_successful_run_ts(), _loop
+        ).result(timeout=30)
     except Exception as exc:
         logger.error("Staleness check DB query failed: %s", exc)
         return
@@ -147,11 +151,13 @@ def _check_pipeline_staleness() -> None:
 
 
 _scheduler: BackgroundScheduler | None = None
+_loop: asyncio.AbstractEventLoop | None = None
 
 
 def start_scheduler() -> BackgroundScheduler:
     """Initialise and start the background scheduler."""
-    global _scheduler
+    global _scheduler, _loop
+    _loop = asyncio.get_event_loop()
     if _scheduler and _scheduler.running:
         logger.info("Scheduler already running.")
         return _scheduler
