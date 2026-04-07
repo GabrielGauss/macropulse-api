@@ -186,7 +186,7 @@
         <div class="plan-feature"><span class="pf-no">✗</span> <span>Domain views &amp; backtest</span></div>
         <div class="plan-feature"><span class="pf-no">✗</span> <span>Webhooks &amp; WebSocket</span></div>
       </div>
-      <button class="plan-btn solid" onclick="openCheckout('starter')">Subscribe →</button>
+      <button class="plan-btn solid" data-tier="starter" onclick="openCheckout('starter')">Subscribe →</button>
     </div>
 
     <div class="pricing-card" id="pricing-pro">
@@ -205,7 +205,7 @@
         <div class="plan-feature"><span class="pf-check">✓</span> <span>WebSocket stream</span></div>
         <div class="plan-feature"><span class="pf-check">✓</span> <span>Priority support</span></div>
       </div>
-      <button class="plan-btn blue" onclick="openCheckout('pro')">Subscribe →</button>
+      <button class="plan-btn blue" data-tier="pro" onclick="openCheckout('pro')">Subscribe →</button>
     </div>
   </div>
 
@@ -244,7 +244,7 @@
     </table>
   </div>
 
-  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</div>
+  <div class="note">14-day money-back guarantee · Cancel anytime · Billed monthly via Stripe</div>
 </div>
 
 <footer>
@@ -318,22 +318,23 @@
 </div>
 
 <script>
-  /* ── Paddle checkout ── */
-  /* TODO: replace placeholders once Paddle merchant account is approved  */
-  /* Paddle Dashboard → Catalog → Products → [Product] → Prices → copy price ID */
-  const PADDLE_PRICE_IDS = {
-    starter: 'PADDLE_STARTER_PRICE_ID_PLACEHOLDER',
-    pro:     'PADDLE_PRO_PRICE_ID_PLACEHOLDER',
-  };
-  /* Paddle.js is loaded via <script> tag in <head> once CLIENT_TOKEN is set */
-  /* <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>     */
-  /* Paddle.Setup({ token: 'PADDLE_CLIENT_TOKEN_PLACEHOLDER' });             */
-  function openCheckout(tier) {
-    if (typeof Paddle === 'undefined') {
-      alert('Checkout coming soon. Email support@macropulse.live to subscribe.');
-      return;
+  /* ── Stripe checkout ── */
+  async function openCheckout(tier) {
+    const btn = document.querySelector(`[data-tier="${tier}"]`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+    try {
+      const res = await fetch('https://api.macropulse.live/v1/billing/stripe/public-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Checkout unavailable.');
+      window.location.href = data.checkout_url;
+    } catch (e) {
+      alert('Could not start checkout. Please email support@macropulse.live.');
+      if (btn) { btn.disabled = false; btn.textContent = tier === 'starter' ? 'Get Starter →' : 'Get Pro →'; }
     }
-    Paddle.Checkout.open({ items: [{ priceId: PADDLE_PRICE_IDS[tier], quantity: 1 }] });
   }
 
   /* ── Free registration modal ── */

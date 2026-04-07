@@ -52,7 +52,6 @@ export const api = {
   getCommentary:        () => apiFetch('/v1/regime/commentary'),
   getForecast:          (horizon = 5) => apiFetch(`/v1/forecast?horizon=${horizon}`),
   getCompositeAnalysis: () => apiFetch('/v1/analysis/composite'),
-  getLsPortal:       () => apiFetch('/v1/billing/ls-portal'),
   getWebhookInfo:    () => apiFetch('/v1/webhook/info'),
   setWebhook:        (url) => apiFetch('/v1/webhook/set', { method: 'POST', body: JSON.stringify({ url }) }),
   testWebhook:       () => apiFetch('/v1/webhook/test'),
@@ -65,9 +64,9 @@ export const api = {
   // Auth — key management (key required)
   rotateKey:         () => apiFetch('/v1/auth/rotate', { method: 'POST' }),
   getUsage:          () => apiFetch('/v1/auth/usage'),
-  // Billing
-  getCheckout:       (tier) => apiFetch('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ tier }) }),
-  getBillingPortal:  () => apiFetch('/v1/billing/portal', { method: 'POST' }),
+  // Billing — Stripe
+  getCheckout:       (tier) => apiFetch('/v1/billing/stripe/checkout', { method: 'POST', body: JSON.stringify({ tier }) }),
+  getBillingPortal:  () => apiFetch('/v1/billing/stripe/portal'),
 
   setKey:            (key) => { if (key) localStorage.setItem('mp_api_key', key.trim()); else localStorage.removeItem('mp_api_key'); },
   getKey,

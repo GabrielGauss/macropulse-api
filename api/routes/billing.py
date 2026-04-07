@@ -445,6 +445,44 @@ class StripeCheckoutRequest(BaseModel):
 
 
 @router.post(
+    "/stripe/public-checkout",
+    summary="Create a Stripe checkout session (no auth — for pricing page)",
+)
+async def stripe_public_checkout(body: StripeCheckoutRequest) -> dict:
+    """
+    Creates a Stripe hosted checkout session without requiring an API key.
+    Used by the public pricing page. Stripe collects the email; the webhook
+    provisions the MacroPulse account and emails the API key on success.
+    """
+    import stripe as stripe_lib
+
+    settings = get_settings()
+    tier = body.tier.lower()
+    if tier not in ("starter", "pro"):
+        raise HTTPException(status_code=400, detail="tier must be 'starter' or 'pro'.")
+
+    price_id = settings.stripe_starter_price_id if tier == "starter" else settings.stripe_pro_price_id
+    if not price_id:
+        raise HTTPException(status_code=503, detail=f"Stripe price ID for '{tier}' not configured.")
+
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    try:
+        session = stripe_lib.checkout.Session.create(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=settings.stripe_success_url + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=settings.stripe_cancel_url,
+            metadata={"tier": tier},
+        )
+    except Exception as exc:
+        logger.error("Stripe public checkout error: %s", exc)
+        raise HTTPException(status_code=502, detail="Could not create checkout session.")
+
+    return {"checkout_url": session.url, "tier": tier}
+
+
+@router.post(
     "/stripe/checkout",
     summary="Create a Stripe checkout session",
 )
