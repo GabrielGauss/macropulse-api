@@ -1187,31 +1187,24 @@ function toggleFaq(btn) {
   if (!isOpen) item.classList.add('open');
 }
 
-/* ── Subscribe modal ────────────────────────────────────── */
-function openSub(plan, price) {
-  _subPlan = plan; _subPrice = price;
-  document.getElementById('sub-title').textContent = 'Subscribe to ' + plan + ' — $' + price + '/month';
-  document.getElementById('sub-email').value = '';
-  document.getElementById('sub-name').value = '';
-  document.getElementById('sub-err').style.display = 'none';
-  document.getElementById('sub-form').style.display = '';
-  document.getElementById('sub-ok').style.display = 'none';
-  document.getElementById('sub-modal').classList.add('open');
-}
-function closeSub() { document.getElementById('sub-modal').classList.remove('open'); }
-async function submitSub() {
-  const email = document.getElementById('sub-email').value.trim();
-  const name = document.getElementById('sub-name').value.trim();
-  const err = document.getElementById('sub-err');
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Please enter a valid email.'; err.style.display = 'block'; return; }
-  err.style.display = 'none';
-  const btn = document.getElementById('sub-btn');
-  btn.disabled = true; btn.textContent = 'Sending…';
-  try { await fetch(API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, name, plan: _subPlan, price: _subPrice }) }); } catch(_) {}
-  document.getElementById('sub-confirm').textContent = email;
-  document.getElementById('sub-form').style.display = 'none';
-  document.getElementById('sub-ok').style.display = 'block';
-  btn.disabled = false; btn.textContent = 'Subscribe →';
+/* ── Stripe checkout ─────────────────────────────────────── */
+async function openSub(plan, price) {
+  const tier = plan.toLowerCase();
+  const btn = document.querySelector(`[onclick="openSub('${plan}','${price}')"]`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  try {
+    const res = await fetch(API + '/v1/billing/stripe/public-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Checkout unavailable.');
+    window.location.href = data.checkout_url;
+  } catch (e) {
+    alert('Could not start checkout. Please email support@macropulse.live.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Subscribe →'; }
+  }
 }
 
 /* ── Registration ───────────────────────────────────────── */
