@@ -56,7 +56,7 @@ def _zscore_to_gauge(series: list[float], lookback: int = _ZSCORE_LOOKBACK) -> f
     return float(np.clip(z / 2.0, -1.0, 1.0))
 
 
-def build_scorecard() -> dict[str, Any]:
+async def build_scorecard() -> dict[str, Any]:
     """
     Compute the 5 normalized gauge signals from the latest macro_features rows.
 
@@ -72,7 +72,7 @@ def build_scorecard() -> dict[str, Any]:
     """
     import datetime as dt
 
-    rows = queries.fetch_latest_features(limit=504)
+    rows = await queries.fetch_latest_features(limit=504)
     if not rows:
         return {
             "growth_momentum": 0.0,

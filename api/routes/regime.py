@@ -212,10 +212,10 @@ async def get_features(
 
 
 @router.get("/scorecard", tags=["MacroPulse"])
-def get_scorecard() -> dict:
+async def get_scorecard() -> dict:
     """
     Return the MacroPulse Scorecard — 5 normalized macro signals on [-1, 1].
 
     No authentication required (public endpoint for the dashboard).
     """
-    return build_scorecard()
+    return await build_scorecard()

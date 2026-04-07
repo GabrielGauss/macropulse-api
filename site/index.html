@@ -836,33 +836,10 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
   </div>
 </footer>
 
-<!-- SUBSCRIBE MODAL -->
-<div class="modal-wrap" id="sub-modal" onclick="if(event.target===this)closeSub()">
-  <div class="modal-box">
-    <div id="sub-form">
-      <h3 id="sub-title">Subscribe to Starter — $49/month</h3>
-      <p>You'll receive an email within 24h with payment instructions and account activation. Cancel anytime.</p>
-      <div class="fl"><label>Email</label><input class="fi" type="email" id="sub-email" placeholder="you@example.com"/></div>
-      <div class="fl"><label>Name (optional)</label><input class="fi" type="text" id="sub-name" placeholder="Jane Smith"/></div>
-      <div class="modal-err" id="sub-err"></div>
-      <div class="modal-actions">
-        <button class="btn btn-green" id="sub-btn" onclick="submitSub()">Subscribe →</button>
-        <button class="btn btn-ghost" onclick="closeSub()">Cancel</button>
-      </div>
-    </div>
-    <div class="modal-ok" id="sub-ok">
-      <div class="modal-ok-icon">✓</div>
-      <h3>You're on the list</h3>
-      <p>We'll email you at <strong id="sub-confirm"></strong> with payment details within 24 hours.</p>
-      <button class="btn btn-ghost btn-sm" style="margin-top:1.5rem" onclick="closeSub()">Done</button>
-    </div>
-  </div>
-</div>
 
 <script>
 const API = 'https://api.macropulse.live';
 let _liveData = null;
-let _subPlan = '', _subPrice = '';
 
 /* ── Scroll helpers ────────────────────────────────────── */
 function jumpTo(sel) { // renamed from scrollTo to avoid shadowing window.scrollTo
