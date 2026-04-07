@@ -382,6 +382,40 @@ async def upsert_ls_subscription(
         )
 
 
+async def get_user_by_stripe_customer(stripe_customer_id: str) -> dict[str, Any] | None:
+    sql = """
+        SELECT id, email, name, stripe_customer_id, stripe_subscription_id, stripe_status
+        FROM users WHERE stripe_customer_id = $1;
+    """
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, stripe_customer_id)
+        return dict(row) if row else None
+
+
+async def upsert_stripe_subscription(
+    user_id: int,
+    stripe_customer_id: str,
+    stripe_subscription_id: str,
+    stripe_price_id: str,
+    stripe_status: str,
+) -> None:
+    """Persist Stripe subscription data on the user row."""
+    sql = """
+        UPDATE users
+        SET stripe_customer_id     = $1,
+            stripe_subscription_id = $2,
+            stripe_price_id        = $3,
+            stripe_status          = $4
+        WHERE id = $5;
+    """
+    async with get_db_conn() as conn:
+        await conn.execute(
+            sql,
+            stripe_customer_id, stripe_subscription_id,
+            stripe_price_id, stripe_status, user_id,
+        )
+
+
 async def upgrade_user_tier(user_id: int, tier: str) -> None:
     """Set the tier on all active API keys for a user."""
     sql = "UPDATE api_keys SET tier = $1 WHERE user_id = $2 AND is_active = TRUE;"

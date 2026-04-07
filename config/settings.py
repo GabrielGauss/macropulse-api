@@ -90,6 +90,17 @@ class Settings(BaseSettings):
     paddle_success_url: str = "https://macropulse.live/welcome"
     paddle_client_token: str = ""  # From Paddle dashboard → Developer Tools → Authentication
 
+    # ── Stripe Billing ──────────────────────────────────────────────
+    stripe_secret_key: str = ""
+    stripe_publishable_key: str = ""
+    stripe_webhook_secret: str = ""         # whsec_... from Stripe dashboard
+    stripe_starter_price_id: str = ""       # price_... for $49/mo
+    stripe_pro_price_id: str = ""           # price_... for $199/mo
+    stripe_starter_product_id: str = ""     # prod_... for Starter
+    stripe_pro_product_id: str = ""         # prod_... for Pro
+    stripe_success_url: str = "https://macropulse.live/welcome"
+    stripe_cancel_url: str = "https://macropulse.live/pricing"
+
     # ── CORS ────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 

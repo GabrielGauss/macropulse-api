@@ -1,10 +1,11 @@
 """
 Billing endpoints for MacroPulse.
 
-  POST /v1/billing/paddle/checkout   — create a Paddle checkout session (auth required)
-  GET  /v1/billing/paddle/portal     — get Paddle customer portal URL (auth required)
-  POST /v1/billing/paddle/webhook    — Paddle webhook receiver (no auth, signature verified)
-  POST /v1/billing/lemonsqueezy      — Lemon Squeezy webhook receiver (no auth, HMAC verified)
+  POST /v1/billing/stripe/checkout   — create a Stripe checkout session (auth required)
+  GET  /v1/billing/stripe/portal     — get Stripe customer portal URL (auth required)
+  POST /v1/billing/stripe/webhook    — Stripe webhook receiver (no auth, signature verified)
+  POST /v1/billing/paddle/webhook    — Paddle webhook receiver (legacy, no auth, signature verified)
+  POST /v1/billing/lemonsqueezy      — Lemon Squeezy webhook receiver (legacy)
 """
 
 from __future__ import annotations
@@ -435,3 +436,249 @@ async def _ls_handle(event: str, attrs: dict) -> dict:
 
     else:
         return {"result": "ignored", "event": event}
+
+
+# ── Stripe ───────────────────────────────────────────────────────────────────
+
+class StripeCheckoutRequest(BaseModel):
+    tier: str  # "starter" | "pro"
+
+
+@router.post(
+    "/stripe/checkout",
+    summary="Create a Stripe checkout session",
+)
+async def stripe_checkout(
+    body: StripeCheckoutRequest,
+    key_record: dict = Depends(require_api_key),
+) -> dict:
+    """
+    Returns a Stripe hosted checkout URL for the given tier.
+    Redirect the user to `checkout_url`. After payment Stripe fires a webhook
+    that upgrades the tier automatically.
+    """
+    import stripe as stripe_lib
+
+    settings = get_settings()
+    tier = body.tier.lower()
+    if tier not in ("starter", "pro"):
+        raise HTTPException(status_code=400, detail="tier must be 'starter' or 'pro'.")
+
+    price_id = settings.stripe_starter_price_id if tier == "starter" else settings.stripe_pro_price_id
+    if not price_id:
+        raise HTTPException(status_code=503, detail=f"Stripe price ID for '{tier}' not configured.")
+
+    stripe_lib.api_key = settings.stripe_secret_key
+    user_id: int = key_record["user_id"]
+    email: str = key_record.get("email", "")
+
+    try:
+        session = stripe_lib.checkout.Session.create(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            customer_email=email or None,
+            success_url=settings.stripe_success_url + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=settings.stripe_cancel_url,
+            metadata={"user_id": str(user_id), "tier": tier},
+        )
+    except Exception as exc:
+        logger.error("Stripe checkout error for user_id=%d: %s", user_id, exc)
+        raise HTTPException(status_code=502, detail="Could not create checkout session.")
+
+    return {"checkout_url": session.url, "tier": tier}
+
+
+@router.get(
+    "/stripe/portal",
+    summary="Get Stripe customer portal URL",
+)
+async def stripe_portal(key_record: dict = Depends(require_api_key)) -> dict:
+    """Returns the Stripe billing portal URL so the user can manage or cancel."""
+    import stripe as stripe_lib
+
+    settings = get_settings()
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    user_id: int = key_record["user_id"]
+    user = await queries.get_user_by_id(user_id)
+
+    if not user or not user.get("stripe_customer_id"):
+        raise HTTPException(status_code=404, detail="No active Stripe subscription found.")
+
+    try:
+        session = stripe_lib.billing_portal.Session.create(
+            customer=user["stripe_customer_id"],
+            return_url="https://macropulse.live/dashboard",
+        )
+    except Exception as exc:
+        logger.error("Stripe portal error for user_id=%d: %s", user_id, exc)
+        raise HTTPException(status_code=502, detail="Could not generate portal URL.")
+
+    return {"portal_url": session.url}
+
+
+@router.post(
+    "/stripe/webhook",
+    status_code=200,
+    summary="Stripe webhook receiver",
+    include_in_schema=False,
+)
+async def stripe_webhook(
+    request: Request,
+    stripe_signature: str | None = Header(None, alias="Stripe-Signature"),
+) -> dict:
+    """
+    Receives and processes Stripe billing events.
+    Verifies the webhook signature before processing.
+    Always returns 200 so Stripe doesn't retry valid deliveries.
+    """
+    import stripe as stripe_lib
+
+    settings = get_settings()
+    raw_body = await request.body()
+
+    if not stripe_signature:
+        raise HTTPException(status_code=400, detail="Missing Stripe-Signature header.")
+
+    try:
+        event = stripe_lib.Webhook.construct_event(
+            raw_body, stripe_signature, settings.stripe_webhook_secret
+        )
+    except stripe_lib.errors.SignatureVerificationError:
+        logger.warning("Stripe webhook: invalid signature rejected")
+        raise HTTPException(status_code=401, detail="Invalid webhook signature.")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Webhook parse error: {exc}")
+
+    # Idempotency check
+    event_id: str = event["id"]
+    from database.connection import get_db_conn
+    try:
+        async with get_db_conn() as conn:
+            row = await conn.fetchrow(
+                "SELECT 1 FROM webhook_idempotency WHERE event_id = $1", event_id
+            )
+            if row is not None:
+                logger.info("Stripe webhook duplicate skipped: event_id=%s", event_id)
+                return {"ok": True, "duplicate": True}
+            await conn.execute(
+                "INSERT INTO webhook_idempotency (event_id, provider) VALUES ($1, 'stripe') ON CONFLICT DO NOTHING",
+                event_id,
+            )
+    except Exception as exc:
+        logger.error("Stripe webhook idempotency check failed: %s", exc)
+
+    try:
+        result = await _stripe_handle(event, settings)
+        logger.info("Stripe webhook processed: %s → %s", event["type"], result)
+    except Exception as exc:
+        logger.error("Stripe webhook handler error: %s", exc, exc_info=True)
+
+    return {"ok": True}
+
+
+def _stripe_tier_from_price(price_id: str) -> str | None:
+    """Map a Stripe price ID to a MacroPulse tier."""
+    settings = get_settings()
+    if price_id == settings.stripe_starter_price_id:
+        return "starter"
+    if price_id == settings.stripe_pro_price_id:
+        return "pro"
+    return None
+
+
+async def _stripe_handle(event: dict, settings) -> dict:
+    import stripe as stripe_lib
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    event_type: str = event["type"]
+    obj: dict = event["data"]["object"]
+
+    # ── checkout.session.completed ───────────────────────────────────
+    if event_type == "checkout.session.completed":
+        customer_id: str = obj.get("customer", "")
+        subscription_id: str = obj.get("subscription", "")
+        email: str = (obj.get("customer_email") or obj.get("customer_details", {}).get("email") or "").lower().strip()
+        tier: str = obj.get("metadata", {}).get("tier", "")
+        user_id_meta: str = obj.get("metadata", {}).get("user_id", "")
+
+        if not tier or not email:
+            logger.warning("Stripe checkout.session.completed missing tier/email: %s", obj.get("id"))
+            return {"result": "missing_tier_or_email"}
+
+        uid, key_prefix, is_new = await _ls_provision(email, tier)
+        await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, tier, "active")
+        action = f"{'created' if is_new else 'upgraded'}_to_{tier}"
+        logger.info("Stripe checkout: uid=%s email=%s action=%s", uid, email, action)
+        return {"result": action, "user_id": uid}
+
+    # ── customer.subscription.updated ───────────────────────────────
+    elif event_type == "customer.subscription.updated":
+        customer_id = obj.get("customer", "")
+        subscription_id = obj.get("id", "")
+        sub_status: str = obj.get("status", "")
+        price_id: str = (obj.get("items", {}).get("data") or [{}])[0].get("price", {}).get("id", "")
+        tier = _stripe_tier_from_price(price_id)
+
+        user = await queries.get_user_by_stripe_customer(customer_id)
+        if not user:
+            return {"result": "user_not_found", "customer_id": customer_id}
+
+        uid = user["id"]
+        if sub_status in ("active", "trialing") and tier:
+            await queries.upgrade_user_tier(uid, tier)
+            await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, price_id, sub_status)
+            return {"result": f"updated_to_{tier}", "status": sub_status}
+        elif sub_status in ("canceled", "unpaid", "past_due"):
+            await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, price_id or "", sub_status)
+            if sub_status in ("canceled", "unpaid"):
+                await queries.upgrade_user_tier(uid, "free")
+                return {"result": "downgraded_to_free", "status": sub_status}
+        return {"result": f"no_tier_change_status={sub_status}"}
+
+    # ── customer.subscription.deleted ───────────────────────────────
+    elif event_type == "customer.subscription.deleted":
+        customer_id = obj.get("customer", "")
+        subscription_id = obj.get("id", "")
+
+        user = await queries.get_user_by_stripe_customer(customer_id)
+        if user:
+            await queries.upgrade_user_tier(user["id"], "free")
+            await queries.upsert_stripe_subscription(user["id"], customer_id, subscription_id, "", "canceled")
+            return {"result": "deleted_downgraded_to_free"}
+        return {"result": "user_not_found"}
+
+    # ── invoice.paid ─────────────────────────────────────────────────
+    elif event_type == "invoice.paid":
+        # Payment confirmed — ensure user is active (handles recovery from past_due)
+        customer_id = obj.get("customer", "")
+        subscription_id = obj.get("subscription", "")
+        price_id = (obj.get("lines", {}).get("data") or [{}])[0].get("price", {}).get("id", "")
+        tier = _stripe_tier_from_price(price_id)
+
+        user = await queries.get_user_by_stripe_customer(customer_id)
+        if user and tier:
+            await queries.upgrade_user_tier(user["id"], tier)
+            await queries.upsert_stripe_subscription(user["id"], customer_id, subscription_id, price_id, "active")
+            return {"result": "payment_confirmed_access_active"}
+        return {"result": "invoice_paid_logged"}
+
+    # ── invoice.payment_failed ───────────────────────────────────────
+    elif event_type == "invoice.payment_failed":
+        customer_id = obj.get("customer", "")
+        logger.warning("Stripe invoice.payment_failed for customer=%s — Stripe handles dunning", customer_id)
+        user = await queries.get_user_by_stripe_customer(customer_id)
+        if user:
+            await queries.upsert_stripe_subscription(
+                user["id"], customer_id,
+                obj.get("subscription", ""), "", "past_due"
+            )
+        return {"result": "payment_failed_logged"}
+
+    # ── invoice.payment_action_required ─────────────────────────────
+    elif event_type == "invoice.payment_action_required":
+        logger.warning("Stripe 3DS required for customer=%s", obj.get("customer"))
+        return {"result": "action_required_logged"}
+
+    else:
+        return {"result": "ignored", "event": event_type}
