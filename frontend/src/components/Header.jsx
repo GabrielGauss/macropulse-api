@@ -73,7 +73,7 @@ export default function Header({ connected, regime, meInfo, guideMode, onToggleG
   const [portalUrl, setPortalUrl] = useState(null);
   useEffect(() => {
     if (!meInfo || meInfo.tier === 'free' || !api.hasKey()) return;
-    api.getLsPortal()
+    api.getBillingPortal()
       .then(d => { if (d?.portal_url) setPortalUrl(d.portal_url); })
       .catch(() => {});
   }, [meInfo?.tier]);
