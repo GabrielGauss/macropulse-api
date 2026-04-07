@@ -16,6 +16,113 @@
 <meta name="twitter:title" content="MacroPulse — Know the macro regime. Build accordingly."/>
 <meta name="twitter:description" content="Daily PCA + HMM regime classification. Four states. One endpoint."/>
 <meta name="twitter:image" content="https://macropulse.live/og-image.svg"/>
+<meta name="robots" content="index, follow"/>
+<meta name="keywords" content="macro regime API, PCA HMM regime classification, macro trading signal, quantitative finance API, economic regime detection, expansion recovery tightening risk-off"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MacroPulse",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any",
+  "url": "https://macropulse.live",
+  "description": "Daily PCA + HMM macro regime classification API. Four states — Expansion, Recovery, Tightening, Risk-Off — updated every business day after US market close.",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "50 API requests/day, 30-day history window"
+    },
+    {
+      "@type": "Offer",
+      "name": "Starter",
+      "price": "49",
+      "priceCurrency": "USD",
+      "billingIncrement": "P1M",
+      "description": "500 API requests/day, 6-month history, email alerts, signal scorecard"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro",
+      "price": "199",
+      "priceCurrency": "USD",
+      "billingIncrement": "P1M",
+      "description": "Unlimited requests, 2+ year history, CSV export, webhook delivery, WebSocket stream, full domain views"
+    }
+  ],
+  "provider": {
+    "@type": "Organization",
+    "name": "MacroPulse",
+    "url": "https://macropulse.live"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a macro regime?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A macro regime is a persistent state of the economy defined by the combination of liquidity conditions, credit spreads, growth momentum, and volatility. MacroPulse classifies the current moment into one of four states — Expansion, Recovery, Tightening, or Risk-Off — each with historically distinct asset return profiles."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When is the MacroPulse signal updated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The pipeline runs automatically every business day at 18:30 UTC after US market close. FRED and Yahoo Finance data are fetched, validated, and run through the frozen PCA + HMM model. The signal is live on the API within minutes of the pipeline completing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there look-ahead bias in the MacroPulse model?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Models are trained once on historical data, serialized, and frozen. Daily inference uses only data available at inference time. Historical regime classifications are immutable — yesterday's signal will never be retroactively changed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use MacroPulse in automated trading?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The REST API is designed for programmatic consumption. Any paid user can poll GET /v1/regime/current on any cadence up to their rate limit. Pro users get webhook and WebSocket delivery, eliminating polling entirely and enabling event-driven architectures."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What data sources does MacroPulse use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "10 daily inputs: WALCL (Fed assets), WTREGEN (Treasury cash), RRPONTSYD (Reverse Repo), S&P 500 returns, VIX, 10Y yield, 2Y yield, HY credit spread, DXY, and the net liquidity proxy derived from the first three. All from FRED and Yahoo Finance."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between Starter and Pro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Starter ($49/mo) is for developers who need the data: 500 API requests/day, 6-month history, email regime alerts, signal scorecard, and liquidity analysis. Pro ($199/mo) is for builders and quant desks: unlimited requests, 2+ year history, CSV export, all domain views, backtest engine, Quant HUD, webhook delivery, and WebSocket stream."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get a MacroPulse API key?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Enter your email in the registration form on macropulse.live. You'll receive a 6-digit verification code. After verification your key is displayed immediately — no credit card required for the free tier."
+      }
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -321,11 +428,11 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
 <nav>
   <div class="nav-logo">MacroPulse<span class="nav-cursor"></span></div>
   <div class="nav-links">
-    <a href="#performance">Performance</a>
-    <a href="#signal">Signal</a>
-    <a href="#integration">Docs</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
+    <a href="javascript:void(0)" onclick="jumpTo('#performance')">Performance</a>
+    <a href="javascript:void(0)" onclick="jumpTo('#signal')">Signal</a>
+    <a href="javascript:void(0)" onclick="jumpTo('#integration')">Docs</a>
+    <a href="javascript:void(0)" onclick="jumpTo('#pricing')">Pricing</a>
+    <a href="javascript:void(0)" onclick="jumpTo('#faq')">FAQ</a>
   </div>
   <div class="nav-right">
     <a href="/irl.html" class="nav-right-link nav-irl">IRL</a>
@@ -337,11 +444,11 @@ footer{border-top:1px solid var(--ln);padding:1.5rem var(--pad);display:flex;ali
   </button>
 </nav>
 <div class="nav-mobile" id="nav-mobile">
-  <a href="#performance" onclick="closeNav()">Performance</a>
-  <a href="#signal" onclick="closeNav()">Signal</a>
-  <a href="#integration" onclick="closeNav()">Docs</a>
-  <a href="#pricing" onclick="closeNav()">Pricing</a>
-  <a href="#faq" onclick="closeNav()">FAQ</a>
+  <a href="javascript:void(0)" onclick="jumpTo('#performance');closeNav()">Performance</a>
+  <a href="javascript:void(0)" onclick="jumpTo('#signal');closeNav()">Signal</a>
+  <a href="javascript:void(0)" onclick="jumpTo('#integration');closeNav()">Docs</a>
+  <a href="javascript:void(0)" onclick="jumpTo('#pricing');closeNav()">Pricing</a>
+  <a href="javascript:void(0)" onclick="jumpTo('#faq');closeNav()">FAQ</a>
   <a href="/irl.html" onclick="closeNav()" style="color:var(--green)">IRL</a>
   <a href="https://api.macropulse.live" target="_blank" onclick="closeNav()">Dashboard</a>
 </div>
@@ -705,7 +812,7 @@ weight = EXPOSURE[regime]  <span class="cc"># → 0.75</span></pre>
       </tbody>
     </table>
     </div>
-    <p class="pt-foot" data-reveal data-d="3">14-day money-back guarantee · Cancel anytime · Billed monthly via Paddle</p>
+    <p class="pt-foot" data-reveal data-d="3">14-day money-back guarantee · Cancel anytime · Billed monthly via Stripe</p>
     <p class="pt-foot" style="margin-top:.5rem;font-size:.65rem;color:var(--di)" data-reveal data-d="4">MacroPulse provides a quantitative data signal, not financial advice. Past performance does not guarantee future results. All trading involves risk of loss.</p>
   </div>
 </section>
