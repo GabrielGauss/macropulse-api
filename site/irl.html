@@ -259,31 +259,41 @@
       footer { flex-direction: column; align-items: flex-start; }
     }
 
-    /* ── Content protection ── */
-    body {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
+    /* ── Pricing table ── */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .pricing-card {
+      background: var(--s1); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 1.5rem 1.75rem;
     }
-    /* Confidential watermark — diagonal, low opacity, non-interactive */
-    body::after {
-      content: 'CONFIDENTIAL · MacroPulse Research · NOT FOR DISTRIBUTION';
-      position: fixed;
-      bottom: 3rem; right: -4rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      color: rgba(34,197,94,0.08);
-      letter-spacing: 0.12em;
-      transform: rotate(-30deg);
-      pointer-events: none;
-      z-index: 9999;
-      white-space: nowrap;
+    .pricing-card.featured { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+    .pricing-tier { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+    .pricing-tier.green { color: var(--green); }
+    .pricing-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .pricing-price { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+    .pricing-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+    .pricing-min { font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; }
+    .pricing-features { list-style: none; }
+    .pricing-features li { font-size: 0.8rem; color: var(--muted); padding: 0.2rem 0; display: flex; gap: 0.5rem; }
+    .pricing-features li::before { content: '—'; color: var(--dim); flex-shrink: 0; }
+    .pricing-features li span { color: var(--text); }
+    .discount-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 1.5rem; }
+    .discount-table th { text-align: left; padding: 0.5rem 1rem; border-bottom: 1px solid var(--border2); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+    .discount-table td { padding: 0.55rem 1rem; border-bottom: 1px solid var(--border); }
+    .discount-table tr:last-child td { border-bottom: none; }
+    .discount-table td:last-child { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    .discount-table-wrap { border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; background: var(--s1); }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; color: var(--muted);
+      background: var(--s1); border: 1px solid var(--border2);
+      padding: 0.3rem 0.75rem; border-radius: 4px; margin-bottom: 1.75rem;
     }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); animation: pulse 2s infinite; }
   </style>
 
-  <!-- No-index: keep this page out of search engines -->
-  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+  <meta name="robots" content="index, follow" />
 </head>
 <body>
 
@@ -301,8 +311,9 @@
   </a>
   <div class="nav-links">
     <a href="/">API</a>
-    <a href="/api-docs.html">Docs</a>
+    <a href="/api-docs.html">API Docs</a>
     <a href="/irl.html" class="active">IRL</a>
+    <a href="https://irl.macropulse.live" target="_blank" rel="noopener">Live Sandbox</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--muted);">Dashboard</a>
   </div>
 </nav>
@@ -310,17 +321,17 @@
 <!-- HERO -->
 <div class="container">
   <div class="hero">
-    <div class="hero-eyebrow">MacroPulse Research · Early Access</div>
+    <div class="status-bar"><span class="status-dot"></span>Production · REST API live at irl.macropulse.live</div>
     <h1>Immutable Reasoning Log<br><span>for Autonomous Agents</span></h1>
     <p class="hero-sub">
-      IRL puts a cryptographic seal on every autonomous trading decision — regardless of which
-      regime signal your agents run on. Bring your own model, your own signal provider, or use
-      MacroPulse as a turnkey Market Truth Anchor. The seal, the audit chain, and the compliance
-      guarantees are identical either way.
+      IRL puts a cryptographic seal on every autonomous trading decision before it reaches the exchange.
+      Pre-execution policy enforcement, bitemporal audit ledger, post-trade verification.
+      Bring your own model and signal, or use MacroPulse as a turnkey Market Truth Anchor.
     </p>
     <div class="hero-actions">
-      <a href="mailto:gabriel.veron134@gmail.com" class="btn-primary">Request Early Access</a>
-      <a href="/irl-whitepaper.html" class="btn-ghost">Read Whitepaper →</a>
+      <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-primary">Try Live Sandbox →</a>
+      <a href="mailto:gabriel.veron134@gmail.com" class="btn-ghost">Contact for Licensing</a>
+      <a href="/irl-whitepaper.html" class="btn-ghost">Whitepaper →</a>
     </div>
   </div>
 </div>
@@ -541,18 +552,97 @@
   </div>
 </div>
 
+<!-- PRICING -->
+<div class="container">
+  <div class="section">
+    <div class="section-label">Pricing</div>
+    <h2>Per-Agent, Not Per-Trade</h2>
+    <p class="section-sub">
+      Compliance value is in the seal existing — not in counting seals.
+      L1 is operational in under a day. Upgrade when your regulatory requirements escalate.
+    </p>
+    <div class="pricing-grid">
+      <div class="pricing-card featured">
+        <div class="pricing-tier green">L1</div>
+        <div class="pricing-name">IRL Sidecar</div>
+        <div class="pricing-price">$500 <span>/ agent / month</span></div>
+        <div class="pricing-min">Minimum 1 agent</div>
+        <ul class="pricing-features">
+          <li>Unlimited authorize + bind-execution calls</li>
+          <li>Multi-Agent Registry, per-agent risk controls</li>
+          <li>Post-trade verifier (MATCHED / DIVERGENT / EXPIRED)</li>
+          <li>Cryptographic audit ledger, SHA-256 sealed</li>
+          <li>REST API + PostgreSQL persistence</li>
+          <li>SDKs: Python, TypeScript, Go</li>
+          <li>Email support</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-tier">L2</div>
+        <div class="pricing-name">IRL Audit Platform</div>
+        <div class="pricing-price">$1,200 <span>/ agent / month</span></div>
+        <div class="pricing-min">Minimum 3 agents</div>
+        <ul class="pricing-features">
+          <li>Everything in L1, plus:</li>
+          <li><span>Signed heartbeats</span> — anti-replay enforcement</li>
+          <li><span>MacroPulse MTA integration</span> — or custom MtaClient</li>
+          <li><span>Compliance dashboard</span> — read-only regulator view</li>
+          <li><span>Forensic replay API</span></li>
+          <li>99.9% uptime SLA</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-tier">L3</div>
+        <div class="pricing-name">IRL Sovereign Gateway</div>
+        <div class="pricing-price" style="font-size:1.15rem;">Enterprise</div>
+        <div class="pricing-min">Quoted per engagement · $8k–$25k/mo typical</div>
+        <ul class="pricing-features">
+          <li>Everything in L2, plus:</li>
+          <li><span>TEE execution</span> — Intel TDX / AMD SEV</li>
+          <li><span>Wasm policy modules</span> — hot-reloadable, sandboxed</li>
+          <li><span>ZK compliance proofs</span> — prove adherence without revealing alpha</li>
+          <li><span>Double-Green signing</span> — API key inaccessible until both checks pass</li>
+          <li>Dedicated support + quarterly review</li>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;">
+      <p class="section-sub" style="margin-bottom:1rem;">Volume discounts — L1 and L2</p>
+      <div class="discount-table-wrap">
+        <table class="discount-table">
+          <thead><tr><th>Fleet size</th><th>Discount</th></tr></thead>
+          <tbody>
+            <tr><td>1–5 agents</td><td>List price</td></tr>
+            <tr><td>6–15 agents</td><td>−15%</td></tr>
+            <tr><td>16–30 agents</td><td>−25%</td></tr>
+            <tr><td>31+ agents</td><td>−35% (negotiated)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-top:1.25rem;">
+      Custom MTA deployments (proprietary signal) pay standard L1/L2/L3 pricing — no additional fee for signal-agnostic configurations.
+      MacroPulse MTA as an L1 add-on: <span style="color:var(--text);">$300/month</span>.
+    </p>
+  </div>
+</div>
+
 <!-- CTA -->
 <div class="container">
   <div class="cta-section">
-    <h2>Early Access</h2>
+    <h2>Start With the Sandbox</h2>
     <p>
-      IRL is in private early access. We are onboarding a small number of firms under NDA
-      to validate production deployments before general availability.
+      The API is live. Three demo agents are pre-seeded. Try authorize + bind-execution in Swagger UI
+      before committing to a deployment conversation.
     </p>
-    <a href="mailto:gabriel.veron134@gmail.com" class="btn-primary" style="margin-bottom:1.5rem;display:inline-block;">
-      Contact for Early Access
-    </a>
-    <br />
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+      <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-primary">
+        Open Swagger UI →
+      </a>
+      <a href="mailto:gabriel.veron134@gmail.com" class="btn-ghost">
+        Contact for Licensing
+      </a>
+    </div>
     <span class="cta-email">gabriel.veron134@gmail.com</span>
   </div>
 </div>
@@ -562,43 +652,11 @@
   <div class="footer-links">
     <a href="/">MacroPulse API</a>
     <a href="/api-docs.html">API Docs</a>
+    <a href="https://irl.macropulse.live" target="_blank" rel="noopener">IRL Sandbox</a>
     <a href="/terms.html">Terms</a>
     <a href="/privacy.html">Privacy</a>
   </div>
 </footer>
-
-<script>
-  // Disable right-click
-  document.addEventListener('contextmenu', e => e.preventDefault());
-
-  // Disable drag
-  document.addEventListener('dragstart', e => e.preventDefault());
-
-  // Block keyboard shortcuts: Ctrl+C, Ctrl+A, Ctrl+S, Ctrl+P, Ctrl+U, F12, PrintScreen
-  document.addEventListener('keydown', e => {
-    const ctrl = e.ctrlKey || e.metaKey;
-    if (
-      (ctrl && ['c','a','s','p','u'].includes(e.key.toLowerCase())) ||
-      e.key === 'F12' ||
-      e.key === 'PrintScreen'
-    ) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // Blank the page on PrintScreen (Windows fires keyup for PrtScn)
-  document.addEventListener('keyup', e => {
-    if (e.key === 'PrintScreen') {
-      navigator.clipboard.writeText('').catch(() => {});
-    }
-  });
-
-  // Disable devtools shortcut on Mac (Cmd+Opt+I)
-  document.addEventListener('keydown', e => {
-    if (e.metaKey && e.altKey && e.key === 'i') e.preventDefault();
-  });
-</script>
 
 </body>
 </html>
