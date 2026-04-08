@@ -157,8 +157,9 @@ footer a:hover{color:var(--mu)}
   <div class="nav-links">
     <a href="/irl.html">IRL Overview</a>
     <a href="/irl-whitepaper.html" class="active">Whitepaper</a>
-    <a href="/api-docs.html">API Docs</a>
-    <a href="https://api.macropulse.live" target="_blank" rel="noopener">Dashboard</a>
+    <a href="https://irl.macropulse.live" target="_blank" rel="noopener">Live Sandbox</a>
+    <a href="https://github.com/GabrielGauss/irl-public-docs" target="_blank" rel="noopener">Docs</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--di)">Dashboard</a>
   </div>
 </nav>
 
@@ -504,8 +505,7 @@ footer a:hover{color:var(--mu)}
         <tr><td>Multi-Agent Registry</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Post-trade verifier (MATCHED/DIVERGENT/EXPIRED)</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Signed heartbeats (replay prevention)</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
-        <tr><td>Merkle anchoring</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
-        <tr><td>Forensic replay</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        <tr><td>Forensic replay API</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>TEE execution (Intel TDX / AMD SEV)</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>WebAssembly policy modules</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
         <tr><td>Zero-knowledge compliance proofs</td><td style="color:var(--di)">—</td><td style="color:var(--di)">—</td><td style="color:var(--green)">✓</td></tr>
@@ -569,10 +569,10 @@ footer a:hover{color:var(--mu)}
       <p>IRL is signal-agnostic. The MacroPulse MTA provides the easiest path to a complete deployment, but any cryptographically signed regime source can serve as the MTA. The protocol is designed to fit the existing infrastructure of systematic trading operations, not to replace it.</p>
 
       <div class="cta">
-        <h3>Request Early Access</h3>
-        <p>IRL is in early access. Contact us to discuss your deployment requirements or request a technical briefing.</p>
-        <a href="mailto:support@macropulse.live?subject=IRL Early Access" class="btn-g">Request Access</a>
-        <a href="/irl.html" class="btn-ghost">IRL Overview →</a>
+        <h3>Try the Live Sandbox</h3>
+        <p>The API is production-ready. Three demo agents are pre-seeded. Run the full authorize → bind-execution flow before any deployment conversation.</p>
+        <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-g">Open Swagger UI →</a>
+        <a href="/irl.html" class="btn-ghost">Pricing &amp; Editions →</a>
       </div>
     </div>
 
@@ -580,7 +580,7 @@ footer a:hover{color:var(--mu)}
 </div>
 
 <footer>
-  <p>© 2026 MacroPulse · IRL Protocol Whitepaper v1.1 · <a href="/terms.html">Terms</a> · <a href="mailto:support@macropulse.live">support@macropulse.live</a></p>
+  <p>© 2026 MacroPulse · IRL Protocol Whitepaper v1.1 · <a href="/irl.html">IRL Overview</a> · <a href="https://irl.macropulse.live">Sandbox</a> · <a href="https://github.com/GabrielGauss/irl-public-docs">Docs</a> · <a href="/terms.html">Terms</a> · <a href="mailto:gabriel.veron134@gmail.com">gabriel.veron134@gmail.com</a></p>
 </footer>
 
 </body>
