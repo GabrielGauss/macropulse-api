@@ -196,6 +196,24 @@
     .tag-matched   { background: rgba(34,197,94,.12); color: var(--green); }
     .tag-divergent { background: rgba(239,68,68,.12); color: var(--red); }
 
+    /* ── Sandbox embed ── */
+    .sandbox-wrap {
+      border: 1px solid var(--border2); border-radius: 8px; overflow: hidden;
+      background: var(--s1);
+    }
+    .sandbox-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1rem; border-bottom: 1px solid var(--border2);
+      background: var(--s2);
+    }
+    .sandbox-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border2); }
+    .sandbox-url {
+      flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      color: var(--muted); text-align: center;
+    }
+    .sandbox-url a { color: var(--green); }
+    .sandbox-frame { width: 100%; height: 520px; border: none; display: block; }
+
     /* ── Editions ── */
     .editions { display: grid; gap: 1rem; }
     .edition-card {
@@ -437,6 +455,39 @@
   </div>
 </div>
 
+<!-- SANDBOX EMBED -->
+<div class="container">
+  <div class="section">
+    <div class="section-label">Live Sandbox</div>
+    <h2>Try it now — no setup</h2>
+    <p class="section-sub">
+      Three demo agents are pre-seeded. Use Swagger UI to run a full authorize → bind-execution
+      cycle in-browser. No API key, no registration.
+    </p>
+    <div class="sandbox-wrap">
+      <div class="sandbox-bar">
+        <div class="sandbox-dot" style="background:#ef4444"></div>
+        <div class="sandbox-dot" style="background:#f59e0b"></div>
+        <div class="sandbox-dot" style="background:#22c55e"></div>
+        <div class="sandbox-url">
+          <a href="https://irl.macropulse.live" target="_blank" rel="noopener">irl.macropulse.live</a>
+        </div>
+        <a href="https://irl.macropulse.live" target="_blank" rel="noopener"
+           style="font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;">
+          open ↗
+        </a>
+      </div>
+      <iframe
+        src="https://irl.macropulse.live"
+        class="sandbox-frame"
+        title="IRL Engine Developer Sandbox"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
+      </iframe>
+    </div>
+  </div>
+</div>
+
 <!-- EDITIONS -->
 <div class="container">
   <div class="section">
@@ -588,7 +639,8 @@
           <li><span>Signed heartbeats</span> — anti-replay enforcement</li>
           <li><span>MacroPulse MTA integration</span> — or custom MtaClient</li>
           <li><span>Compliance dashboard</span> — read-only regulator view</li>
-          <li><span>Forensic replay API</span></li>
+          <li><span>Forensic replay API</span> — any historical trade reconstructable from its sealed snapshot</li>
+          <li><span>Merkle anchoring</span> — period root hashes anchored to Bitcoin via OpenTimestamps</li>
           <li>99.9% uptime SLA</li>
         </ul>
       </div>
