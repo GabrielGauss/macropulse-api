@@ -42,7 +42,14 @@ async def get_current_regime() -> RegimeResponse:
     if row is None:
         raise HTTPException(status_code=404, detail="No regime data available.")
 
-    broadcast_time = int(time.time() * 1000)  # Unix ms
+    # Use the regime's own DB timestamp as broadcast_time so every call
+    # for the same regime produces an identical response body and hash.
+    # time.time() would differ on each call, breaking IRL mta_ref verification.
+    regime_ts = row.get("time")
+    if hasattr(regime_ts, "timestamp"):
+        broadcast_time = int(regime_ts.timestamp() * 1000)
+    else:
+        broadcast_time = int(time.time() * 1000)
 
     # Numeric regime ID — stable key for IRL Engine policy enforcement.
     _REGIME_ID = {"expansion": 0, "recovery": 1, "tightening": 2, "risk_off": 3}

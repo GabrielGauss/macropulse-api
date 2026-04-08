@@ -134,6 +134,54 @@
 
   <div class="changelog-feed">
 
+    <!-- v1.8 -->
+    <div class="entry">
+      <div class="entry-meta">
+        <span class="entry-version" style="background:rgba(34,197,94,0.1);color:var(--green);">v1.8</span>
+        <div class="entry-date">Apr 8, 2026</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-title">IRL Engine v1.2 — Layer 2 live, Python SDK, MtaMode::None</div>
+        <p class="entry-summary">
+          IRL Engine v1.2 ships with Layer 2 anti-replay fully live in production.
+          Every authorize request now requires a signed heartbeat from the MTA operator,
+          cryptographically binding the agent's regime knowledge to a real broadcast timestamp.
+          New Python SDK (pip install irl-sdk) makes integration a 10-line async call.
+          MtaMode::None lets firms use IRL as a pure cryptographic audit rail with no external signal.
+        </p>
+        <div class="entry-items">
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Layer 2 heartbeat anti-replay live in production — every authorize binds to a signed MTA broadcast via Ed25519 + monotonic sequence</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Python SDK <code>irl-sdk</code> — async <code>IRLClient</code>, automatic heartbeat fetch, <code>AuthorizeRequest</code>, <code>TradeAction</code>, <code>OrderType</code></div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>MtaMode::None</code> — production-valid passthrough mode for firms managing risk externally; traces record <code>signal_mode="none"</code></div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>signal_mode</code> field on every trace — <code>"live"</code> / <code>"mock"</code> / <code>"none"</code> — auditors can see exactly how the regime context was produced</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>OTS receipt automation — Bitcoin-anchored Merkle proof upgrade runs every 6 hours via cron</div>
+          <div class="entry-item"><span class="item-tag tag-infra">Infra</span>IRL Engine Docker runtime switched to <code>debian:bookworm-slim</code> — healthcheck now functional; distroless removed</div>
+          <div class="entry-item"><span class="item-tag tag-fix">Fix</span>MacroPulse <code>/v1/regime/current</code> <code>broadcast_time</code> now uses DB timestamp — every call for the same regime returns identical bytes, fixing MTA ref hash mismatches</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.7 -->
+    <div class="entry">
+      <div class="entry-meta">
+        <span class="entry-version" style="background:rgba(34,197,94,0.1);color:var(--green);">v1.7</span>
+        <div class="entry-date">Apr 7, 2026</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-title">Stripe billing — self-serve checkout live</div>
+        <p class="entry-summary">
+          Billing migrated from Paddle to Stripe. Starter ($49/mo) and Pro ($199/mo) checkout
+          is fully self-serve from the dashboard. Existing subscribers were migrated automatically.
+        </p>
+        <div class="entry-items">
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Stripe Checkout for Starter and Pro subscriptions — hosted, PCI-compliant</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Stripe Customer Portal for self-serve subscription management and cancellation</div>
+          <div class="entry-item"><span class="item-tag tag-infra">Infra</span>Webhook handler for 6 Stripe events — idempotent, signature-verified</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Legal pages (Privacy, Terms, Refund Policy) updated to reference Stripe</div>
+        </div>
+      </div>
+    </div>
+
     <!-- v1.6 -->
     <div class="entry">
       <div class="entry-meta">

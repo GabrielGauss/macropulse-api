@@ -41,6 +41,7 @@ from api.routes.pipeline import router as pipeline_router
 from api.routes.public import router as public_router
 from api.routes.webhook import router as webhook_router
 from api.routes.websocket import router as ws_router
+from api.routes.irl import router as irl_router
 from api.schemas.responses import HealthResponse
 from config.settings import get_settings
 
@@ -161,6 +162,7 @@ app.include_router(model_router)
 app.include_router(pipeline_router)
 app.include_router(public_router)
 app.include_router(webhook_router)
+app.include_router(irl_router)
 
 # ── Prometheus metrics ────────────────────────────────────────────────
 # Mounted after all API routes so it doesn't shadow any route prefix.
