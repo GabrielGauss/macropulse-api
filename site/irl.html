@@ -40,6 +40,10 @@
       --amber:   #f59e0b;
       --red:     #ef4444;
       --indigo:  #6366f1;
+      /* IRL brand accent — amber conveys compliance/audit (distinct from MacroPulse green) */
+      --irl:     #f59e0b;
+      --irl-dim: rgba(245,158,11,0.08);
+      --irl-brd: rgba(245,158,11,0.22);
     }
 
     html { scroll-behavior: smooth; }
@@ -70,7 +74,7 @@
     }
     .nav-links a::after {
       content: ''; position: absolute; left: 0; bottom: -2px; right: 0; height: 1px;
-      background: var(--green); transform: scaleX(0); transition: transform 0.2s;
+      background: var(--irl); transform: scaleX(0); transition: transform 0.2s;
     }
     .nav-links a:hover { color: var(--text); }
     .nav-links a:hover::after { transform: scaleX(1); }
@@ -87,12 +91,12 @@
     }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      font-size: 0.75rem; color: var(--green); letter-spacing: 0.08em;
+      font-size: 0.75rem; color: var(--irl); letter-spacing: 0.08em;
       text-transform: uppercase; font-weight: 500;
-      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+      background: var(--irl-dim); border: 1px solid var(--irl-brd);
       padding: 0.3rem 0.75rem; border-radius: 4px; margin-bottom: 1.75rem;
     }
-    .hero-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    .hero-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--irl); box-shadow: 0 0 6px var(--irl); animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
     .hero h1 {
@@ -100,7 +104,7 @@
       font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
       margin-bottom: 1.5rem;
     }
-    .hero h1 span { color: var(--green); }
+    .hero h1 span { color: var(--irl); }
     .hero-sub {
       font-size: 1.05rem; color: var(--muted); max-width: 600px;
       line-height: 1.7; margin-bottom: 2.5rem;
@@ -108,7 +112,7 @@
     .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
     .btn-primary {
       display: inline-block; padding: 0.65rem 1.5rem;
-      background: var(--green); color: #000; border-radius: 6px;
+      background: var(--irl); color: #000; border-radius: 6px;
       font-size: 0.875rem; font-weight: 600; cursor: pointer;
       border: none; transition: opacity 0.2s;
     }
@@ -125,7 +129,7 @@
     /* ── Sections ── */
     .section { padding: 5rem 0; border-top: 1px solid var(--border); }
     .section-label {
-      font-size: 0.72rem; color: var(--green); letter-spacing: 0.1em;
+      font-size: 0.72rem; color: var(--irl); letter-spacing: 0.1em;
       text-transform: uppercase; font-weight: 600; margin-bottom: 1rem;
     }
     .section h2 {
@@ -145,7 +149,7 @@
     .gap-table tr:last-child td { border-bottom: none; }
     .gap-table td:first-child { color: var(--muted); }
     .gap-table td:nth-child(2) { color: var(--dim); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
-    .gap-table td:nth-child(3) { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+    .gap-table td:nth-child(3) { color: var(--irl); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
     .gap-table-wrap {
       border: 1px solid var(--border2); border-radius: 8px; overflow: hidden;
       background: var(--s1);
@@ -211,7 +215,7 @@
       flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
       color: var(--muted); text-align: center;
     }
-    .sandbox-url a { color: var(--green); }
+    .sandbox-url a { color: var(--irl); }
     .sandbox-frame { width: 100%; height: 520px; border: none; display: block; }
 
     /* ── Editions ── */
@@ -220,14 +224,14 @@
       background: var(--s1); border: 1px solid var(--border2);
       border-radius: 8px; padding: 1.5rem 1.75rem;
     }
-    .edition-card.featured { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+    .edition-card.featured { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
     .edition-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .edition-badge {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em;
       text-transform: uppercase; padding: 0.2rem 0.5rem;
       border-radius: 4px; background: var(--border2); color: var(--muted);
     }
-    .edition-badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .edition-badge.green { background: rgba(245,158,11,0.15); color: var(--irl); }
     .edition-name { font-size: 0.95rem; font-weight: 600; }
     .edition-tagline { font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; }
     .edition-features { list-style: none; }
@@ -256,7 +260,7 @@
     }
     .cta-section h2 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; }
     .cta-section p { font-size: 0.9rem; color: var(--muted); margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
-    .cta-email { font-size: 0.9rem; color: var(--green); font-family: 'JetBrains Mono', monospace; }
+    .cta-email { font-size: 0.9rem; color: var(--irl); font-family: 'JetBrains Mono', monospace; }
 
     /* ── Footer ── */
     footer {
@@ -283,9 +287,9 @@
       background: var(--s1); border: 1px solid var(--border2);
       border-radius: 8px; padding: 1.5rem 1.75rem;
     }
-    .pricing-card.featured { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+    .pricing-card.featured { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
     .pricing-tier { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
-    .pricing-tier.green { color: var(--green); }
+    .pricing-tier.green { color: var(--irl); }
     .pricing-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
     .pricing-price { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
     .pricing-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
@@ -298,7 +302,7 @@
     .discount-table th { text-align: left; padding: 0.5rem 1rem; border-bottom: 1px solid var(--border2); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
     .discount-table td { padding: 0.55rem 1rem; border-bottom: 1px solid var(--border); }
     .discount-table tr:last-child td { border-bottom: none; }
-    .discount-table td:last-child { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    .discount-table td:last-child { color: var(--irl); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
     .discount-table-wrap { border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; background: var(--s1); }
 
     /* ── Status bar ── */
@@ -308,7 +312,7 @@
       background: var(--s1); border: 1px solid var(--border2);
       padding: 0.3rem 0.75rem; border-radius: 4px; margin-bottom: 1.75rem;
     }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); animation: pulse 2s infinite; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--irl); box-shadow: 0 0 5px var(--irl); animation: pulse 2s infinite; }
   </style>
 
   <meta name="robots" content="index, follow" />
@@ -328,13 +332,15 @@
     MacroPulse
   </a>
   <div class="nav-links">
-    <a href="/">API</a>
-    <a href="/api-docs.html">API Docs</a>
-    <a href="/irl.html" class="active">IRL</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#editions">Editions</a>
+    <a href="#pricing">Pricing</a>
     <a href="/irl-whitepaper.html">Whitepaper</a>
-    <a href="https://irl.macropulse.live" target="_blank" rel="noopener">Live Sandbox</a>
-    <a href="https://github.com/GabrielGauss/irl-public-docs" target="_blank" rel="noopener">Docs</a>
-    <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--muted);">Dashboard</a>
+    <a href="https://irl.macropulse.live" target="_blank" rel="noopener" style="color:var(--irl)">Live Sandbox ↗</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <a href="/" style="font-size:0.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;">macropulse.live</a>
+    <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;">Dashboard</a>
   </div>
 </nav>
 
@@ -390,7 +396,7 @@
 </div>
 
 <!-- HOW IT WORKS -->
-<div class="container">
+<div class="container" id="how-it-works">
   <div class="section">
     <div class="section-label">Architecture</div>
     <h2>The Audit Chain</h2>
@@ -489,7 +495,7 @@
 </div>
 
 <!-- EDITIONS -->
-<div class="container">
+<div class="container" id="editions">
   <div class="section">
     <div class="section-label">Deployment</div>
     <h2>Three Editions</h2>
@@ -569,7 +575,7 @@
         <h3>Custom MTA — one implementation</h3>
         <p>
           Quant firms running their own regime pipelines implement a single Rust trait
-          (<span class="mono" style="color:var(--green);font-size:0.82rem;">MtaClient</span>)
+          (<span class="mono" style="color:var(--irl);font-size:0.82rem;">MtaClient</span>)
           and pass it at startup. IRL seals against your signal with the same
           cryptographic guarantees. Your model stays private. Your compliance chain is identical.
         </p>
@@ -605,7 +611,7 @@
 </div>
 
 <!-- PRICING -->
-<div class="container">
+<div class="container" id="pricing">
   <div class="section">
     <div class="section-label">Pricing</div>
     <h2>Per-Agent, Not Per-Trade</h2>
