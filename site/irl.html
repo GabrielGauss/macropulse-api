@@ -313,6 +313,110 @@
       padding: 0.3rem 0.75rem; border-radius: 4px; margin-bottom: 1.75rem;
     }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--irl); box-shadow: 0 0 5px var(--irl); animation: pulse 2s infinite; }
+
+    /* ── Brutalist Pricing ── */
+    @keyframes pb-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .pb-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; border: 1.5px solid var(--border2); overflow: hidden; margin-bottom: 1.75rem;
+    }
+    @media (max-width: 720px) { .pb-grid { grid-template-columns: 1fr; } }
+    .pb-card {
+      border-right: 1.5px solid var(--border2);
+      padding: 2.25rem 1.75rem; position: relative; overflow: hidden;
+      transition: background 0.22s;
+      animation: pb-in 0.45s ease both;
+    }
+    .pb-card:nth-child(2) { animation-delay: 0.07s; }
+    .pb-card:nth-child(3) { animation-delay: 0.14s; }
+    @media (max-width: 720px) { .pb-card { border-right: none; border-bottom: 1.5px solid var(--border2); } }
+    .pb-card:last-child { border-right: none; }
+    .pb-card::before {
+      content: attr(data-tier);
+      position: absolute; right: -0.5rem; bottom: -1.25rem;
+      font-size: 8rem; font-weight: 900; letter-spacing: -0.06em;
+      font-family: 'JetBrains Mono', monospace;
+      color: rgba(255,255,255,0.018); line-height: 1;
+      pointer-events: none; user-select: none; transition: color 0.25s;
+    }
+    .pb-card:hover::before { color: rgba(245,158,11,0.07); }
+    .pb-card.featured { background: var(--irl-dim); border-color: var(--irl-brd); }
+    .pb-card:hover { background: rgba(245,158,11,0.04); }
+    .pb-card.featured:hover { background: rgba(245,158,11,0.09); }
+    .pb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .pb-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; padding: 0.22rem 0.55rem;
+      border: 1px solid var(--border2); color: var(--muted); border-radius: 3px;
+    }
+    .pb-card.featured .pb-badge { border-color: var(--irl-brd); color: var(--irl); }
+    .pb-popular {
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #000;
+      background: var(--irl); padding: 0.18rem 0.45rem; border-radius: 2px;
+    }
+    .pb-name { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; line-height: 1.2; }
+    .pb-tagline { font-size: 0.76rem; color: var(--muted); margin-bottom: 1.4rem; line-height: 1.5; }
+    .pb-price {
+      font-size: 2.4rem; font-weight: 900; letter-spacing: -0.05em; line-height: 1;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 0.2rem;
+    }
+    .pb-price-period { font-size: 0.76rem; color: var(--muted); font-weight: 400; font-family: 'Inter', sans-serif; }
+    .pb-min { font-size: 0.66rem; color: var(--dim); margin-bottom: 1.4rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+    .pb-divider { border: none; border-top: 1px solid var(--border); margin: 1.1rem 0; }
+    .pb-features { list-style: none; margin-bottom: 1.6rem; }
+    .pb-features li { font-size: 0.78rem; color: var(--muted); padding: 0.28rem 0; display: flex; gap: 0.55rem; align-items: flex-start; }
+    .pb-features li .icon { color: var(--irl); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; margin-top: 2px; font-weight: 700; }
+    .pb-features li.inherit .icon { color: var(--dim); }
+    .pb-features li strong { color: var(--text); font-weight: 600; }
+    .pb-cta {
+      display: block; width: 100%; padding: 0.68rem;
+      font-size: 0.76rem; font-weight: 700; letter-spacing: 0.07em;
+      text-align: center; cursor: pointer; text-decoration: none;
+      border: 1.5px solid var(--border2); background: transparent; color: var(--muted);
+      text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .pb-cta:hover { border-color: var(--text); color: var(--text); }
+    .pb-card.featured .pb-cta { border-color: var(--irl); color: var(--irl); }
+    .pb-card.featured .pb-cta:hover { background: var(--irl); color: #000; }
+
+    /* ── Regulation tooltips ── */
+    .reg-ref {
+      color: var(--text); border-bottom: 1px dashed var(--dim);
+      position: relative; transition: border-color 0.15s, color 0.15s;
+      text-decoration: none; display: inline;
+    }
+    .reg-ref:hover { border-color: var(--irl); color: var(--irl); }
+    .reg-tip {
+      position: absolute; left: 0; top: 100%; margin-top: 8px; z-index: 30;
+      width: 280px; padding: 0.7rem 0.9rem;
+      background: var(--s1); border: 1px solid var(--border2);
+      font-size: 0.71rem; color: var(--muted); line-height: 1.55;
+      white-space: normal; pointer-events: none;
+      opacity: 0; transform: translateY(5px);
+      transition: opacity 0.15s, transform 0.15s;
+      font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: 0;
+    }
+    .reg-ref:hover .reg-tip { opacity: 1; transform: translateY(0); pointer-events: all; }
+    .reg-tip a { color: var(--irl); text-decoration: underline; }
+
+    /* ── Volume discount table ── */
+    .vol-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .vol-table th {
+      text-align: left; padding: 0.55rem 1rem;
+      border-bottom: 1.5px solid var(--border2);
+      font-size: 0.63rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .vol-table td { padding: 0.58rem 1rem; border-bottom: 1px solid var(--border); }
+    .vol-table tr:last-child td { border-bottom: none; }
+    .vol-table td:last-child { color: var(--irl); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600; }
+    .vol-table-wrap { border: 1.5px solid var(--border2); overflow: hidden; background: var(--s1); }
   </style>
 
   <meta name="robots" content="index, follow" />
@@ -337,7 +441,7 @@
     <a href="#editions">Editions</a>
     <a href="#pricing">Pricing</a>
     <a href="/irl-whitepaper.html">Whitepaper</a>
-    <a href="https://irl.macropulse.live" target="_blank" rel="noopener" style="color:var(--irl)">Live Sandbox ↗</a>
+    <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" style="color:var(--irl)">Live Sandbox ↗</a>
   </div>
   <div style="display:flex;align-items:center;gap:0.75rem">
     <a href="/" style="font-size:0.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace;">macropulse.live</a>
@@ -368,7 +472,7 @@
     </p>
     <div class="hero-actions">
       <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-primary">Try Live Sandbox →</a>
-      <a href="mailto:gabriel.veron134@gmail.com" class="btn-ghost">Contact for Licensing</a>
+      <a href="mailto:licensing@macropulse.live" class="btn-ghost">Contact for Licensing</a>
       <a href="/irl-whitepaper.html" class="btn-ghost">Whitepaper →</a>
     </div>
   </div>
@@ -729,11 +833,61 @@ asyncio.run(trade())</pre>
           </tr>
         </thead>
         <tbody>
-          <tr><td>Decision auditability — EU AI Act Art. 12</td><td>reasoning_hash = SHA-256(canonical snapshot)</td></tr>
-          <tr><td>Transparency to regulators — Art. 13</td><td>ZK proof: compliance verified without alpha disclosure</td></tr>
-          <tr><td>Pre-trade risk controls — SEC Rule 15c3-5</td><td>Policy Engine blocks non-compliant intents before execution</td></tr>
-          <tr><td>Contemporaneous recordkeeping — MiFID II</td><td>Bitemporal timestamps: valid_time + txn_time, immutable</td></tr>
-          <tr><td>Fleet governance — DORA, AI Act</td><td>Multi-Agent Registry: per-agent identity and risk controls</td></tr>
+          <tr>
+            <td style="position:relative;">
+              <span class="reg-ref">EU AI Act Art. 12
+                <span class="reg-tip">Requires high-risk AI systems to automatically log events enabling post-market monitoring and incident investigation. Autonomous trading systems are classified as high-risk under Annex III. Phased enforcement begins 2025–2027.
+                  <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689#art_12" target="_blank" rel="noopener">Read regulation →</a>
+                </span>
+              </span>
+              — Decision auditability
+            </td>
+            <td>reasoning_hash = SHA-256(canonical snapshot)</td>
+          </tr>
+          <tr>
+            <td style="position:relative;">
+              <span class="reg-ref">EU AI Act Art. 13
+                <span class="reg-tip">Mandates that high-risk AI systems be sufficiently transparent that deployers can understand and interpret outputs. Requires logging of decisions and human oversight capability — including disclosure to regulators on request.
+                  <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689#art_13" target="_blank" rel="noopener">Read regulation →</a>
+                </span>
+              </span>
+              — Transparency to regulators
+            </td>
+            <td>ZK proof: compliance verified without alpha disclosure</td>
+          </tr>
+          <tr>
+            <td style="position:relative;">
+              <span class="reg-ref">SEC Rule 15c3-5
+                <span class="reg-tip">The Market Access Rule requires broker-dealers with market access to implement pre-trade risk controls and supervisory procedures. Firms must have systems to prevent erroneous orders and ensure compliance with applicable regulatory requirements.
+                  <a href="https://www.ecfr.gov/current/title-17/chapter-II/part-240/section-240.15c3-5" target="_blank" rel="noopener">Read regulation →</a>
+                </span>
+              </span>
+              — Pre-trade risk controls
+            </td>
+            <td>Policy Engine blocks non-compliant intents before execution</td>
+          </tr>
+          <tr>
+            <td style="position:relative;">
+              <span class="reg-ref">MiFID II RTS 6
+                <span class="reg-tip">Requires algorithmic traders to maintain contemporaneous records of all algorithmic orders showing time of creation, modification, cancellation and execution. Records must include the parameters that triggered the order and remain available to regulators for five years.
+                  <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017R0589" target="_blank" rel="noopener">Read regulation →</a>
+                </span>
+              </span>
+              — Contemporaneous recordkeeping
+            </td>
+            <td>Bitemporal timestamps: valid_time + txn_time, immutable</td>
+          </tr>
+          <tr>
+            <td style="position:relative;">
+              <span class="reg-ref">DORA Art. 9 &amp; 10
+                <span class="reg-tip">The Digital Operational Resilience Act requires financial entities to maintain registers of all ICT-supported functions and third-party dependencies, with continuous monitoring and incident classification. Applies to AI systems used in financial decision-making from Jan 2025.
+                  <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554" target="_blank" rel="noopener">Read regulation →</a>
+                </span>
+              </span>
+              — Fleet governance
+            </td>
+            <td>Multi-Agent Registry: per-agent identity and risk controls</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -744,75 +898,105 @@ asyncio.run(trade())</pre>
 <div class="container" id="pricing">
   <div class="section">
     <div class="section-label">Pricing</div>
-    <h2>Per-Agent, Not Per-Trade</h2>
+    <h2>Per-Agent.<br>Not Per-Trade.</h2>
     <p class="section-sub">
-      Compliance value is in the seal existing — not in counting seals.
-      L1 is operational in under a day. Upgrade when your regulatory requirements escalate.
+      The value of a sealed reasoning trace is in its existence — not in counting seals.
+      Flat per-agent pricing means compliance scales linearly with your fleet, never with your volume.
+      L1 is operational in under a day.
     </p>
-    <div class="pricing-grid">
-      <div class="pricing-card featured">
-        <div class="pricing-tier green">L1</div>
-        <div class="pricing-name">IRL Sidecar</div>
-        <div class="pricing-price">$500 <span>/ agent / month</span></div>
-        <div class="pricing-min">Minimum 1 agent</div>
-        <ul class="pricing-features">
-          <li>Unlimited authorize + bind-execution calls</li>
-          <li>Multi-Agent Registry, per-agent risk controls</li>
-          <li>Post-trade verifier (MATCHED / DIVERGENT / EXPIRED)</li>
-          <li>Cryptographic audit ledger, SHA-256 sealed</li>
-          <li>REST API + PostgreSQL persistence</li>
-          <li>SDKs: Python, TypeScript, Go</li>
-          <li>Email support</li>
+
+    <div class="pb-grid">
+
+      <!-- L1 -->
+      <div class="pb-card featured" data-tier="L1">
+        <div class="pb-top">
+          <span class="pb-badge">L1</span>
+          <span class="pb-popular">Most common</span>
+        </div>
+        <div class="pb-name">IRL Sidecar</div>
+        <div class="pb-tagline">Drop-in compliance. Wraps any existing agent in ~20 lines.</div>
+        <div class="pb-price">$500<span class="pb-price-period"> / agent / mo</span></div>
+        <div class="pb-min">MIN 1 AGENT · UNLIMITED CALLS</div>
+        <hr class="pb-divider">
+        <ul class="pb-features">
+          <li><span class="icon">+</span><span><strong>Pre-execution enforcement</strong> — hard halt before the exchange sees the order</span></li>
+          <li><span class="icon">+</span><span><strong>Cryptographic reasoning seal</strong> — SHA-256 / RFC 8785 canonical JSON, auditor-reproducible</span></li>
+          <li><span class="icon">+</span><span><strong>Bitemporal audit ledger</strong> — valid_time + txn_time, tamper-evident</span></li>
+          <li><span class="icon">+</span><span><strong>Multi-Agent Registry</strong> — fleet identity, model hashes, notional caps per agent</span></li>
+          <li><span class="icon">+</span><span><strong>Post-trade verifier</strong> — MATCHED / DIVERGENT / EXPIRED lifecycle</span></li>
+          <li><span class="icon">+</span><span><strong>REST API + SDKs</strong> — Python, TypeScript, Go</span></li>
         </ul>
+        <a href="mailto:licensing@macropulse.live" class="pb-cta">Start with L1 →</a>
       </div>
-      <div class="pricing-card">
-        <div class="pricing-tier">L2</div>
-        <div class="pricing-name">IRL Audit Platform</div>
-        <div class="pricing-price">$1,200 <span>/ agent / month</span></div>
-        <div class="pricing-min">Minimum 3 agents</div>
-        <ul class="pricing-features">
-          <li>Everything in L1, plus:</li>
-          <li><span>Signed heartbeats</span> — anti-replay enforcement</li>
-          <li><span>MacroPulse MTA integration</span> — or custom MtaClient</li>
-          <li><span>Compliance dashboard</span> — read-only regulator view</li>
-          <li><span>Forensic replay API</span> — any historical trade reconstructable from its sealed snapshot</li>
-          <li><span>Merkle anchoring</span> — period root hashes anchored to Bitcoin via OpenTimestamps</li>
-          <li>99.9% uptime SLA</li>
+
+      <!-- L2 -->
+      <div class="pb-card" data-tier="L2">
+        <div class="pb-top">
+          <span class="pb-badge">L2</span>
+        </div>
+        <div class="pb-name">IRL Audit Platform</div>
+        <div class="pb-tagline">Enterprise compliance. Anti-replay. Signed market truth.</div>
+        <div class="pb-price">$1,200<span class="pb-price-period"> / agent / mo</span></div>
+        <div class="pb-min">MIN 3 AGENTS · 99.9% SLA</div>
+        <hr class="pb-divider">
+        <ul class="pb-features">
+          <li class="inherit"><span class="icon">↳</span><span>Everything in L1, plus:</span></li>
+          <li><span class="icon">+</span><span><strong>Signed heartbeats</strong> — monotonic Ed25519 sequence, anti-replay enforced</span></li>
+          <li><span class="icon">+</span><span><strong>MacroPulse MTA integration</strong> — or plug in your own MtaClient</span></li>
+          <li><span class="icon">+</span><span><strong>Forensic replay API</strong> — any historical trade reconstructable from its sealed snapshot</span></li>
+          <li><span class="icon">+</span><span><strong>Merkle anchoring</strong> — period root hashes anchored to Bitcoin via OpenTimestamps</span></li>
+          <li><span class="icon">+</span><span><strong>Compliance dashboard</strong> — read-only regulator view</span></li>
         </ul>
+        <a href="mailto:licensing@macropulse.live" class="pb-cta">Upgrade to L2 →</a>
       </div>
-      <div class="pricing-card">
-        <div class="pricing-tier">L3</div>
-        <div class="pricing-name">IRL Sovereign Gateway</div>
-        <div class="pricing-price" style="font-size:1.15rem;">Enterprise</div>
-        <div class="pricing-min">Quoted per engagement · $8k–$25k/mo typical</div>
-        <ul class="pricing-features">
-          <li>Everything in L2, plus:</li>
-          <li><span>TEE execution</span> — Intel TDX / AMD SEV</li>
-          <li><span>Wasm policy modules</span> — hot-reloadable, sandboxed</li>
-          <li><span>ZK compliance proofs</span> — prove adherence without revealing alpha</li>
-          <li><span>Double-Green signing</span> — API key inaccessible until both checks pass</li>
-          <li>Dedicated support + quarterly review</li>
+
+      <!-- L3 -->
+      <div class="pb-card" data-tier="L3">
+        <div class="pb-top">
+          <span class="pb-badge">L3</span>
+        </div>
+        <div class="pb-name">IRL Sovereign Gateway</div>
+        <div class="pb-tagline">For clients where compliance cannot reveal alpha.</div>
+        <div class="pb-price" style="font-size:1.85rem;letter-spacing:-0.03em;">Enterprise</div>
+        <div class="pb-min">$8k–$25k / mo · QUOTED PER ENGAGEMENT</div>
+        <hr class="pb-divider">
+        <ul class="pb-features">
+          <li class="inherit"><span class="icon">↳</span><span>Everything in L2, plus:</span></li>
+          <li><span class="icon">+</span><span><strong>TEE execution</strong> — Intel TDX / AMD SEV hardware-attested enclave</span></li>
+          <li><span class="icon">+</span><span><strong>Wasm policy modules</strong> — hot-reloadable, sandboxed, zero engine restarts</span></li>
+          <li><span class="icon">+</span><span><strong>ZK compliance proofs</strong> — prove adherence without revealing model or strategy</span></li>
+          <li><span class="icon">+</span><span><strong>Double-Green signing</strong> — API key inaccessible until MTA + MAR both pass</span></li>
+          <li><span class="icon">+</span><span>Dedicated support · Quarterly review</span></li>
         </ul>
+        <a href="mailto:licensing@macropulse.live" class="pb-cta">Talk to us →</a>
+      </div>
+
+    </div>
+
+    <!-- Volume discounts + add-ons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start;">
+      <div>
+        <p style="font-size:0.63rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:0.75rem;">Fleet discounts — L1 &amp; L2</p>
+        <div class="vol-table-wrap">
+          <table class="vol-table">
+            <thead><tr><th>Fleet size</th><th>Discount</th></tr></thead>
+            <tbody>
+              <tr><td>1–5 agents</td><td>List price</td></tr>
+              <tr><td>6–15 agents</td><td>−15%</td></tr>
+              <tr><td>16–30 agents</td><td>−25%</td></tr>
+              <tr><td>31+ agents</td><td>−35% (negotiated)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="padding:1.4rem 1.5rem;background:var(--s1);border:1.5px solid var(--border2);">
+        <p style="font-size:0.63rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:0.9rem;">Add-ons</p>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);"><span>MacroPulse MTA (L1 add-on)</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">+$300/mo</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;"><span>Custom MTA deployments</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">no surcharge</span></div>
+        </div>
       </div>
     </div>
-    <div style="margin-top:1.5rem;">
-      <p class="section-sub" style="margin-bottom:1rem;">Volume discounts — L1 and L2</p>
-      <div class="discount-table-wrap">
-        <table class="discount-table">
-          <thead><tr><th>Fleet size</th><th>Discount</th></tr></thead>
-          <tbody>
-            <tr><td>1–5 agents</td><td>List price</td></tr>
-            <tr><td>6–15 agents</td><td>−15%</td></tr>
-            <tr><td>16–30 agents</td><td>−25%</td></tr>
-            <tr><td>31+ agents</td><td>−35% (negotiated)</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p style="font-size:0.8rem;color:var(--muted);margin-top:1.25rem;">
-      Custom MTA deployments (proprietary signal) pay standard L1/L2/L3 pricing — no additional fee for signal-agnostic configurations.
-      MacroPulse MTA as an L1 add-on: <span style="color:var(--text);">$300/month</span>.
-    </p>
   </div>
 </div>
 
@@ -828,11 +1012,10 @@ asyncio.run(trade())</pre>
       <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-primary">
         Open Swagger UI →
       </a>
-      <a href="mailto:gabriel.veron134@gmail.com" class="btn-ghost">
+      <a href="mailto:licensing@macropulse.live" class="btn-ghost">
         Contact for Licensing
       </a>
     </div>
-    <span class="cta-email">gabriel.veron134@gmail.com</span>
   </div>
 </div>
 

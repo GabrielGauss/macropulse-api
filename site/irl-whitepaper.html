@@ -25,6 +25,8 @@
   --ln:#1c1c1c;--ln2:#282828;
   --tx:#e8e8e8;--mu:#888;--di:#444;
   --green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+  /* IRL brand accent — amber throughout, distinct from MacroPulse green */
+  --irl:#f59e0b;--irl-dim:rgba(245,158,11,0.06);--irl-brd:rgba(245,158,11,0.22);
   --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
 }
 html{scroll-behavior:smooth}
@@ -43,7 +45,7 @@ nav{
 .nav-links{display:flex;gap:1.5rem}
 .nav-links a{font-size:.82rem;color:var(--di);transition:color .15s}
 .nav-links a:hover{color:var(--mu)}
-.nav-links a.active{color:var(--green)}
+.nav-links a.active{color:var(--irl)}
 
 /* ── Layout ── */
 .page{display:grid;grid-template-columns:220px 1fr;gap:0;max-width:1080px;margin:0 auto;padding:0 2rem}
@@ -64,7 +66,7 @@ nav{
 
 /* Cover */
 .cover{padding-bottom:3rem;border-bottom:1px solid var(--ln);margin-bottom:3rem}
-.cover-label{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--green);margin-bottom:1rem}
+.cover-label{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--irl);margin-bottom:1rem}
 .cover h1{font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem}
 .cover-sub{font-size:.95rem;color:var(--mu);max-width:540px;line-height:1.75;margin-bottom:1.5rem}
 .cover-meta{font-family:var(--mono);font-size:.7rem;color:var(--di);display:flex;gap:2rem;flex-wrap:wrap}
@@ -72,7 +74,7 @@ nav{
 /* Sections */
 .wp-section{margin-bottom:3.5rem}
 .wp-section:last-child{margin-bottom:0}
-.section-num{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);margin-bottom:.5rem}
+.section-num{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--irl);margin-bottom:.5rem}
 .wp-section h2{font-size:1.2rem;font-weight:600;letter-spacing:-.02em;margin-bottom:1rem;padding-top:.5rem;border-top:1px solid var(--ln)}
 .wp-section h3{font-size:.9rem;font-weight:600;color:var(--tx);margin:1.75rem 0 .6rem}
 .wp-section p{color:#bbb;font-size:.92rem;line-height:1.8;margin-bottom:1rem}
@@ -100,7 +102,7 @@ nav{
 .def-table td:nth-child(2){color:var(--amber);font-family:var(--mono);font-size:.76rem;white-space:nowrap}
 
 /* Callout */
-.callout{border-left:2px solid var(--green);background:rgba(34,197,94,.04);padding:.9rem 1.25rem;margin:1.25rem 0}
+.callout{border-left:2px solid var(--irl);background:var(--irl-dim);padding:.9rem 1.25rem;margin:1.25rem 0}
 .callout p{margin:0;font-size:.85rem;color:var(--mu);line-height:1.65}
 .callout strong{color:var(--tx)}
 
@@ -136,10 +138,10 @@ nav{
 .flow-desc code{font-family:var(--mono);font-size:.76rem;color:var(--tx)}
 
 /* CTA */
-.cta{border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.04);padding:2rem;margin-top:3rem;text-align:center}
+.cta{border:1px solid var(--irl-brd);background:var(--irl-dim);padding:2rem;margin-top:3rem;text-align:center}
 .cta h3{font-size:1rem;font-weight:600;margin-bottom:.4rem}
 .cta p{color:var(--mu);font-size:.85rem;margin-bottom:1.25rem}
-.btn-g{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:500;padding:.65rem 1.5rem;background:var(--green);color:#000;letter-spacing:.02em;transition:opacity .15s}
+.btn-g{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:600;padding:.65rem 1.5rem;background:var(--irl);color:#000;letter-spacing:.02em;transition:opacity .15s}
 .btn-g:hover{opacity:.85}
 .btn-ghost{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:500;padding:.65rem 1.5rem;background:transparent;color:var(--mu);border:1px solid var(--ln2);letter-spacing:.02em;margin-left:.75rem;transition:color .15s,border-color .15s}
 .btn-ghost:hover{color:var(--tx);border-color:var(--mu)}
@@ -157,7 +159,7 @@ footer a:hover{color:var(--mu)}
   <div class="nav-links">
     <a href="/irl.html">IRL Overview</a>
     <a href="/irl-whitepaper.html" class="active">Whitepaper</a>
-    <a href="https://irl.macropulse.live" target="_blank" rel="noopener">Live Sandbox</a>
+    <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" style="color:var(--irl)">Live Sandbox ↗</a>
     <a href="https://github.com/GabrielGauss/irl-public-docs" target="_blank" rel="noopener">Docs</a>
     <a href="https://api.macropulse.live" target="_blank" rel="noopener" style="color:var(--di)">Dashboard</a>
   </div>
@@ -206,7 +208,7 @@ footer a:hover{color:var(--mu)}
         <span>IRL Protocol v1.1</span>
         <span>March 2026</span>
         <span>MacroPulse Research</span>
-        <span><a href="mailto:support@macropulse.live" style="color:var(--green)">support@macropulse.live</a></span>
+        <span><a href="mailto:licensing@macropulse.live" style="color:var(--irl)">licensing@macropulse.live</a></span>
       </div>
     </div>
 
@@ -580,7 +582,7 @@ footer a:hover{color:var(--mu)}
 </div>
 
 <footer>
-  <p>© 2026 MacroPulse · IRL Protocol Whitepaper v1.1 · <a href="/irl.html">IRL Overview</a> · <a href="https://irl.macropulse.live">Sandbox</a> · <a href="https://github.com/GabrielGauss/irl-public-docs">Docs</a> · <a href="/terms.html">Terms</a> · <a href="mailto:gabriel.veron134@gmail.com">gabriel.veron134@gmail.com</a></p>
+  <p>© 2026 MacroPulse · IRL Protocol Whitepaper v1.1 · <a href="/irl.html">IRL Overview</a> · <a href="https://irl.macropulse.live/swagger-ui/">Sandbox</a> · <a href="https://github.com/GabrielGauss/irl-public-docs">Docs</a> · <a href="/terms.html">Terms</a> · <a href="mailto:licensing@macropulse.live">licensing@macropulse.live</a></p>
 </footer>
 
 </body>
