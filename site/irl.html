@@ -333,6 +333,7 @@
   </a>
   <div class="nav-links">
     <a href="#how-it-works">How it works</a>
+    <a href="#quickstart">SDKs</a>
     <a href="#editions">Editions</a>
     <a href="#pricing">Pricing</a>
     <a href="/irl-whitepaper.html">Whitepaper</a>
@@ -347,12 +348,23 @@
 <!-- HERO -->
 <div class="container">
   <div class="hero">
-    <div class="status-bar"><span class="status-dot"></span>Production · REST API live at irl.macropulse.live</div>
-    <h1>Immutable Reasoning Log<br><span>for Autonomous Agents</span></h1>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.75rem;">
+      <div class="status-bar" style="margin-bottom:0"><span class="status-dot"></span>Production · IRL Engine v1.2</div>
+      <div class="status-bar" style="margin-bottom:0;border-color:rgba(59,130,246,0.25);background:rgba(59,130,246,0.06);">
+        <span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;display:inline-block;flex-shrink:0;"></span>
+        <span style="font-family:'JetBrains Mono',monospace;">pip install irl-sdk &nbsp;·&nbsp; npm install irl-sdk</span>
+      </div>
+      <div class="status-bar" style="margin-bottom:0;border-color:rgba(99,102,241,0.25);background:rgba(99,102,241,0.06);">
+        <span style="width:6px;height:6px;border-radius:50%;background:#6366f1;display:inline-block;flex-shrink:0;"></span>
+        L2 live · signed heartbeats
+      </div>
+    </div>
+    <h1>The trust layer<br><span>for autonomous trading.</span></h1>
+    <div style="margin:1.5rem 0;padding:1rem 1.5rem;border-left:3px solid var(--irl);background:var(--irl-dim);font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--text);letter-spacing:-0.01em;">"If it's not logged, it didn't happen."</div>
     <p class="hero-sub">
-      IRL puts a cryptographic seal on every autonomous trading decision before it reaches the exchange.
-      Pre-execution policy enforcement, bitemporal audit ledger, post-trade verification.
-      Bring your own model and signal, or use MacroPulse as a turnkey Market Truth Anchor.
+      IRL cryptographically seals every autonomous trading decision before it reaches the exchange.
+      Pre-execution policy enforcement. Bitemporal audit ledger. Post-trade verification.
+      The compliance standard that regulators will require — and that serious funds adopt first.
     </p>
     <div class="hero-actions">
       <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-primary">Try Live Sandbox →</a>
@@ -476,20 +488,103 @@
         <div class="sandbox-dot" style="background:#f59e0b"></div>
         <div class="sandbox-dot" style="background:#22c55e"></div>
         <div class="sandbox-url">
-          <a href="https://irl.macropulse.live" target="_blank" rel="noopener">irl.macropulse.live</a>
+          <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener">irl.macropulse.live/swagger-ui/</a>
         </div>
-        <a href="https://irl.macropulse.live" target="_blank" rel="noopener"
+        <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener"
            style="font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;">
           open ↗
         </a>
       </div>
       <iframe
-        src="https://irl.macropulse.live"
+        src="https://irl.macropulse.live/swagger-ui/"
         class="sandbox-frame"
         title="IRL Engine Developer Sandbox"
         loading="lazy"
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
       </iframe>
+    </div>
+  </div>
+</div>
+
+<!-- SDK QUICKSTART -->
+<div class="container" id="quickstart">
+  <div class="section">
+    <div class="section-label">Developer Quickstart</div>
+    <h2>Wire any agent in under 20 lines</h2>
+    <p class="section-sub">
+      Native SDKs for Python and TypeScript wrap the IRL REST API with typed models and automatic
+      heartbeat handling. Available on PyPI and npm — no build step required.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
+
+      <!-- Python column -->
+      <div style="display:grid;gap:1rem;">
+        <div style="background:var(--s1);border:1px solid var(--border2);border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1rem;border-bottom:1px solid var(--border2);background:var(--s2);">
+            <span style="font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">PYTHON · pip install irl-sdk</span>
+          </div>
+          <pre style="padding:1rem 1.25rem;font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.7;overflow-x:auto;"><span style="color:var(--indigo)">import</span> <span style="color:var(--text)">asyncio</span>
+<span style="color:var(--indigo)">from</span> <span style="color:var(--irl)">irl_sdk</span> <span style="color:var(--indigo)">import</span> <span style="color:var(--text)">IRLClient, AuthorizeRequest</span>
+
+<span style="color:var(--indigo)">async def</span> <span style="color:var(--green)">trade</span>():
+    <span style="color:var(--indigo)">async with</span> <span style="color:var(--text)">IRLClient(</span><span style="color:var(--muted)">&quot;https://irl.macropulse.live&quot;</span><span style="color:var(--text)">)</span> <span style="color:var(--indigo)">as</span> <span style="color:var(--text)">client:</span>
+        result <span style="color:var(--muted)">=</span> <span style="color:var(--indigo)">await</span> client.authorize(AuthorizeRequest(
+            agent_id<span style="color:var(--muted)">=</span><span style="color:var(--muted)">&quot;agent-42&quot;</span>,
+            model_hash_hex<span style="color:var(--muted)">=</span><span style="color:var(--muted)">&quot;a3f2...&quot;</span>,
+            action<span style="color:var(--muted)">=</span><span style="color:var(--muted)">&quot;Long&quot;</span>,
+            asset<span style="color:var(--muted)">=</span><span style="color:var(--muted)">&quot;BTC-USD&quot;</span>,
+            quantity<span style="color:var(--muted)">=</span><span style="color:var(--green)">0.5</span>,
+            notional<span style="color:var(--muted)">=</span><span style="color:var(--green)">32500</span>,
+        ))
+        <span style="color:var(--indigo)">if</span> result.authorized:
+            <span style="color:var(--text)">place_order(reasoning_hash</span><span style="color:var(--muted)">=</span>result.reasoning_hash<span style="color:var(--text)">)</span>
+
+asyncio.run(trade())</pre>
+        </div>
+        <a href="https://pypi.org/project/irl-sdk/" target="_blank" rel="noopener" class="btn-primary" style="background:var(--blue);text-align:center;">
+          irl-sdk on PyPI →
+        </a>
+      </div>
+
+      <!-- TypeScript column -->
+      <div style="display:grid;gap:1rem;">
+        <div style="background:var(--s1);border:1px solid var(--border2);border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1rem;border-bottom:1px solid var(--border2);background:var(--s2);">
+            <span style="font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">TYPESCRIPT · npm install irl-sdk</span>
+          </div>
+          <pre style="padding:1rem 1.25rem;font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.7;overflow-x:auto;"><span style="color:var(--indigo)">import</span> <span style="color:var(--text)">{ IRLClient }</span> <span style="color:var(--indigo)">from</span> <span style="color:var(--muted)">&quot;irl-sdk&quot;</span><span style="color:var(--text)">;</span>
+
+<span style="color:var(--indigo)">const</span> client <span style="color:var(--muted)">=</span> <span style="color:var(--indigo)">new</span> <span style="color:var(--text)">IRLClient({</span>
+  irlUrl<span style="color:var(--muted)">:</span> <span style="color:var(--muted)">&quot;https://irl.macropulse.live&quot;</span><span style="color:var(--text)">,</span>
+  apiToken<span style="color:var(--muted)">:</span> process.env<span style="color:var(--text)">.</span>IRL_API_TOKEN<span style="color:var(--text)">!,</span>
+<span style="color:var(--text)">});</span>
+
+<span style="color:var(--indigo)">const</span> result <span style="color:var(--muted)">=</span> <span style="color:var(--indigo)">await</span> client.authorize({
+  agent_id<span style="color:var(--muted)">:</span> <span style="color:var(--muted)">&quot;agent-42&quot;</span><span style="color:var(--text)">,</span>
+  model_hash_hex<span style="color:var(--muted)">:</span> <span style="color:var(--muted)">&quot;a3f2...&quot;</span><span style="color:var(--text)">,</span>
+  action<span style="color:var(--muted)">:</span> <span style="color:var(--muted)">&quot;Long&quot;</span><span style="color:var(--text)">,</span>
+  asset<span style="color:var(--muted)">:</span> <span style="color:var(--muted)">&quot;BTC-USD&quot;</span><span style="color:var(--text)">,</span>
+  quantity<span style="color:var(--muted)">:</span> <span style="color:var(--green)">0.5</span><span style="color:var(--text)">,</span> notional<span style="color:var(--muted)">:</span> <span style="color:var(--green)">32500</span><span style="color:var(--text)">,</span>
+<span style="color:var(--text)">});</span>
+<span style="color:var(--indigo)">if</span> <span style="color:var(--text)">(result.authorized)</span>
+  <span style="color:var(--text)">placeOrder(result.reasoning_hash);</span></pre>
+        </div>
+        <a href="https://www.npmjs.com/package/irl-sdk" target="_blank" rel="noopener" class="btn-primary" style="background:#cc3534;text-align:center;">
+          irl-sdk on npm →
+        </a>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+      <a href="https://github.com/GabrielGauss/irl-public-docs/blob/master/docs/developer-guide.md" target="_blank" rel="noopener" class="btn-ghost">
+        Developer Guide
+      </a>
+      <a href="https://irl.macropulse.live/swagger-ui/" target="_blank" rel="noopener" class="btn-ghost">
+        Live Sandbox
+      </a>
+      <span style="font-size:0.8rem;color:var(--dim);font-family:'JetBrains Mono',monospace;">Python 3.10+ &nbsp;·&nbsp; Node.js ≥ 18 &nbsp;·&nbsp; CJS + ESM</span>
     </div>
   </div>
 </div>
@@ -522,6 +617,7 @@
         <div class="edition-header">
           <span class="edition-badge">L2</span>
           <span class="edition-name">IRL Audit Platform</span>
+          <span style="margin-left:auto;font-size:0.65rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:0.18rem 0.5rem;border-radius:4px;background:rgba(99,102,241,0.12);color:#6366f1;border:1px solid rgba(99,102,241,0.25);">Live</span>
         </div>
         <div class="edition-tagline">Enterprise compliance with anti-replay and signed market truth.</div>
         <ul class="edition-features">
@@ -578,6 +674,40 @@
           (<span class="mono" style="color:var(--irl);font-size:0.82rem;">MtaClient</span>)
           and pass it at startup. IRL seals against your signal with the same
           cryptographic guarantees. Your model stays private. Your compliance chain is identical.
+        </p>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem;background:var(--s1);border:1px solid var(--border2);border-radius:8px;padding:1.25rem 1.75rem;display:flex;gap:1.25rem;align-items:flex-start;">
+      <div style="flex-shrink:0;margin-top:2px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--border2);padding:0.2rem 0.5rem;border-radius:4px;">v1.2</span>
+      </div>
+      <div>
+        <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.35rem;">
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--irl);">MtaMode::None</span> — for firms managing risk externally
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);line-height:1.65;margin:0;">
+          Set <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">MTA_MODE=none</span> to bypass regime verification entirely.
+          IRL still enforces all pre-execution policy checks from the Multi-Agent Registry — per-agent notional caps, side constraints, and policy rules remain active.
+          Returns <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">signal_mode="none"</span> in the reasoning seal so auditors know no MTA was consulted.
+          For firms with their own real-time risk management systems.
+        </p>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;background:var(--s1);border:1px solid var(--border2);border-radius:8px;padding:1.25rem 1.75rem;display:flex;gap:1.25rem;align-items:flex-start;">
+      <div style="flex-shrink:0;margin-top:2px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--border2);padding:0.2rem 0.5rem;border-radius:4px;">v1.2</span>
+      </div>
+      <div>
+        <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.35rem;">
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--irl);">KMS encryption</span> — reasoning snapshots encrypted at rest
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);line-height:1.65;margin:0;">
+          Each reasoning snapshot is encrypted with a per-trace data encryption key (DEK) before being written to the ledger.
+          Set <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">KMS_PROVIDER=local</span> for single-node deployments;
+          plug in AWS KMS, GCP KMS, or a hardware HSM via the <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">KmsProvider</span> trait.
+          The audit hash chain is unaffected — cryptographic integrity holds independently of storage encryption.
         </p>
       </div>
     </div>
