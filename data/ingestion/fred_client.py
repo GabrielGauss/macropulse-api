@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Maps cache_key → (epoch_timestamp, pd.Series).
 _series_cache: dict[str, tuple[float, pd.Series]] = {}
 _CACHE_TTL: int = 3_600   # seconds (1 hour)
-_MAX_RETRIES: int = 3
+_MAX_RETRIES: int = 5     # increased from 3 — FRED can be slow at daily publish time
 
 
 def _get_fred_client() -> Fred:
@@ -77,7 +77,7 @@ def fetch_fred_series(
             return data
         except Exception as exc:
             last_exc = exc
-            wait = 2 ** attempt  # 1s, 2s, 4s
+            wait = 2 ** (attempt + 1)  # 2s, 4s, 8s, 16s, 32s — longer window for FRED publish delays
             logger.warning(
                 "FRED fetch attempt %d/%d for %s failed (%s). Retrying in %ds…",
                 attempt + 1, _MAX_RETRIES, series_id, exc, wait,

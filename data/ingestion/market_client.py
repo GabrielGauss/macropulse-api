@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 _MARKET_TICKERS: dict[str, str] = {
     "^GSPC": "sp500",
     "^VIX": "vix",
-    "DX=F": "dxy",   # Dollar Index Futures — DX-Y.NYB was delisted from yfinance
+    "DX-Y.NYB": "dxy",   # Dollar Index — DX=F delisted from Yahoo Finance 2026-04
     "GC=F": "gold",
     "CL=F": "oil",
     "BTC-USD": "btc",
