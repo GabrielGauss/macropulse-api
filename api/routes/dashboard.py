@@ -39,6 +39,63 @@ _REGIME_COLORS = {
 }
 
 
+def _pipeline_status_html(row: dict | None) -> str:
+    """Render the pipeline status pill for the dashboard header."""
+    now = dt.datetime.now(dt.timezone.utc)
+
+    if row is None:
+        return (
+            '<div class="pipeline-pill pipeline-unknown">'
+            '<span class="pip-dot"></span>No pipeline runs recorded'
+            '</div>'
+        )
+
+    status     = row.get("status", "unknown")
+    last_run   = row.get("run_ts")
+    data_lag   = bool(row.get("data_lag", False))
+    model_ver  = row.get("model_version") or "–"
+
+    # Compute human-readable age
+    age_str = "–"
+    stale   = False
+    if last_run:
+        if not last_run.tzinfo:
+            last_run = last_run.replace(tzinfo=dt.timezone.utc)
+        delta  = now - last_run
+        hours  = int(delta.total_seconds() // 3600)
+        if hours < 1:
+            age_str = "< 1 h ago"
+        elif hours < 24:
+            age_str = f"{hours} h ago"
+        else:
+            days = hours // 24
+            age_str = f"{days}d ago"
+        stale = hours > 28   # more than 1 business day + buffer
+
+    failed = status == "failed"
+    if failed:
+        css_cls  = "pipeline-fail"
+        label    = f"Pipeline FAILED · {age_str}"
+    elif data_lag:
+        css_cls  = "pipeline-lag"
+        label    = f"Data lag · last run {age_str}"
+    elif stale:
+        css_cls  = "pipeline-lag"
+        label    = f"Stale · last run {age_str}"
+    else:
+        css_cls  = "pipeline-ok"
+        label    = f"Pipeline OK · {age_str}"
+
+    ts_str = last_run.strftime("%Y-%m-%d %H:%M UTC") if last_run else "–"
+
+    return (
+        f'<div class="pipeline-pill {css_cls}" title="Last run: {ts_str} · model {model_ver}">'
+        f'<span class="pip-dot"></span>{label}'
+        f'<span class="pip-ver">· {model_ver}</span>'
+        f'</div>'
+    )
+
+
 def _build_dashboard_html(
     history: list[dict],
     liquidity: list[dict],
@@ -46,6 +103,7 @@ def _build_dashboard_html(
     current: dict | None,
     forecast_rows: list[dict] | None = None,
     perf: dict | None = None,
+    pipeline_row: dict | None = None,
 ) -> str:
     """Build and return a self-contained Plotly HTML dashboard."""
 
@@ -294,6 +352,9 @@ def _build_dashboard_html(
     def fig_json(fig: go.Figure) -> str:  # noqa: E301
         return fig.to_json()
 
+    # ── Pipeline status pill ─────────────────────────────────────────
+    pipeline_html = _pipeline_status_html(pipeline_row)
+
     # ── Current regime badge ─────────────────────────────────────────
     if current:
         regime    = current.get("regime", "–")
@@ -357,6 +418,23 @@ def _build_dashboard_html(
   .chart {{ background: #0f172a; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }}
   .chart-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
   .refresh-note {{ color: #475569; font-size: 0.75rem; text-align: right; margin-top: 16px; }}
+  .pipeline-pill {{
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; padding: 5px 12px; border-radius: 999px;
+    font-weight: 500; letter-spacing: 0.01em; cursor: default;
+  }}
+  .pip-dot {{
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }}
+  .pip-ver {{ color: inherit; opacity: 0.55; margin-left: 2px; }}
+  .pipeline-ok      {{ background: rgba(34,197,94,0.12);  color: #4ade80; }}
+  .pipeline-ok      .pip-dot {{ background: #22c55e; box-shadow: 0 0 6px #22c55e; }}
+  .pipeline-lag     {{ background: rgba(251,191,36,0.12); color: #fbbf24; }}
+  .pipeline-lag     .pip-dot {{ background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }}
+  .pipeline-fail    {{ background: rgba(239,68,68,0.12);  color: #f87171; }}
+  .pipeline-fail    .pip-dot {{ background: #ef4444; box-shadow: 0 0 6px #ef4444; }}
+  .pipeline-unknown {{ background: rgba(100,116,139,0.12); color: #64748b; }}
+  .pipeline-unknown .pip-dot {{ background: #475569; }}
 </style>
 </head>
 <body>
@@ -366,7 +444,7 @@ def _build_dashboard_html(
     <h1>Macro<span>Pulse</span></h1>
     <div class="subtitle">Probabilistic macro regime intelligence · PCA + HMM · Powered by FRED &amp; yfinance</div>
   </div>
-  <div id="last-updated" style="color:#64748b; font-size:0.8rem;"></div>
+  {pipeline_html}
 </header>
 
 {regime_badge}
@@ -411,9 +489,6 @@ def _build_dashboard_html(
     Plotly.newPlot(id, spec.data, spec.layout, cfg);
   }}
 
-  document.getElementById("last-updated").textContent =
-    "Last updated: " + new Date().toLocaleTimeString();
-
   setTimeout(() => location.reload(), 60_000);
 </script>
 </body>
@@ -437,6 +512,14 @@ async def dashboard() -> HTMLResponse:
     liquidity = await queries.fetch_latest_liquidity(limit=252)
     factors   = await queries.fetch_latest_factors(limit=252)
 
+    # ── Pipeline status (best-effort — never blocks the dashboard) ────
+    pipeline_row: dict | None = None
+    try:
+        from database.queries import fetch_latest_pipeline_run
+        pipeline_row = await fetch_latest_pipeline_run()
+    except Exception as exc:
+        logger.warning("Dashboard: pipeline status fetch failed (non-fatal): %s", exc)
+
     # ── Generate 5-day forecast (best-effort; dashboard still loads on failure) ──
     forecast_rows: list[dict] | None = None
     try:
@@ -455,5 +538,5 @@ async def dashboard() -> HTMLResponse:
     except Exception as exc:
         logger.warning("Dashboard performance failed (non-fatal): %s", exc)
 
-    html = _build_dashboard_html(history, liquidity, factors, current, forecast_rows, perf)
+    html = _build_dashboard_html(history, liquidity, factors, current, forecast_rows, perf, pipeline_row)
     return HTMLResponse(content=html, status_code=200)
