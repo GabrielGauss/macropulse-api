@@ -7,6 +7,8 @@ on:
 
 jobs:
   deploy:
+    # Only run in the private repo — public mirror doesn't have VPS secrets
+    if: github.repository == 'GabrielGauss/macropulse'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
