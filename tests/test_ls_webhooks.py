@@ -126,6 +126,7 @@ async def test_ls_handle_subscription_created_existing_user_upgrades():
 
     with patch("database.queries.get_user_by_email", new=AsyncMock(return_value=existing_user)), \
          patch("database.queries.get_active_keys_for_user", new=AsyncMock(return_value=existing_keys)), \
+         patch("database.queries.reactivate_user_keys", new=AsyncMock(return_value=None)), \
          patch("database.queries.upgrade_user_tier", new=AsyncMock(return_value=None)), \
          patch("database.queries.upsert_ls_subscription", new=AsyncMock(return_value=None)), \
          patch("services.email.send_upgrade_email"), \

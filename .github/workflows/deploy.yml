@@ -19,8 +19,9 @@ jobs:
             set -e
             cd /opt/macropulse
 
-            # Pull latest code
-            git pull origin master
+            # Sync to latest remote — discard any locally SCP'd files
+            git fetch origin master
+            git reset --hard origin/master
 
             # Rebuild and restart only the API container
             # (DB and nginx keep running — no downtime)

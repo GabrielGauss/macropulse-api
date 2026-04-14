@@ -26,6 +26,7 @@ EXPECTED_MIGRATIONS = [
     "009_auth_rate_limits.sql",
     "010_paddle_subscription_status.sql",
     "011_gdpr_deletion.sql",
+    "012_stripe_billing.sql",
 ]
 
 # Table → migration file that must CREATE it
