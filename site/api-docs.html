@@ -527,6 +527,33 @@
       <a class="sidebar-link" data-target="ep-performance" onclick="scrollTo('ep-performance')">
         <span class="sidebar-method method-get">GET</span>/v1/performance
       </a>
+      <a class="sidebar-link" data-target="ep-forecast" onclick="scrollTo('ep-forecast')">
+        <span class="sidebar-method method-get">GET</span>/v1/forecast
+      </a>
+      <a class="sidebar-link" data-target="ep-signals-history" onclick="scrollTo('ep-signals-history')">
+        <span class="sidebar-method method-get">GET</span>/v1/signals/history
+      </a>
+      <a class="sidebar-link" data-target="ep-account" onclick="scrollTo('ep-account')">
+        <span class="sidebar-method method-get">GET</span>/v1/account
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-group-label">Public (No Auth)</div>
+      <a class="sidebar-link" data-target="ep-public-regime" onclick="scrollTo('ep-public-regime')">
+        <span class="sidebar-method method-get">GET</span>/v1/public/regime
+      </a>
+      <a class="sidebar-link" data-target="ep-public-chart" onclick="scrollTo('ep-public-chart')">
+        <span class="sidebar-method method-get">GET</span>/v1/public/chart-data
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-group-label">IRL Engine</div>
+      <a class="sidebar-link" data-target="ep-irl-heartbeat" onclick="scrollTo('ep-irl-heartbeat')">
+        <span class="sidebar-method method-get">GET</span>/v1/irl/heartbeat
+      </a>
+      <a class="sidebar-link" data-target="ep-irl-audit" onclick="scrollTo('ep-irl-audit')">
+        <span class="sidebar-method method-get">GET</span>/v1/irl/audit
+      </a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-group-label">Authentication</div>
@@ -1420,6 +1447,275 @@ bt = resp.<span class="t-fn">json</span>()
           <span>The old key stops working immediately. Ensure all production integrations are updated before rotating.</span>
         </div>
       </div>
+    </section>
+
+    <!-- GET /v1/forecast -->
+    <section class="section" id="ep-forecast">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/forecast</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-auth">Paid</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Returns an ARIMA(1,0,1)-based forward projection of macro regime probabilities for up to 10 business days.
+        A separate ARIMA model is fit on each probability column and on the risk score.
+        Probabilities are clipped to [0,1] and renormalised to sum to 1.
+        The <code>confidence</code> field reflects concentration across the forecast — a highly concentrated regime yields higher confidence.
+        Requires Starter or Pro tier.
+      </p>
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <table class="params-table">
+        <tr><td class="param-name">horizon</td><td class="param-type">integer</td><td>Business days to forecast. Range: 1–10. Default: 5.</td></tr>
+      </table>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "horizon": 5,
+  "generated_at": "2026-04-14T09:00:00+00:00",
+  "forecast": [
+    {
+      "date": "2026-04-15",
+      "regime": "recovery",
+      "confidence": 0.72,
+      "risk_score": 1.1,
+      "prob_expansion": 0.11,
+      "prob_recovery": 0.71,
+      "prob_tightening": 0.13,
+      "prob_risk_off": 0.05
+    }
+  ]
+}</pre></div>
+    </section>
+
+    <!-- GET /v1/signals/history -->
+    <section class="section" id="ep-signals-history">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/signals/history</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-auth">API Key</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Returns a compact regime history — date, regime label, risk score, and all four probability columns.
+        Available to all authenticated tiers (Free, Starter, Pro, IRL). Default window is 90 days.
+        Useful for building charts, regime calendars, and transition analysis.
+      </p>
+      <h3 class="section-subtitle">Query Parameters</h3>
+      <table class="params-table">
+        <tr><td class="param-name">days</td><td class="param-type">integer</td><td>Number of days of history. Default: 90. Max: 730.</td></tr>
+      </table>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>[
+  {
+    "date": "2026-04-14",
+    "regime": "recovery",
+    "risk_score": 1.24,
+    "prob_expansion": 0.12,
+    "prob_recovery": 0.71,
+    "prob_tightening": 0.11,
+    "prob_risk_off": 0.06
+  }
+]</pre></div>
+    </section>
+
+    <!-- GET /v1/account -->
+    <section class="section" id="ep-account">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/account</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-auth">API Key</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Returns account metadata for the authenticated API key — tier, product line, usage, entitlements,
+        and billing portal link. Works with any valid key including Free tier.
+        Use <code>billing_portal_url</code> to redirect the user to Stripe Customer Portal for subscription management.
+      </p>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "tier": "pro",
+  "tier_label": "Pro",
+  "product": "macropulse",
+  "product_line": "macropulse",
+  "agent_count": 1,
+  "payment_status": "active",
+  "features": ["signals", "liquidity", "scorecard", "forecast", "backtest", "webhook", "commentary"],
+  "usage": {
+    "today_requests": 14,
+    "daily_limit": 5000
+  },
+  "billing_portal_url": "https://api.macropulse.live/v1/billing/stripe/portal",
+  "docs_url": "https://macropulse.live/api-docs.html"
+}</pre></div>
+    </section>
+
+    <!-- GET /v1/public/regime -->
+    <section class="section" id="ep-public-regime">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/public/regime</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-public">Public</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Returns the current macro regime with an equity exposure recommendation and a plain-English interpretation.
+        <strong>No API key required.</strong> Designed as the free-tier entry point — enough signal to be useful,
+        with a link to upgrade for the full package (scorecard, forecast, webhook alerts, factor decomposition).
+      </p>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "date": "2026-04-14",
+  "regime": "recovery",
+  "regime_label": "Recovery",
+  "emoji": "🔵",
+  "risk_score": 1.2,
+  "equity_exposure": "75%",
+  "interpretation": "Liquidity re-injecting after stress. Risk appetite healing but not fully restored. Positive bias with elevated caution.",
+  "upgrade": {
+    "message": "Get the full signal package — scorecard, 5-day forecast, webhook alerts, and factor decomposition.",
+    "url": "https://macropulse.live/#pricing"
+  }
+}</pre></div>
+    </section>
+
+    <!-- GET /v1/public/chart-data -->
+    <section class="section" id="ep-public-chart">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/public/chart-data</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-public">Public</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Last 730 days of regime history for interactive charts and performance analysis — no API key required.
+        Each row includes cumulative returns for a regime-weighted strategy, S&amp;P 500 buy-and-hold, and gold.
+        The <code>stats</code> field includes Sharpe proxy, max drawdown, annualised return, and regime distribution.
+      </p>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "days": 730,
+  "generated_at": "2026-04-14T09:00:00Z",
+  "series": [
+    {
+      "date": "2024-04-14",
+      "regime": "recovery",
+      "risk_score": 0.82,
+      "sp500": 100.0,
+      "gold": 100.0,
+      "strategy": 100.0
+    }
+  ],
+  "stats": {
+    "sharpe_proxy": 1.42,
+    "max_drawdown": -8.3,
+    "avg_persistence_days": 47.2,
+    "strategy_annual_return": 18.4,
+    "bh_annual_return": 14.1,
+    "total_days": 730,
+    "regime_distribution": {
+      "expansion": 0.28,
+      "recovery": 0.41,
+      "risk_off": 0.07,
+      "tightening": 0.24
+    }
+  }
+}</pre></div>
+    </section>
+
+    <!-- GET /v1/irl/heartbeat -->
+    <section class="section" id="ep-irl-heartbeat">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/irl/heartbeat</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-auth" style="background:rgba(245,158,11,0.1);color:#f59e0b;border-color:rgba(245,158,11,0.3);">IRL Key</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Issues a fresh signed heartbeat for use in <code>/irl/authorize</code> requests when
+        <code>LAYER2_ENABLED=true</code> on the IRL Engine. Requires an IRL-tier API key
+        (<code>irl_sidecar</code>, <code>irl_audit</code>, or <code>owner</code>).
+        Each call returns a new heartbeat with a strictly increasing <code>sequence_id</code> — do not reuse.
+        The heartbeat signature is Ed25519 over a canonical JSON blob of the heartbeat fields.
+      </p>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "sequence_id": 1042,
+  "timestamp_ms": 1744624800000,
+  "regime_id": 2,
+  "mta_ref": "a3f7c2...",
+  "signature": "ed25519:b5e3a1..."
+}</pre></div>
+      <div class="callout callout-info" style="margin-top:1rem;padding:0.75rem 1rem;background:rgba(245,158,11,0.06);border-left-color:#f59e0b;">
+        <span class="callout-icon" style="color:#f59e0b;">ℹ</span>
+        <span>Fetch a new heartbeat immediately before each <code>/irl/authorize</code> call. The IRL Engine rejects heartbeats older than its configured replay window (default: 30 seconds).</span>
+      </div>
+    </section>
+
+    <!-- GET /v1/irl/audit -->
+    <section class="section" id="ep-irl-audit">
+      <div class="endpoint-header">
+        <div class="endpoint-path">GET /v1/irl/audit</div>
+        <div class="badge-group">
+          <span class="badge badge-get">GET</span>
+          <span class="badge badge-auth" style="background:rgba(245,158,11,0.1);color:#f59e0b;border-color:rgba(245,158,11,0.3);">IRL Audit (L2)</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        Deep decomposition of the current macro regime signal. Available exclusively to
+        <code>irl_audit</code>-tier keys (IRL Engine Audit — L2 licence, minimum 3 agents).
+        Returns PCA factor attribution, stress indicator z-scores vs 90-day window,
+        liquidity attribution in $bn, HMM transition probability matrix for the current regime,
+        and model drift health flags.
+      </p>
+      <h3 class="section-subtitle">Response</h3>
+      <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">copy</button><pre>{
+  "generated_at": "2026-04-14T09:00:00+00:00",
+  "date": "2026-04-14",
+  "regime": "recovery",
+  "risk_score": 1.24,
+  "agent_count": 3,
+  "factor_attribution": [
+    { "factor": "PC1", "description": "Liquidity & rates — primary driver of risk-on/risk-off",
+      "value": 0.612, "direction": "bullish" },
+    { "factor": "PC2", "description": "Risk appetite — equity momentum vs credit stress",
+      "value": -0.09, "direction": "neutral" },
+    { "factor": "PC3", "description": "Credit stress — HY spreads vs investment grade",
+      "value": -0.22, "direction": "bearish" },
+    { "factor": "PC4", "description": "Dollar & momentum — DXY and cross-asset momentum",
+      "value": 0.18, "direction": "bullish" }
+  ],
+  "stress_indicators": [
+    { "name": "VIX (equity vol)", "value": -0.0812, "z_score": -0.84, "flag": "normal" },
+    { "name": "HY credit spread", "value": 0.0031, "z_score": 0.42, "flag": "normal" },
+    { "name": "Yield curve (10Y-2Y)", "value": 0.0041, "z_score": 1.21, "flag": "normal" },
+    { "name": "DXY (dollar index)", "value": -0.0019, "z_score": -0.61, "flag": "normal" },
+    { "name": "Net Fed liquidity", "value": 5823100.0, "z_score": 0.33, "flag": "normal" }
+  ],
+  "liquidity": {
+    "trend": "expanding",
+    "latest_bn_usd": 5823.1,
+    "30d_change_bn_usd": 142.6
+  },
+  "transition_risk": {
+    "expansion": 0.1042,
+    "recovery": 0.7831,
+    "tightening": 0.0882,
+    "risk_off": 0.0245
+  },
+  "model_health": {
+    "status": "healthy",
+    "flags": [],
+    "pca_explained_variance": 0.0021,
+    "regime_persistence": 0.8314,
+    "feature_mean_shift": 0.0084
+  }
+}</pre></div>
     </section>
 
     <!-- Regime Export -->

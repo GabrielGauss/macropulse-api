@@ -172,7 +172,7 @@ def _build_text(
     )
 
 
-def send_daily_digest(
+async def send_daily_digest(
     regime_row: dict[str, Any],
     scorecard: dict[str, Any],
     narrative: str,
@@ -184,7 +184,7 @@ def send_daily_digest(
     Silently skips if Brevo key is not configured.  Never raises.
     """
     try:
-        emails = queries.fetch_subscriber_emails()
+        emails = await queries.fetch_subscriber_emails()
     except Exception:
         logger.error("Could not fetch subscriber emails", exc_info=True)
         return

@@ -117,6 +117,18 @@ async def require_api_key(
             detail="Invalid or revoked API key.",
         )
 
+    # Payment-suspended keys stay is_active=TRUE so we can return 402 here
+    if record.get("payment_status") == "suspended":
+        logger.warning("Suspended key access attempt prefix=%s…", record.get("key_prefix", "")[:8])
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=(
+                "Your API access has been suspended due to a failed payment. "
+                "Please update your payment method at macropulse.live/dashboard "
+                "to restore access."
+            ),
+        )
+
     # Fire-and-forget last_used update (don't fail the request if this errors)
     try:
         from database.queries import touch_api_key

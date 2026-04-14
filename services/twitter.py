@@ -157,3 +157,61 @@ def post_daily_tweet(regime_row: dict[str, Any], scorecard: dict[str, Any]) -> N
         logger.error("Twitter API failed: %s", exc)
     except Exception:
         logger.error("Twitter unexpected error", exc_info=True)
+
+
+def post_regime_change_tweet(
+    prev_regime: str,
+    new_regime: str,
+    risk_score: float,
+    date: str,
+) -> None:
+    """
+    Post a regime change alert tweet.
+    Fire-and-forget — never raises.
+    """
+    settings = get_settings()
+    if not all([
+        settings.x_api_key, settings.x_api_secret,
+        settings.x_access_token, settings.x_access_token_secret,
+    ]):
+        logger.debug("X credentials not configured; skipping regime change tweet.")
+        return
+
+    prev_emoji = _REGIME_EMOJI.get(prev_regime, "⚪")
+    new_emoji  = _REGIME_EMOJI.get(new_regime, "⚪")
+    prev_label = _REGIME_LABEL.get(prev_regime, prev_regime.title())
+    new_label  = _REGIME_LABEL.get(new_regime, new_regime.title())
+    exposure   = _EXPOSURE.get(new_regime, "—")
+
+    tweet = (
+        f"⚡ REGIME SHIFT · {date}\n\n"
+        f"{prev_emoji} {prev_label} → {new_emoji} {new_label}\n\n"
+        f"Risk Score: {risk_score:+.1f}\n"
+        f"New equity exposure: {exposure}\n\n"
+        f"Full signal → macropulse.live\n"
+        f"#macro #quant #trading"
+    )
+
+    payload = json.dumps({"text": tweet}).encode()
+    auth_header = _oauth1_header("POST", _TWEET_URL, settings)
+
+    req = Request(
+        _TWEET_URL,
+        data=payload,
+        headers={
+            "Authorization": auth_header,
+            "Content-Type":  "application/json",
+            "User-Agent":    "MacroPulse/1.0",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read())
+            tweet_id = body.get("data", {}).get("id", "?")
+            logger.info("Regime change tweet posted (id=%s): %s→%s", tweet_id, prev_regime, new_regime)
+    except URLError as exc:
+        logger.error("Twitter regime change API failed: %s", exc)
+    except Exception:
+        logger.error("Twitter regime change unexpected error", exc_info=True)

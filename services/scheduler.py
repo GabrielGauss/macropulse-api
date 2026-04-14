@@ -150,6 +150,33 @@ def _check_pipeline_staleness() -> None:
         logger.error("Could not send staleness alert email: %s", mail_exc)
 
 
+async def _run_weekly_digest_async() -> None:
+    """Fetch current regime + scorecard + narrative, then send the weekly digest."""
+    from database import queries
+    from services.scorecard import build_scorecard
+    from services.narrative import generate_narrative
+    from services.digest import send_daily_digest
+
+    regime_row = await queries.fetch_current_regime()
+    if regime_row is None:
+        logger.warning("Weekly digest: no regime data available, skipping.")
+        return
+
+    scorecard = await build_scorecard()
+    narrative = generate_narrative(regime_row, scorecard)
+    await send_daily_digest(regime_row, scorecard, narrative)
+
+
+def _run_weekly_digest() -> None:
+    """Thread-safe wrapper — dispatches async digest coroutine to the event loop."""
+    try:
+        asyncio.run_coroutine_threadsafe(
+            _run_weekly_digest_async(), _loop
+        ).result()
+    except Exception as exc:
+        logger.error("Weekly digest FAILED: %s", exc, exc_info=True)
+
+
 _scheduler: BackgroundScheduler | None = None
 _loop: asyncio.AbstractEventLoop | None = None
 
@@ -194,6 +221,15 @@ def start_scheduler() -> BackgroundScheduler:
         id="pipeline_staleness_check",
         name="Pipeline Staleness Check",
         replace_existing=True,
+    )
+
+    _scheduler.add_job(
+        _run_weekly_digest,
+        trigger=CronTrigger(day_of_week="mon", hour=9, minute=0, timezone="UTC"),
+        id="weekly_digest",
+        name="MacroPulse Weekly Digest",
+        replace_existing=True,
+        misfire_grace_time=3600,
     )
 
     _scheduler.start()

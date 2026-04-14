@@ -3,6 +3,7 @@ Unified signal endpoints for MacroPulse.
 
 Implements the /v1/signals surface defined in the Master Build & Launch Manual §5.2:
   GET /v1/signals/latest          — most recent signal package
+  GET /v1/signals/history         — regime history (query: days, max 365)
   GET /v1/signals/{date}          — historical lookup by date (YYYY-MM-DD)
   GET /v1/signals/range           — time series (query: start, end; max 365 days)
 """
@@ -45,6 +46,42 @@ async def get_latest_signal(
             detail="No regime data available. Run the daily pipeline first.",
         )
     return SignalPackageResponse(**pkg)
+
+
+@router.get(
+    "/history",
+    summary="Regime history for charting",
+)
+async def get_signal_history(
+    days: int = Query(default=90, ge=7, le=365, description="Number of calendar days to return"),
+    key_record: dict = Depends(require_api_key),
+) -> list[dict]:
+    """
+    Return daily regime rows for the last N days, newest first.
+
+    Lighter than /range — returns only the fields needed for a timeline chart:
+    date, regime, risk_score, and the four probability columns.
+    Available to all authenticated tiers (free/starter/pro).
+    """
+    from database.queries import fetch_regime_history
+    import datetime as dt
+
+    end   = dt.date.today()
+    start = end - dt.timedelta(days=days)
+    rows  = await fetch_regime_history(start=start, end=end, limit=days)
+
+    return [
+        {
+            "date":             str(r["time"])[:10],
+            "regime":           r["regime"],
+            "risk_score":       float(r.get("risk_score") or 0),
+            "prob_expansion":   float(r.get("prob_expansion") or 0),
+            "prob_recovery":    float(r.get("prob_recovery") or 0),
+            "prob_tightening":  float(r.get("prob_tightening") or 0),
+            "prob_risk_off":    float(r.get("prob_risk_off") or 0),
+        }
+        for r in rows
+    ]
 
 
 @router.get(

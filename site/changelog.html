@@ -134,6 +134,40 @@
 
   <div class="changelog-feed">
 
+    <!-- v1.9 -->
+    <div class="entry">
+      <div class="entry-meta">
+        <span class="entry-version" style="background:rgba(34,197,94,0.1);color:var(--green);">v1.9</span>
+        <div class="entry-date">Apr 14, 2026</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-title">IRL L2 Audit, LLM narrative, 5-day forecast, regime alerts, free tier endpoint</div>
+        <p class="entry-summary">
+          Major feature sprint: IRL Engine gains a deep audit endpoint for L2 subscribers.
+          The signal package now includes an LLM-generated narrative via Claude Haiku.
+          The 5-day ARIMA forecast is live and auth-gated. Regime transitions fire real-time
+          alerts to X and Discord. A new unauthenticated endpoint exposes the live regime
+          to the public as a free-tier entry point. Weekly digest email ships to all subscribers
+          every Monday morning.
+        </p>
+        <div class="entry-items">
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>GET /v1/irl/audit</code> — IRL Engine L2 deep decomposition: PCA factor attribution (PC1–PC4 with directional scores), stress indicator z-scores (VIX, HY spread, yield curve, DXY, net liquidity), liquidity attribution in $bn, HMM transition probability matrix, model drift health flags. Requires <code>irl_audit</code> tier.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>GET /v1/public/regime</code> — unauthenticated endpoint returning the live regime, risk score, equity exposure recommendation, plain-English interpretation, and an upgrade CTA. Free-tier entry point, no API key required.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>GET /v1/account</code> — returns tier, product line, agent count, payment status, daily request usage, feature entitlements, Stripe billing portal link, and docs URL. Works with any valid API key.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span><code>GET /v1/signals/history?days=N</code> — regime history with probabilities for all tiers. Returns up to 90 days of <code>{date, regime, risk_score, prob_*}</code> rows.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>LLM narrative in signal package — Claude Haiku generates a 2–3 sentence macro interpretation on every pipeline run. Included in <code>/v1/signals/latest</code> as <code>narrative</code>. Falls back to rule-based text if API is unavailable.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Regime change alerts — on every regime transition the pipeline posts to X (Twitter OAuth 1.0a) and Discord (colored embed with regime shift, risk score, new equity exposure). IRL subscribers now correctly receive email alerts alongside MacroPulse subscribers.</div>
+          <div class="entry-item"><span class="item-tag tag-new">New</span>Weekly digest — every Monday at 09:00 UTC, all newsletter subscribers receive a formatted macro brief (regime, risk score, signal gauges, LLM narrative, dashboard CTA).</div>
+          <div class="entry-item"><span class="item-tag tag-fix">Fix</span><code>GET /v1/forecast</code> was returning 500 due to a missing <code>await</code> on the DB query and missing auth. Both fixed — now requires Paid tier and returns correctly.</div>
+          <div class="entry-item"><span class="item-tag tag-fix">Fix</span>IRL welcome email CTA previously linked to a non-existent sandbox URL. Now correctly points to <code>macropulse.live/irl-welcome.html</code>.</div>
+          <div class="entry-item"><span class="item-tag tag-fix">Fix</span><code>GET /v1/irl/heartbeat</code> was open to all keys. Now requires an IRL-tier key (<code>irl_sidecar</code>, <code>irl_audit</code>, or <code>owner</code>).</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Commentary endpoint fixed — 3 missing <code>await</code> calls on DB queries resolved; no longer returns stale/empty data.</div>
+          <div class="entry-item"><span class="item-tag tag-improvement">Improved</span>Pipeline staleness check correctly uses the event loop via <code>run_coroutine_threadsafe</code> — no more <code>asyncio.run()</code> conflict inside the scheduler thread.</div>
+          <div class="entry-item"><span class="item-tag tag-infra">Infra</span>Stripe env vars documented in <code>.env.example</code>. Lemon Squeezy and Paddle references removed — Stripe is the sole billing provider.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- v1.8 -->
     <div class="entry">
       <div class="entry-meta">

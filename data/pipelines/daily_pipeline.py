@@ -248,7 +248,7 @@ async def _run_daily_pipeline_async(
         from services.alerts import send_regime_change_alerts
         history = await queries.fetch_regime_history(limit=2)
         if len(history) >= 2 and history[0]["regime"] != history[1]["regime"]:
-            send_regime_change_alerts(
+            await send_regime_change_alerts(
                 prev_regime=history[1]["regime"],
                 new_regime=history[0]["regime"],
                 risk_score=float(history[0].get("risk_score", 0)),
@@ -304,9 +304,19 @@ async def _run_daily_pipeline_async(
 
     logger.info("═══ Pipeline complete in %.1fs ═══  %s", duration, output)
 
-    # ── 14. Daily brief (future: Discord / email digest / X post) ──
-    # Placeholder — services not yet implemented. Add here when ready.
-    pass
+    # ── 14. Daily brief — narrative + X + Discord signal post ────
+    try:
+        from services.scorecard import build_scorecard
+        from services.narrative import generate_narrative
+        from services.twitter import post_daily_tweet
+        from services.discord import post_daily_signal
+        scorecard = await build_scorecard()
+        narrative = generate_narrative(regime_row, scorecard)
+        post_daily_tweet(regime_row, scorecard)
+        post_daily_signal(regime_row, scorecard, narrative=narrative)
+        logger.info("Daily brief dispatched (narrative: %d chars)", len(narrative))
+    except Exception as exc:
+        logger.warning("daily signal broadcast failed: %s", exc)
 
     return output
 

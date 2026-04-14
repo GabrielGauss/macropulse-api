@@ -42,6 +42,7 @@ from api.routes.public import router as public_router
 from api.routes.webhook import router as webhook_router
 from api.routes.websocket import router as ws_router
 from api.routes.irl import router as irl_router
+from api.routes.account import router as account_router
 from api.schemas.responses import HealthResponse
 from config.settings import get_settings
 
@@ -163,6 +164,7 @@ app.include_router(pipeline_router)
 app.include_router(public_router)
 app.include_router(webhook_router)
 app.include_router(irl_router)
+app.include_router(account_router)
 
 # ── Prometheus metrics ────────────────────────────────────────────────
 # Mounted after all API routes so it doesn't shadow any route prefix.
@@ -203,6 +205,11 @@ async def health_check() -> HealthResponse:
         checks={"database": db_status},
     )
 
+
+# ── /portal → redirect to dashboard (Account tab has everything) ──
+@app.get("/portal", include_in_schema=False)
+def redirect_portal():
+    return RedirectResponse("https://macropulse.live/dashboard", status_code=301)
 
 # ── Static frontend (served in production) ───────────────────────
 # NOTE: must be mounted AFTER all API routes — StaticFiles catches everything

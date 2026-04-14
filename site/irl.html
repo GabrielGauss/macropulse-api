@@ -151,9 +151,15 @@
     .gap-table td:nth-child(2) { color: var(--dim); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
     .gap-table td:nth-child(3) { color: var(--irl); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
     .gap-table-wrap {
-      border: 1px solid var(--border2); border-radius: 8px; overflow: hidden;
-      background: var(--s1);
+      border: 1px solid var(--border2); border-radius: 8px;
+      background: var(--s1); position: relative;
     }
+    /* border-radius on corner cells so we can drop overflow:hidden
+       (which was clipping the absolutely-positioned .reg-tip tooltips) */
+    .gap-table thead tr:first-child th:first-child { border-radius: 7px 0 0 0; }
+    .gap-table thead tr:first-child th:last-child  { border-radius: 0 7px 0 0; }
+    .gap-table tbody tr:last-child  td:first-child  { border-radius: 0 0 0 7px; }
+    .gap-table tbody tr:last-child  td:last-child   { border-radius: 0 0 7px 0; }
 
     /* ── Chain diagram ── */
     .chain { display: flex; flex-direction: column; gap: 0; max-width: 560px; }
@@ -242,16 +248,70 @@
     .edition-features li::before { content: '—'; color: var(--dim); flex-shrink: 0; }
     .edition-features li span.hi { color: var(--text); }
 
-    /* ── How MTA connects ── */
-    .mta-box {
-      background: var(--s1); border: 1px solid var(--border2);
-      border-radius: 8px; padding: 1.5rem 1.75rem;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    /* ── MTA section ── */
+    .mta-flow {
+      display: flex; align-items: center; gap: 0;
+      border: 1.5px solid var(--border2); border-radius: 8px;
+      overflow: hidden; margin-bottom: 1.5rem; background: var(--s1);
     }
-    @media (max-width: 600px) { .mta-box { grid-template-columns: 1fr; } }
-    .mta-box h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .mta-box p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
-    .mta-divider { border: none; border-left: 1px solid var(--border2); }
+    .mta-flow-step {
+      flex: 1; padding: 0.9rem 1rem; text-align: center;
+      border-right: 1px solid var(--border2);
+    }
+    .mta-flow-step:last-child { border-right: none; }
+    .mta-flow-step.active { background: var(--irl-dim); border-bottom: 2px solid var(--irl); }
+    .mta-flow-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+      font-weight: 600;
+    }
+    .mta-flow-step.active .mta-flow-label { color: var(--irl); }
+    .mta-flow-sub { font-size: 0.7rem; color: var(--dim); margin-top: 0.15rem; }
+    .mta-flow-arr {
+      flex-shrink: 0; color: var(--dim); font-size: 0.85rem; padding: 0 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @media (max-width: 640px) { .mta-flow { display: none; } }
+
+    .mta-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border: 1.5px solid var(--border2); overflow: hidden; margin-bottom: 1.25rem;
+    }
+    @media (max-width: 680px) { .mta-grid { grid-template-columns: 1fr; } }
+    .mta-card {
+      padding: 1.75rem 1.5rem; border-right: 1.5px solid var(--border2);
+      position: relative; transition: background 0.2s;
+    }
+    .mta-card:last-child { border-right: none; }
+    .mta-card.featured { background: var(--irl-dim); }
+    .mta-mode {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+      font-weight: 600; margin-bottom: 0.75rem;
+    }
+    .mta-card.featured .mta-mode { color: var(--irl); }
+    .mta-title {
+      font-size: 1rem; font-weight: 700; letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+    .mta-desc {
+      font-size: 0.8rem; color: var(--muted); line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+    .mta-facts { list-style: none; margin-bottom: 1.25rem; display: grid; gap: 0.35rem; }
+    .mta-facts li {
+      font-size: 0.78rem; color: var(--dim); display: flex; gap: 0.5rem; align-items: flex-start;
+    }
+    .mta-facts li::before { content: '→'; color: var(--border2); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+    .mta-card.featured .mta-facts li::before { color: var(--irl); }
+    .mta-config {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      background: var(--s2); border: 1px solid var(--border2); border-radius: 4px;
+      padding: 0.5rem 0.75rem; color: var(--text); line-height: 1.7;
+    }
+    .mta-config .k { color: var(--muted); }
+    .mta-config .v { color: var(--irl); }
+    .mta-card.featured .mta-config { border-color: var(--irl-brd); background: rgba(0,0,0,0.3); }
 
     /* ── CTA ── */
     .cta-section {
@@ -393,9 +453,9 @@
     }
     .reg-ref:hover { border-color: var(--irl); color: var(--irl); }
     .reg-tip {
-      position: absolute; left: 0; top: 100%; margin-top: 8px; z-index: 30;
-      width: 280px; padding: 0.7rem 0.9rem;
-      background: var(--s1); border: 1px solid var(--border2);
+      position: absolute; left: 0; top: 100%; margin-top: 8px; z-index: 200;
+      width: 300px; padding: 0.75rem 1rem;
+      background: #111; border: 1px solid var(--irl-brd);
       font-size: 0.71rem; color: var(--muted); line-height: 1.55;
       white-space: normal; pointer-events: none;
       opacity: 0; transform: translateY(5px);
@@ -403,7 +463,15 @@
       font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: 0;
     }
     .reg-ref:hover .reg-tip { opacity: 1; transform: translateY(0); pointer-events: all; }
-    .reg-tip a { color: var(--irl); text-decoration: underline; }
+    .reg-tip a { color: var(--irl); text-decoration: underline; font-size: 0.8rem; }
+    /* Flip tooltip upward for the last 2 tbody rows so it doesn't fall off-screen */
+    .gap-table tbody tr:nth-last-child(-n+2) .reg-tip {
+      top: auto; bottom: 100%; margin-top: 0; margin-bottom: 8px;
+      transform: translateY(4px);
+    }
+    .gap-table tbody tr:nth-last-child(-n+2) .reg-ref:hover .reg-tip {
+      transform: translateY(0);
+    }
 
     /* ── Volume discount table ── */
     .vol-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
@@ -757,64 +825,107 @@ asyncio.run(trade())</pre>
     <div class="section-label">Market Truth Anchor</div>
     <h2>Bring Your Own Signal — or Use Ours</h2>
     <p class="section-sub">
-      IRL depends on an abstract MTA interface, not on any specific operator.
-      Any cryptographically signed regime source can serve as the MTA for your deployment.
+      IRL's engine is agnostic to the regime source. The <span class="mono" style="color:var(--irl);font-size:0.9em;">MtaClient</span> interface accepts any
+      cryptographically signed signal — MacroPulse's pipeline, your own quant model, or nothing at all.
+      Three modes. Same audit guarantees.
     </p>
-    <div class="mta-box">
-      <div>
-        <h3>MacroPulse MTA — turnkey</h3>
-        <p>
-          Zero additional infrastructure. MacroPulse's HMM/PCA pipeline produces
-          Ed25519-signed regime broadcasts with version hashes. Plug in your URL and
-          public key — IRL verifies signatures and caches state automatically.
-          Recommended for firms without a proprietary regime model.
-        </p>
+
+    <!-- Architecture flow bar -->
+    <div class="mta-flow">
+      <div class="mta-flow-step">
+        <div class="mta-flow-label">Agent</div>
+        <div class="mta-flow-sub">reasoning snapshot</div>
       </div>
-      <hr class="mta-divider" />
+      <div class="mta-flow-arr">→</div>
+      <div class="mta-flow-step active">
+        <div class="mta-flow-label">MTA Signal</div>
+        <div class="mta-flow-sub">signed regime state</div>
+      </div>
+      <div class="mta-flow-arr">→</div>
+      <div class="mta-flow-step">
+        <div class="mta-flow-label">IRL Engine</div>
+        <div class="mta-flow-sub">pre-execution seal</div>
+      </div>
+      <div class="mta-flow-arr">→</div>
+      <div class="mta-flow-step">
+        <div class="mta-flow-label">Exchange</div>
+        <div class="mta-flow-sub">order placed</div>
+      </div>
+    </div>
+
+    <!-- 3-mode comparison grid -->
+    <div class="mta-grid">
+
+      <!-- Mode 01 -->
+      <div class="mta-card featured">
+        <div class="mta-mode">01 — Turnkey</div>
+        <div class="mta-title">MacroPulse MTA</div>
+        <div class="mta-desc">Zero additional infrastructure. Plug your API key and public key — IRL handles signature verification, caching, and failover automatically.</div>
+        <ul class="mta-facts">
+          <li>HMM/PCA regime pipeline, updated daily</li>
+          <li>Ed25519-signed broadcasts with version hash</li>
+          <li>Latency &lt;5 ms — local cache, async refresh</li>
+          <li>Recommended for most deployments</li>
+        </ul>
+        <div class="mta-config">
+          <span class="k">MTA_MODE</span>=<span class="v">macropulse</span><br>
+          <span class="k">MTA_URL</span>=<span class="v">https://api.macropulse.live</span><br>
+          <span class="k">MTA_PUBKEY</span>=<span class="v">ed25519:...</span>
+        </div>
+      </div>
+
+      <!-- Mode 02 -->
+      <div class="mta-card">
+        <div class="mta-mode">02 — Bring Your Own</div>
+        <div class="mta-title">Custom MtaClient</div>
+        <div class="mta-desc">Implement a single Rust trait and pass it at startup. Your model stays private; your compliance chain is cryptographically identical to Mode 01.</div>
+        <ul class="mta-facts">
+          <li>One trait: <span class="mono" style="color:var(--irl);font-size:0.85em;">MtaClient</span> — 3 methods</li>
+          <li>Any signal format: REST, gRPC, or shared memory</li>
+          <li>IRL seals against your signal, not ours</li>
+          <li>For quant firms with proprietary regime models</li>
+        </ul>
+        <div class="mta-config">
+          <span class="k">MTA_MODE</span>=<span class="v">custom</span><br>
+          <span class="k">MTA_IMPL</span>=<span class="v">./mta_client.so</span><br>
+          <span class="k">MTA_PUBKEY</span>=<span class="v">ed25519:...</span>
+        </div>
+      </div>
+
+      <!-- Mode 03 -->
+      <div class="mta-card">
+        <div class="mta-mode">03 — Policy Only</div>
+        <div class="mta-title">MtaMode::None</div>
+        <div class="mta-desc">Bypass regime verification entirely. All Multi-Agent Registry policy checks — notional caps, side constraints, per-agent rules — remain fully active.</div>
+        <ul class="mta-facts">
+          <li>No external signal dependency</li>
+          <li>MAR policies enforced as normal</li>
+          <li>Seal records <span class="mono" style="color:var(--dim);font-size:0.85em;">signal_mode="none"</span></li>
+          <li>For firms managing macro risk internally</li>
+        </ul>
+        <div class="mta-config">
+          <span class="k">MTA_MODE</span>=<span class="v">none</span><br>
+          <span class="k"># KMS encryption still active</span><br>
+          <span class="k"># Audit chain unaffected</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- KMS note -->
+    <div style="background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:1rem 1.25rem;display:flex;gap:1rem;align-items:flex-start;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);background:var(--border2);padding:0.18rem 0.45rem;border-radius:3px;flex-shrink:0;margin-top:1px;">v1.2</span>
       <div>
-        <h3>Custom MTA — one implementation</h3>
-        <p>
-          Quant firms running their own regime pipelines implement a single Rust trait
-          (<span class="mono" style="color:var(--irl);font-size:0.82rem;">MtaClient</span>)
-          and pass it at startup. IRL seals against your signal with the same
-          cryptographic guarantees. Your model stays private. Your compliance chain is identical.
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.25rem;"><span class="mono" style="color:var(--irl);font-size:0.85em;">KmsProvider</span> — snapshots encrypted at rest</div>
+        <p style="font-size:0.78rem;color:var(--muted);line-height:1.6;margin:0;">
+          Each reasoning snapshot receives a per-trace DEK before ledger write.
+          <span class="mono" style="color:var(--text);font-size:0.78em;">KMS_PROVIDER=local</span> for single-node;
+          AWS KMS, GCP KMS, or hardware HSM via the <span class="mono" style="color:var(--text);font-size:0.78em;">KmsProvider</span> trait.
+          Hash chain integrity is independent of storage encryption — audit proofs hold regardless.
         </p>
       </div>
     </div>
 
-    <div style="margin-top:1.5rem;background:var(--s1);border:1px solid var(--border2);border-radius:8px;padding:1.25rem 1.75rem;display:flex;gap:1.25rem;align-items:flex-start;">
-      <div style="flex-shrink:0;margin-top:2px;">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--border2);padding:0.2rem 0.5rem;border-radius:4px;">v1.2</span>
-      </div>
-      <div>
-        <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.35rem;">
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--irl);">MtaMode::None</span> — for firms managing risk externally
-        </div>
-        <p style="font-size:0.8rem;color:var(--muted);line-height:1.65;margin:0;">
-          Set <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">MTA_MODE=none</span> to bypass regime verification entirely.
-          IRL still enforces all pre-execution policy checks from the Multi-Agent Registry — per-agent notional caps, side constraints, and policy rules remain active.
-          Returns <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">signal_mode="none"</span> in the reasoning seal so auditors know no MTA was consulted.
-          For firms with their own real-time risk management systems.
-        </p>
-      </div>
-    </div>
-
-    <div style="margin-top:1rem;background:var(--s1);border:1px solid var(--border2);border-radius:8px;padding:1.25rem 1.75rem;display:flex;gap:1.25rem;align-items:flex-start;">
-      <div style="flex-shrink:0;margin-top:2px;">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--border2);padding:0.2rem 0.5rem;border-radius:4px;">v1.2</span>
-      </div>
-      <div>
-        <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.35rem;">
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--irl);">KMS encryption</span> — reasoning snapshots encrypted at rest
-        </div>
-        <p style="font-size:0.8rem;color:var(--muted);line-height:1.65;margin:0;">
-          Each reasoning snapshot is encrypted with a per-trace data encryption key (DEK) before being written to the ledger.
-          Set <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">KMS_PROVIDER=local</span> for single-node deployments;
-          plug in AWS KMS, GCP KMS, or a hardware HSM via the <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.78rem;">KmsProvider</span> trait.
-          The audit hash chain is unaffected — cryptographic integrity holds independently of storage encryption.
-        </p>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -926,7 +1037,7 @@ asyncio.run(trade())</pre>
           <li><span class="icon">+</span><span><strong>Post-trade verifier</strong> — MATCHED / DIVERGENT / EXPIRED lifecycle</span></li>
           <li><span class="icon">+</span><span><strong>REST API + SDKs</strong> — Python, TypeScript, Go</span></li>
         </ul>
-        <a href="mailto:licensing@macropulse.live" class="pb-cta">Start with L1 →</a>
+        <button class="pb-cta" onclick="irlCheckout('irl_sidecar', 1)">Start with L1 →</button>
       </div>
 
       <!-- L2 -->
@@ -947,18 +1058,27 @@ asyncio.run(trade())</pre>
           <li><span class="icon">+</span><span><strong>Merkle anchoring</strong> — period root hashes anchored to Bitcoin via OpenTimestamps</span></li>
           <li><span class="icon">+</span><span><strong>Compliance dashboard</strong> — read-only regulator view</span></li>
         </ul>
-        <a href="mailto:licensing@macropulse.live" class="pb-cta">Upgrade to L2 →</a>
+        <!-- Agent count picker — min 3 for L2 -->
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+          <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Agents:</span>
+          <button onclick="adjustAgents(-1)" style="width:26px;height:26px;background:var(--s2);border:1px solid var(--border2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;">−</button>
+          <span id="agent-count" style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:600;min-width:24px;text-align:center;">3</span>
+          <button onclick="adjustAgents(1)" style="width:26px;height:26px;background:var(--s2);border:1px solid var(--border2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.9rem;cursor:pointer;">+</button>
+          <span id="agent-total" style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--irl);margin-left:0.25rem;">$3,600/mo</span>
+        </div>
+        <button class="pb-cta" onclick="irlCheckout('irl_audit', parseInt(document.getElementById('agent-count').textContent))">Upgrade to L2 →</button>
       </div>
 
-      <!-- L3 -->
-      <div class="pb-card" data-tier="L3">
+      <!-- L3 — Coming Soon -->
+      <div class="pb-card" data-tier="L3" style="opacity:0.7;position:relative;">
+        <div style="position:absolute;top:1rem;right:1rem;font-family:'JetBrains Mono',monospace;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--border2);color:var(--muted);padding:0.2rem 0.55rem;">Coming Soon</div>
         <div class="pb-top">
           <span class="pb-badge">L3</span>
         </div>
         <div class="pb-name">IRL Sovereign Gateway</div>
         <div class="pb-tagline">For clients where compliance cannot reveal alpha.</div>
         <div class="pb-price" style="font-size:1.85rem;letter-spacing:-0.03em;">Enterprise</div>
-        <div class="pb-min">$8k–$25k / mo · QUOTED PER ENGAGEMENT</div>
+        <div class="pb-min">TEE + ZK · QUOTED PER ENGAGEMENT</div>
         <hr class="pb-divider">
         <ul class="pb-features">
           <li class="inherit"><span class="icon">↳</span><span>Everything in L2, plus:</span></li>
@@ -968,7 +1088,7 @@ asyncio.run(trade())</pre>
           <li><span class="icon">+</span><span><strong>Double-Green signing</strong> — API key inaccessible until MTA + MAR both pass</span></li>
           <li><span class="icon">+</span><span>Dedicated support · Quarterly review</span></li>
         </ul>
-        <a href="mailto:licensing@macropulse.live" class="pb-cta">Talk to us →</a>
+        <a href="mailto:licensing@macropulse.live" class="pb-cta" style="pointer-events:all;opacity:1;">Notify me →</a>
       </div>
 
     </div>
@@ -1030,6 +1150,47 @@ asyncio.run(trade())</pre>
     <a href="/privacy.html">Privacy</a>
   </div>
 </footer>
+
+<script>
+// ── IRL agent count picker ────────────────────────────────────
+function adjustAgents(delta) {
+  const el = document.getElementById('agent-count');
+  const tot = document.getElementById('agent-total');
+  let n = parseInt(el.textContent) + delta;
+  if (n < 3) n = 3;
+  if (n > 100) n = 100;
+  el.textContent = n;
+  tot.textContent = '$' + (n * 1200).toLocaleString() + '/mo';
+}
+
+// ── IRL Stripe checkout ───────────────────────────────────────
+async function irlCheckout(tier, agentCount) {
+  const btn = event.currentTarget;
+  const original = btn.textContent;
+  btn.textContent = 'Redirecting…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://api.macropulse.live/v1/billing/stripe/irl-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier, agent_count: agentCount }),
+    });
+    const data = await res.json();
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      alert(data.detail || 'Could not start checkout. Please email licensing@macropulse.live');
+      btn.textContent = original;
+      btn.disabled = false;
+    }
+  } catch (e) {
+    alert('Network error. Please email licensing@macropulse.live');
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+}
+</script>
 
 </body>
 </html>

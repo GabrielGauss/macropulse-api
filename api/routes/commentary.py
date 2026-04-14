@@ -159,9 +159,9 @@ async def get_regime_commentary() -> CommentaryResponse:
         logger.debug("Commentary cache hit for regime=%s time=%s", regime_row["regime"], regime_row["time"])
         return _commentary_cache[cache_key]
 
-    history = queries.fetch_regime_history(limit=14)
-    liquidity = queries.fetch_latest_liquidity(limit=7)
-    factors = queries.fetch_latest_factors(limit=1)
+    history = await queries.fetch_regime_history(limit=14)
+    liquidity = await queries.fetch_latest_liquidity(limit=7)
+    factors = await queries.fetch_latest_factors(limit=1)
 
     context = _build_context(regime_row, history, liquidity, factors)
     logger.info("Requesting Claude commentary for regime=%s (cache miss)", regime_row["regime"])

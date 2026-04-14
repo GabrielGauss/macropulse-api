@@ -12,8 +12,9 @@ import datetime as dt
 import logging
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.deps import require_paid
 from api.schemas.responses import ForecastResponse, ForecastRow
 from database import queries
 from services.forecaster import forecast_regime_probabilities
@@ -27,13 +28,14 @@ _MIN_HISTORY_ROWS = 10
 
 
 @router.get("/forecast", response_model=ForecastResponse, summary="5-day regime forecast")
-def get_forecast(
+async def get_forecast(
     horizon: int = Query(
         default=5,
         ge=1,
         le=10,
         description="Number of business days ahead to forecast (1–10).",
     ),
+    key_record: dict = Depends(require_paid),
 ) -> ForecastResponse:
     """
     Return an ARIMA-based forward projection of macro regime probabilities.
@@ -46,10 +48,10 @@ def get_forecast(
     The `confidence` field (0–1) reflects agreement across the probability
     forecasts: a highly concentrated forecast yields higher confidence.
     """
-    logger.info("GET /v1/forecast horizon=%d", horizon)
+    logger.info("GET /v1/forecast horizon=%d tier=%s", horizon, key_record.get("tier"))
 
     # ── Fetch history ─────────────────────────────────────────────────
-    raw_history = queries.fetch_regime_history(limit=60)
+    raw_history = await queries.fetch_regime_history(limit=60)
     if not raw_history:
         raise HTTPException(
             status_code=503,

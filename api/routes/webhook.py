@@ -25,7 +25,7 @@ class WebhookRequest(BaseModel):
 
 
 @router.post("/set", status_code=200)
-def set_webhook(
+async def set_webhook(
     body: WebhookRequest,
     key_record: dict = Depends(require_api_key),
 ):
@@ -38,7 +38,7 @@ def set_webhook(
 
     try:
         from database.queries import update_webhook_url
-        update_webhook_url(key_record["user_id"], url)
+        await update_webhook_url(key_record["user_id"], url)
     except Exception as exc:
         logger.error("webhook set error: %s", exc)
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
@@ -47,7 +47,7 @@ def set_webhook(
 
 
 @router.get("/test")
-def test_webhook(key_record: dict = Depends(require_api_key)):
+async def test_webhook(key_record: dict = Depends(require_api_key)):
     """Send a test payload to the configured webhook."""
     tier = key_record.get("tier", "free")
     if tier not in ("pro", "owner"):
@@ -55,7 +55,7 @@ def test_webhook(key_record: dict = Depends(require_api_key)):
 
     try:
         from database import queries
-        user = queries.get_user_by_id(key_record["user_id"])
+        user = await queries.get_user_by_id(key_record["user_id"])
     except Exception:
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
@@ -83,7 +83,7 @@ def test_webhook(key_record: dict = Depends(require_api_key)):
 
 
 @router.get("/info")
-def get_webhook_info(key_record: dict = Depends(require_api_key)):
+async def get_webhook_info(key_record: dict = Depends(require_api_key)):
     """Return current webhook configuration."""
     tier = key_record.get("tier", "free")
     if tier not in ("pro", "owner"):
@@ -91,7 +91,7 @@ def get_webhook_info(key_record: dict = Depends(require_api_key)):
 
     try:
         from database import queries
-        user = queries.get_user_by_id(key_record["user_id"])
+        user = await queries.get_user_by_id(key_record["user_id"])
     except Exception:
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 

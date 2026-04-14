@@ -31,7 +31,7 @@ Required variables that must be set before starting in production:
 | Variable | Description |
 |----------|-------------|
 | `MTA_SIGNING_KEY_HEX` | Ed25519 private key hex for regime signature |
-| `LS_WEBHOOK_SECRET` | Lemon Squeezy webhook HMAC signing secret |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook endpoint signing secret |
 | `ENV` | Must be `production` to activate startup guards |
 | `CORS_ORIGINS` | Must be explicit domains — wildcard `*` is rejected in production |
 
@@ -130,12 +130,32 @@ The API refuses to start if any of the following are missing or misconfigured wh
 | Variable | Check |
 |----------|-------|
 | `MTA_SIGNING_KEY_HEX` | Must be a valid 64-char Ed25519 private key hex — raises `ValueError` if invalid |
-| `LS_WEBHOOK_SECRET` | Must be set in production — raises `RuntimeError` if missing |
+| `STRIPE_WEBHOOK_SECRET` | Must be set in production — raises `RuntimeError` if missing |
 | `ENV` | Set to `production` to activate all startup guards |
 | `CORS_ORIGINS` | Must not contain `*` in production — raises `RuntimeError` if wildcard present |
 
-In `ENV=development`, missing `LS_WEBHOOK_SECRET` logs a warning instead of raising — allowing
+In `ENV=development`, missing `STRIPE_WEBHOOK_SECRET` logs a warning instead of raising — allowing
 local development without billing credentials.
+
+## Stripe Secret Rotation
+
+MacroPulse uses Stripe for subscription billing (Starter, Pro, IRL Sidecar, IRL Audit tiers).
+
+### Rotating the Stripe Secret Key
+
+1. Log into [Stripe Dashboard](https://dashboard.stripe.com) → Developers → API Keys
+2. Roll the restricted key
+3. Update `.env` on the production server: `STRIPE_SECRET_KEY=sk_live_...`
+4. Restart the API container:
+   ```bash
+   docker compose up -d api
+   ```
+
+### Rotating a Webhook Secret
+
+1. Stripe Dashboard → Developers → Webhooks → select endpoint → Roll signing secret
+2. Update `.env`: `STRIPE_WEBHOOK_SECRET=whsec_...` (or `STRIPE_IRL_WEBHOOK_SECRET` for IRL)
+3. Restart API: `docker compose up -d api`
 
 ---
 

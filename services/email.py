@@ -434,6 +434,185 @@ Questions? support@macropulse.live
     })
 
 
+def send_irl_welcome_email(
+    to: str,
+    license_key: str,
+    tier: str,
+    agent_count: int = 1,
+    is_upgrade: bool = False,
+) -> None:
+    """
+    Send IRL Engine onboarding email after Stripe payment.
+    Covers IRL Sidecar L1 and IRL Audit Platform L2.
+    Fire-and-forget — never blocks or raises.
+    """
+    is_audit = tier == "irl_audit"
+    tier_label = "IRL Audit Platform L2" if is_audit else "IRL Sidecar L1"
+    tier_short = "L2" if is_audit else "L1"
+    price_per = "$1,200" if is_audit else "$500"
+    action_word = "Upgraded" if is_upgrade else "Welcome to"
+    shown_once = "Shown once — store it securely." if not is_upgrade else "Use your existing license key."
+
+    text_content = f"""{action_word} IRL Engine — {tier_label}
+
+License key ({tier_short} · {agent_count} agent{'s' if agent_count != 1 else ''} · {price_per}/agent/mo):
+
+  {license_key}
+
+{shown_once}
+
+Quick start:
+  docker pull macropulse/irl-engine:{tier_short.lower()}
+  IRL_LICENSE={license_key} IRL_AGENTS={agent_count} docker-compose up
+
+SDK:
+  pip install irl-sdk
+  npm install irl-sdk
+
+Onboarding guide:
+  https://macropulse.live/irl-welcome.html
+
+Whitepaper:
+  https://macropulse.live/irl-whitepaper.html
+
+Questions?  licensing@macropulse.live
+"""
+
+    key_display = license_key if not is_upgrade else f"{license_key} (unchanged)"
+    agent_label = f"{agent_count} agent{'s' if agent_count != 1 else ''}"
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Inter',Arial,sans-serif;color:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:48px 16px;">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+
+  <!-- logo -->
+  <tr><td style="padding-bottom:32px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="width:8px;height:8px;border-radius:50%;background:#f59e0b;vertical-align:middle;"></td>
+      <td style="padding-left:8px;font-size:15px;font-weight:600;letter-spacing:-0.02em;vertical-align:middle;">IRL Engine &middot; MacroPulse</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- badge -->
+  <tr><td style="padding-bottom:20px;">
+    <span style="font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:#1a1400;color:#f59e0b;border:1px solid #3a2800;padding:4px 10px;">{tier_short} · {tier_label.upper()}</span>
+  </td></tr>
+
+  <!-- headline -->
+  <tr><td style="padding-bottom:6px;">
+    <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.03em;line-height:1.2;">{"Your IRL license is active." if not is_upgrade else "IRL plan upgraded."}</h1>
+  </td></tr>
+  <tr><td style="padding-bottom:28px;">
+    <p style="margin:0;font-size:14px;color:#888;">{tier_label} &middot; {agent_label} &middot; {price_per}/agent/mo</p>
+  </td></tr>
+
+  <!-- license key -->
+  <tr><td style="padding-bottom:6px;">
+    <p style="margin:0 0 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#555;">Your IRL License Key</p>
+    <div style="background:#111;border:1px solid #3a2800;border-radius:8px;padding:16px 20px;">
+      <code style="font-family:'Courier New',monospace;font-size:13px;color:#f59e0b;word-break:break-all;">{key_display}</code>
+    </div>
+  </td></tr>
+  <tr><td style="padding-bottom:28px;">
+    <p style="margin:6px 0 0;font-size:11px;color:#555;">{shown_once}</p>
+  </td></tr>
+
+  <!-- divider -->
+  <tr><td style="height:1px;background:#1f1f1f;"></td></tr>
+
+  <!-- quick start -->
+  <tr><td style="padding:28px 0;">
+    <p style="margin:0 0 16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#555;">Deploy in 3 Steps</p>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:14px;width:100%;"><tr>
+      <td style="width:24px;vertical-align:top;font-family:monospace;font-size:10px;color:#444;padding-top:2px;">01</td>
+      <td>
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;">Pull the engine image</p>
+        <div style="background:#111;border:1px solid #1f1f1f;border-radius:6px;padding:10px 14px;">
+          <code style="font-family:monospace;font-size:11px;color:#888;">docker pull <span style="color:#f59e0b;">macropulse/irl-engine:{tier_short.lower()}</span></code>
+        </div>
+      </td>
+    </tr></table>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:14px;width:100%;"><tr>
+      <td style="width:24px;vertical-align:top;font-family:monospace;font-size:10px;color:#444;padding-top:2px;">02</td>
+      <td>
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;">Set your environment</p>
+        <div style="background:#111;border:1px solid #1f1f1f;border-radius:6px;padding:10px 14px;">
+          <code style="font-family:monospace;font-size:11px;color:#888;">IRL_LICENSE=<span style="color:#f59e0b;">{license_key[:20]}...</span><br>IRL_AGENTS=<span style="color:#f59e0b;">{agent_count}</span><br>MTA_MODE=<span style="color:#f59e0b;">macropulse</span> &nbsp;<span style="color:#444;"># or 'custom' / 'none'</span></code>
+        </div>
+      </td>
+    </tr></table>
+
+    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+      <td style="width:24px;vertical-align:top;font-family:monospace;font-size:10px;color:#444;padding-top:2px;">03</td>
+      <td>
+        <p style="margin:0 0 4px;font-size:13px;font-weight:600;">Run the sandbox</p>
+        <p style="margin:0;font-size:12px;color:#666;">Open <code style="font-family:monospace;color:#888;">irl.macropulse.live/swagger-ui/</code> — three demo agents pre-seeded. Try <code style="font-family:monospace;color:#888;">POST /v1/authorize</code> and <code style="font-family:monospace;color:#888;">POST /v1/bind-execution</code> before deploying your own fleet.</p>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="height:1px;background:#1f1f1f;"></td></tr>
+
+  <!-- SDK row -->
+  <tr><td style="padding:20px 0;">
+    <p style="margin:0 0 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#555;">SDK</p>
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="padding-right:16px;">
+        <div style="background:#111;border:1px solid #1f1f1f;border-radius:6px;padding:8px 14px;">
+          <code style="font-family:monospace;font-size:11px;color:#888;">pip install <span style="color:#f59e0b;">irl-sdk</span></code>
+        </div>
+      </td>
+      <td>
+        <div style="background:#111;border:1px solid #1f1f1f;border-radius:6px;padding:8px 14px;">
+          <code style="font-family:monospace;font-size:11px;color:#888;">npm install <span style="color:#f59e0b;">irl-sdk</span></code>
+        </div>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="height:1px;background:#1f1f1f;"></td></tr>
+
+  <!-- CTA -->
+  <tr><td style="padding:28px 0;">
+    <a href="https://macropulse.live/irl-welcome.html"
+       style="display:inline-block;background:#f59e0b;color:#000;font-size:13px;font-weight:700;padding:10px 22px;text-decoration:none;letter-spacing:0.01em;">
+      Open Onboarding Guide &rarr;
+    </a>
+    &nbsp;
+    <a href="https://macropulse.live/irl-whitepaper.html"
+       style="display:inline-block;background:transparent;color:#666;font-size:13px;font-weight:500;padding:10px 22px;text-decoration:none;border:1px solid #2a2a2a;">
+      Read Whitepaper
+    </a>
+  </td></tr>
+
+  <!-- footer -->
+  <tr><td style="padding-top:16px;border-top:1px solid #1a1a1a;">
+    <p style="margin:0;font-size:11px;color:#444;line-height:1.8;">
+      IRL Engine &middot; MacroPulse &middot; <a href="mailto:licensing@macropulse.live" style="color:#555;text-decoration:none;">licensing@macropulse.live</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    _post({
+        "sender":      _get_sender(),
+        "to":          [{"email": to}],
+        "subject":     f"IRL Engine {tier_short} — your license is active",
+        "htmlContent": html_content,
+        "textContent": text_content,
+    })
+
+
 def send_upgrade_email(to: str, tier: str, key_prefix: str) -> None:
     """
     Notify an existing user that their plan was upgraded after a successful payment.

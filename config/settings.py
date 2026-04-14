@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     paddle_success_url: str = "https://macropulse.live/welcome"
     paddle_client_token: str = ""  # From Paddle dashboard → Developer Tools → Authentication
 
-    # ── Stripe Billing ──────────────────────────────────────────────
+    # ── Stripe Billing — MacroPulse API ─────────────────────────────
     stripe_secret_key: str = ""
     stripe_publishable_key: str = ""
     stripe_webhook_secret: str = ""         # whsec_... from Stripe dashboard
@@ -100,6 +100,18 @@ class Settings(BaseSettings):
     stripe_pro_product_id: str = ""         # prod_... for Pro
     stripe_success_url: str = "https://macropulse.live/welcome"
     stripe_cancel_url: str = "https://macropulse.live/pricing"
+
+    # ── Stripe Billing — IRL Engine ──────────────────────────────────
+    # IRL Sidecar L1 — $500 / agent / mo (min 1 agent)
+    stripe_irl_sidecar_price_id: str = ""       # price_1TLrfwBxwgqkQOv3VQ20H3Dk
+    stripe_irl_sidecar_product_id: str = ""     # prod_UKWj7PcXcO1PY9
+    # IRL Audit Platform L2 — $1,200 / agent / mo (min 3 agents)
+    stripe_irl_audit_price_id: str = ""         # price_1TLrgfBxwgqkQOv3Ur3mDsSU
+    stripe_irl_audit_product_id: str = ""       # prod_UKWk5todqtc8Fn
+    # Separate webhook secret for IRL (recommended: distinct endpoint in Stripe)
+    stripe_irl_webhook_secret: str = ""         # whsec_... — falls back to stripe_webhook_secret
+    stripe_irl_success_url: str = "https://macropulse.live/irl-welcome"
+    stripe_irl_cancel_url: str = "https://macropulse.live/irl.html#pricing"
 
     # ── CORS ────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]

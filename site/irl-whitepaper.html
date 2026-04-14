@@ -386,6 +386,17 @@ footer a:hover{color:var(--mu)}
       </ul>
       <p>This prevents a class of attacks where an agent accumulates authorized snapshots during a favorable regime and attempts to replay them during a different, unfavorable regime. Without L2 heartbeats, the time window between authorization and binding could in principle be exploited by an adversarial agent.</p>
 
+      <h3 style="margin-top:1.75rem;">L2 Audit Endpoint (MacroPulse MTA)</h3>
+      <p>MacroPulse MTA operators with an <strong>IRL Audit (L2)</strong> licence gain access to <code>GET /v1/irl/audit</code> — a deep decomposition endpoint that exposes the full signal state underlying each regime broadcast. The audit response includes:</p>
+      <ul>
+        <li><strong>PCA factor attribution</strong> (PC1–PC4) with directional scores — identifies which macro forces are driving the current regime</li>
+        <li><strong>Stress indicator z-scores</strong> vs 90-day window (VIX, HY spread, yield curve, DXY, net liquidity) — shows whether current readings are elevated or suppressed relative to recent history</li>
+        <li><strong>Liquidity attribution</strong> — net Fed liquidity in $bn with 30-day change and expansion/contraction trend</li>
+        <li><strong>Transition probability matrix</strong> — the HMM's next-state probabilities from the current regime, indicating transition risk</li>
+        <li><strong>Model drift health</strong> — PCA variance drift and feature mean shift flags, so operators can detect when the model is degrading before it affects regime output</li>
+      </ul>
+      <p>This endpoint is designed to support post-trade reconciliation, compliance audits, and internal risk review — giving the operator the same decomposition that produced the regime broadcast used in every authorization.</p>
+
       <div class="callout">
         <p><strong>What IRL does not do:</strong> IRL does not evaluate whether the agent's decision was correct, profitable, or wise. It only proves that the decision was made, under specific conditions, subject to specific policies, and that the execution matched the declared intent. Judgment remains with the operator.</p>
       </div>

@@ -184,12 +184,62 @@ async def get_public_latest():
     }
 
 
+@router.get("/regime")
+async def get_public_regime():
+    """
+    Current macro regime — no API key required.
+
+    Returns the live regime, risk score, equity exposure recommendation,
+    and a plain-English interpretation. Designed as the free-tier entry point:
+    gives enough signal to be useful, links to upgrade for the full package
+    (scorecard, factors, forecast, webhook alerts).
+    """
+    _EXPOSURE = {"expansion": "100%", "recovery": "75%", "tightening": "25%", "risk_off": "0%"}
+    _LABEL    = {"expansion": "Expansion", "recovery": "Recovery",
+                 "tightening": "Tightening", "risk_off": "Risk-Off"}
+    _EMOJI    = {"expansion": "🟢", "recovery": "🔵", "tightening": "🟡", "risk_off": "🔴"}
+    _WHAT     = {
+        "expansion":  "Fed liquidity is ample, credit spreads are tight, volatility suppressed. Full risk-on positioning is warranted.",
+        "recovery":   "Liquidity re-injecting after stress. Risk appetite healing but not fully restored. Positive bias with elevated caution.",
+        "tightening": "Fed draining liquidity or hiking. Credit spreads widening. Defensive positioning appropriate — reduce duration and leveraged exposure.",
+        "risk_off":   "Acute stress conditions. Spiking spreads and volatility. Capital preservation is the only objective.",
+    }
+
+    try:
+        from database.queries import fetch_current_regime
+        row = await fetch_current_regime()
+    except Exception as exc:
+        logger.error("public regime DB error: %s", exc)
+        raise HTTPException(status_code=503, detail="Data temporarily unavailable")
+
+    if row is None:
+        raise HTTPException(status_code=503, detail="No regime data available yet")
+
+    regime = str(row.get("regime", "recovery")).lower()
+    risk_score = float(row.get("risk_score") or 0)
+    date = str(row.get("time", ""))[:10]
+
+    return {
+        "date": date,
+        "regime": regime,
+        "regime_label": _LABEL.get(regime, regime.title()),
+        "emoji": _EMOJI.get(regime, "⚪"),
+        "risk_score": round(risk_score, 1),
+        "equity_exposure": _EXPOSURE.get(regime, "—"),
+        "interpretation": _WHAT.get(regime, ""),
+        "upgrade": {
+            "message": "Get the full signal package — scorecard, 5-day forecast, webhook alerts, and factor decomposition.",
+            "url": "https://macropulse.live/#pricing",
+        },
+    }
+
+
 class SubscribeRequest(BaseModel):
     email: EmailStr
 
 
 @router.post("/subscribe", status_code=202)
-def subscribe(body: SubscribeRequest):
+async def subscribe(body: SubscribeRequest):
     """
     Newsletter subscribe — captures email for the weekly macro brief.
     No API key required.
@@ -198,7 +248,7 @@ def subscribe(body: SubscribeRequest):
 
     try:
         from database.queries import create_newsletter_subscriber
-        create_newsletter_subscriber(email)
+        await create_newsletter_subscriber(email)
     except Exception as exc:
         logger.error("newsletter subscribe DB error: %s", exc)
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")

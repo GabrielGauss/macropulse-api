@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.9
+milestone_name: IRL L2, narrative, forecast, alerts, free tier, weekly digest
 status: completed
-stopped_at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
-last_updated: "2026-04-03T14:31:31.846Z"
-last_activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR erasure endpoint, atomic anonymisation, full test suite green)
+stopped_at: v1.9 shipped — all features deployed to VPS, documentation updated, pushed to both remotes
+last_updated: "2026-04-14T02:15:00.000Z"
+last_activity: 2026-04-14 — v1.9 shipped (IRL L2 audit, LLM narrative, 5-day forecast fix, regime alerts, public/regime, account endpoint, weekly digest, full docs refresh)
 progress:
   total_phases: 12
-  completed_phases: 10
+  completed_phases: 12
   total_plans: 28
   completed_plans: 29
 ---
@@ -24,17 +24,21 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 
 ## Current Position
 
-Phase: Phase 11 — GDPR Compliance (complete: 11-01)
-Plan: 11-01 complete (GDPR right-to-erasure: DELETE /v1/auth/me, anonymise_user(), migration 011, 5 new tests — 33 total passing)
-Status: Phase 11 complete (GDPR-01–04 all covered)
-Last activity: 2026-04-01 — Phase 11 Plan 01 complete (GDPR erasure endpoint, atomic anonymisation, full test suite green)
+Phase: v1.9 — complete
+Status: All features shipped, documentation refreshed, pushed to GitHub (both remotes) + Vercel deployed
+Last activity: 2026-04-14 — v1.9 ship complete
 
-Progress (v1.1): [██████░░░░] 60%
+Progress (v1.9): [██████████] 100%
 
 v1.0 complete: Phases 1–5 shipped (2026-03-18 to 2026-03-19)
 Phase 6 complete: Secrets, Webhooks, Infra Hardening (2026-03-29)
 Phase 7 complete: Auth Rate Limiting — SEC-30–33 (2026-03-30)
 Phase 8 complete: asyncpg migration — pool, queries, route handlers, middleware (DB-10–DB-13)
+Phase 9 complete: Prometheus metrics + pipeline failure/staleness alerts (2026-04-01)
+Phase 10 complete: Stripe billing — Checkout, webhooks, subscription lifecycle (2026-04-07)
+Phase 11 complete: GDPR erasure endpoint + anonymise_user() (2026-04-01)
+v1.8 shipped: IRL Engine v1.2 — Layer 2 heartbeat live, Python SDK, MtaMode::None (2026-04-08)
+v1.9 shipped: IRL L2 Audit endpoint, LLM narrative, 5-day forecast fix, regime alerts (X + Discord), public/regime free-tier endpoint, account endpoint, signals/history endpoint, weekly digest, portal redirect (2026-04-14)
 
 ## v1.1 Phase Overview
 
@@ -133,17 +137,15 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Phase 6 must begin immediately: `.env` in git history contains live Brevo API key and MTA Ed25519 private key
-- Paddle approval pending — Phase 10 unblocks once approved
+- Stripe subscription webhooks: verify all 6 event handlers work end-to-end in production with real Stripe test events
+- IRL L3 (sovereign gateway, ZK proofs) — not started, deferred post v2.0
 
 ### Blockers/Concerns
 
-- Live secrets in git history (Brevo API key, MTA Ed25519 key) — Phase 6 is highest priority
-- Lemon Squeezy webhook has silent-accept vulnerability when LS_WEBHOOK_SECRET is unset — Phase 6
-- Paddle approval still pending — Phase 10 may need to wait on external approval
+- None blocking. Paddle was replaced by Stripe. Secrets were purged from git history in Phase 6.
 
 ## Session Continuity
 
-Last session: 2026-04-01T23:45:00Z
-Stopped at: Completed 11-01-PLAN.md — GDPR right-to-erasure DELETE /v1/auth/me + anonymise_user() + 5 tests (33 total passing)
+Last session: 2026-04-14T02:15:00Z
+Stopped at: v1.9 fully deployed — VPS running, both GitHub remotes pushed, Vercel site deployed
 Resume file: None

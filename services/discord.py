@@ -126,3 +126,70 @@ def post_daily_signal(
         logger.error("Discord webhook failed: %s", exc)
     except Exception:
         logger.error("Discord webhook unexpected error", exc_info=True)
+
+
+def post_regime_change(
+    prev_regime: str,
+    new_regime: str,
+    risk_score: float,
+    date: str,
+) -> None:
+    """
+    Post a regime change alert embed to Discord.
+    Fire-and-forget — never raises.
+    """
+    settings = get_settings()
+    webhook_url = settings.discord_webhook_url or _FALLBACK_WEBHOOK
+    if not webhook_url:
+        logger.debug("No Discord webhook URL configured; skipping regime change post.")
+        return
+
+    prev_emoji = _REGIME_EMOJI.get(prev_regime, "⚪")
+    new_emoji  = _REGIME_EMOJI.get(new_regime, "⚪")
+    prev_label = _REGIME_LABEL.get(prev_regime, prev_regime.title())
+    new_label  = _REGIME_LABEL.get(new_regime, new_regime.title())
+    color      = _REGIME_COLOR.get(new_regime, 0x888888)
+
+    _EXPOSURE = {
+        "expansion":  "100%",
+        "recovery":   "75%",
+        "tightening": "25%",
+        "risk_off":   "0%",
+    }
+    exposure = _EXPOSURE.get(new_regime, "—")
+
+    description = (
+        f"## ⚡ Regime Shift Detected\n\n"
+        f"{prev_emoji} **{prev_label}** → {new_emoji} **{new_label}**\n\n"
+        f"**Risk Score:** `{risk_score:+.1f}`\n"
+        f"**New Equity Exposure:** `{exposure}`\n\n"
+        f"*Updated {date} · 18:30 UTC*"
+    )
+
+    embed = {
+        "title": "MacroPulse · Regime Change Alert",
+        "description": description,
+        "color": color,
+        "footer": {
+            "text": "macropulse.live  ·  Full signal + dashboard →"
+        },
+    }
+
+    payload = {"embeds": [embed]}
+    data = json.dumps(payload).encode()
+    req = Request(
+        webhook_url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "MacroPulse/1.0 (https://macropulse.live)",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=10) as resp:
+            logger.info("Discord regime change posted (status %d)", resp.status)
+    except URLError as exc:
+        logger.error("Discord regime change webhook failed: %s", exc)
+    except Exception:
+        logger.error("Discord regime change unexpected error", exc_info=True)

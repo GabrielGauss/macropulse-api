@@ -329,33 +329,32 @@ async def lemonsqueezy_webhook(request: Request) -> dict:
 
 async def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
     """
-    Ensure a paid user has an account and an active API key at the given tier.
+    Ensure a paid user has a MacroPulse account and an active API key at the given tier.
 
+    Scoped to product_line='macropulse' so IRL keys are never touched.
     Returns (user_id, key_prefix, key_is_new).
-    key_is_new=True  → a new plaintext key was just generated and emailed.
-    key_is_new=False → user already had a key; tier was upgraded in place.
     """
     from api.auth import generate_api_key, hash_key
     from services.email import send_welcome_email, send_upgrade_email
 
-    # Get or create user
     user = await queries.get_user_by_email(email)
     if user is None:
         user = await queries.create_user(email)
 
     uid: int = user["id"]
 
-    # Check for an existing active key
-    existing_keys = await queries.get_active_keys_for_user(uid)
+    # Scope to MacroPulse product line — prevents cross-product key collision
+    existing_keys = await queries.get_active_keys_for_user(uid, product_line="macropulse")
 
     if not existing_keys:
-        # New user (or one without a key) — generate and deliver a key
         raw_key = generate_api_key()
         await queries.create_api_key(
             user_id=uid,
             key_hash=hash_key(raw_key),
             key_prefix=raw_key[:12],
             tier=tier,
+            product_line="macropulse",
+            agent_count=1,
         )
         try:
             send_welcome_email(email, raw_key, tier)
@@ -363,8 +362,9 @@ async def _ls_provision(email: str, tier: str) -> tuple[int, str, bool]:
             logger.error("send_welcome_email failed for %s: %s", email, exc)
         return uid, raw_key[:12], True
     else:
-        # Existing user — upgrade tier on all active keys and notify
-        await queries.upgrade_user_tier(uid, tier)
+        # Re-activate if suspended, then upgrade tier
+        await queries.reactivate_user_keys(uid, product_line="macropulse")
+        await queries.upgrade_user_tier(uid, tier, product_line="macropulse")
         key_prefix = existing_keys[0]["key_prefix"]
         try:
             send_upgrade_email(email, tier, key_prefix)
@@ -438,6 +438,57 @@ async def _ls_handle(event: str, attrs: dict) -> dict:
         return {"result": "ignored", "event": event}
 
 
+# ── IRL Engine provisioning ──────────────────────────────────────────────────
+
+async def _irl_provision(email: str, tier: str, agent_count: int = 1) -> tuple[int, str, bool]:
+    """
+    Ensure an IRL customer has an account and a license key at the given tier.
+
+    Scoped to product_line='irl' — one IRL key per customer, independent from
+    any MacroPulse key they may hold. L2 Audit requires minimum 3 agents;
+    this is enforced at checkout and stored on the key for billing reconciliation.
+    Returns (user_id, license_key_prefix, key_is_new).
+    """
+    from api.auth import generate_api_key, hash_key
+    from services.email import send_irl_welcome_email
+
+    user = await queries.get_user_by_email(email)
+    if user is None:
+        user = await queries.create_user(email)
+
+    uid: int = user["id"]
+
+    # Scope to IRL product line only
+    existing_keys = await queries.get_active_keys_for_user(uid, product_line="irl")
+
+    if not existing_keys:
+        raw_key = generate_api_key()
+        await queries.create_api_key(
+            user_id=uid,
+            key_hash=hash_key(raw_key),
+            key_prefix=raw_key[:12],
+            tier=tier,
+            product_line="irl",
+            agent_count=agent_count,
+        )
+        try:
+            send_irl_welcome_email(email, raw_key, tier, agent_count)
+        except Exception as exc:
+            logger.error("send_irl_welcome_email failed for %s: %s", email, exc)
+        return uid, raw_key[:12], True
+    else:
+        # Existing IRL customer — re-activate if suspended, upgrade tier, update agent count
+        await queries.reactivate_user_keys(uid, product_line="irl")
+        await queries.upgrade_user_tier(uid, tier, product_line="irl")
+        await queries.update_agent_count(uid, agent_count, product_line="irl")
+        key_prefix = existing_keys[0]["key_prefix"]
+        try:
+            send_irl_welcome_email(email, key_prefix + "...", tier, agent_count, is_upgrade=True)
+        except Exception as exc:
+            logger.error("send_irl_welcome_email (upgrade) failed for %s: %s", email, exc)
+        return uid, key_prefix, False
+
+
 # ── Stripe ───────────────────────────────────────────────────────────────────
 
 class StripeCheckoutRequest(BaseModel):
@@ -480,6 +531,87 @@ async def stripe_public_checkout(body: StripeCheckoutRequest) -> dict:
         raise HTTPException(status_code=502, detail="Could not create checkout session.")
 
     return {"checkout_url": session.url, "tier": tier}
+
+
+class IrlCheckoutRequest(BaseModel):
+    tier: str         # "irl_sidecar" | "irl_audit"
+    agent_count: int  # number of agents — min 1 for Sidecar, min 3 for Audit
+
+
+@router.post(
+    "/stripe/irl-checkout",
+    summary="Create a Stripe checkout session for IRL Engine products",
+)
+async def stripe_irl_public_checkout(body: IrlCheckoutRequest) -> dict:
+    """
+    Creates a Stripe hosted checkout for IRL Sidecar L1 or IRL Audit Platform L2.
+    Uses per-unit pricing — quantity = agent_count.
+    No auth required; Stripe collects the email; webhook provisions the IRL license.
+    """
+    import stripe as stripe_lib
+
+    settings = get_settings()
+    tier = body.tier.lower()
+
+    if tier == "irl_sidecar":
+        price_id = settings.stripe_irl_sidecar_price_id
+        min_agents = 1
+    elif tier == "irl_audit":
+        price_id = settings.stripe_irl_audit_price_id
+        min_agents = 3
+    else:
+        raise HTTPException(status_code=400, detail="tier must be 'irl_sidecar' or 'irl_audit'.")
+
+    agent_count = max(body.agent_count, min_agents)
+
+    if not price_id:
+        raise HTTPException(status_code=503, detail=f"IRL price ID for '{tier}' not configured yet.")
+
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    try:
+        session = stripe_lib.checkout.Session.create(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": agent_count}],
+            success_url=settings.stripe_irl_success_url + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=settings.stripe_irl_cancel_url,
+            metadata={"tier": tier, "agent_count": str(agent_count)},
+        )
+    except Exception as exc:
+        logger.error("Stripe IRL checkout error: %s", exc)
+        raise HTTPException(status_code=502, detail="Could not create IRL checkout session.")
+
+    return {"checkout_url": session.url, "tier": tier, "agent_count": agent_count}
+
+
+@router.get(
+    "/stripe/session-info",
+    summary="Get IRL tier + agent count from a completed checkout session",
+    include_in_schema=False,  # internal use by irl-welcome page only
+)
+async def stripe_session_info(session_id: str) -> dict:
+    """
+    Returns { tier, agent_count } from a Stripe checkout session.
+    Used by irl-welcome.html to populate the onboarding UI without requiring auth.
+    Only exposes non-sensitive metadata; never returns email or customer data.
+    """
+    import stripe as stripe_lib
+    settings = get_settings()
+
+    if not session_id or not session_id.startswith("cs_"):
+        raise HTTPException(status_code=400, detail="Invalid session_id.")
+
+    stripe_lib.api_key = settings.stripe_secret_key
+    try:
+        session = stripe_lib.checkout.Session.retrieve(session_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Session not found.")
+
+    meta = session.get("metadata") or {}
+    return {
+        "tier": meta.get("tier", ""),
+        "agent_count": int(meta.get("agent_count", 1)),
+    }
 
 
 @router.post(
@@ -546,7 +678,7 @@ async def stripe_portal(key_record: dict = Depends(require_api_key)) -> dict:
     try:
         session = stripe_lib.billing_portal.Session.create(
             customer=user["stripe_customer_id"],
-            return_url="https://macropulse.live/dashboard",
+            return_url="https://api.macropulse.live/portal",
         )
     except Exception as exc:
         logger.error("Stripe portal error for user_id=%d: %s", user_id, exc)
@@ -616,12 +748,16 @@ async def stripe_webhook(
 
 
 def _stripe_tier_from_price(price_id: str) -> str | None:
-    """Map a Stripe price ID to a MacroPulse tier."""
+    """Map a Stripe price ID to a MacroPulse or IRL tier."""
     settings = get_settings()
     if price_id == settings.stripe_starter_price_id:
         return "starter"
     if price_id == settings.stripe_pro_price_id:
         return "pro"
+    if price_id == settings.stripe_irl_sidecar_price_id:
+        return "irl_sidecar"
+    if price_id == settings.stripe_irl_audit_price_id:
+        return "irl_audit"
     return None
 
 
@@ -644,7 +780,12 @@ async def _stripe_handle(event: dict, settings) -> dict:
             logger.warning("Stripe checkout.session.completed missing tier/email: %s", obj.get("id"))
             return {"result": "missing_tier_or_email"}
 
-        uid, key_prefix, is_new = await _ls_provision(email, tier)
+        if tier in ("irl_sidecar", "irl_audit"):
+            agent_count = int(obj.get("metadata", {}).get("agent_count", "1"))
+            uid, key_prefix, is_new = await _irl_provision(email, tier, agent_count)
+        else:
+            uid, key_prefix, is_new = await _ls_provision(email, tier)
+
         await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, tier, "active")
         action = f"{'created' if is_new else 'upgraded'}_to_{tier}"
         logger.info("Stripe checkout: uid=%s email=%s action=%s", uid, email, action)
@@ -663,14 +804,24 @@ async def _stripe_handle(event: dict, settings) -> dict:
             return {"result": "user_not_found", "customer_id": customer_id}
 
         uid = user["id"]
+        product_line = "irl" if (tier or "").startswith("irl_") else "macropulse"
+
         if sub_status in ("active", "trialing") and tier:
-            await queries.upgrade_user_tier(uid, tier)
+            await queries.reactivate_user_keys(uid, product_line=product_line)
+            await queries.upgrade_user_tier(uid, tier, product_line=product_line)
+            # For IRL: sync agent count from subscription quantity
+            if product_line == "irl":
+                qty = (obj.get("items", {}).get("data") or [{}])[0].get("quantity", 1)
+                await queries.update_agent_count(uid, int(qty), product_line="irl")
             await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, price_id, sub_status)
             return {"result": f"updated_to_{tier}", "status": sub_status}
         elif sub_status in ("canceled", "unpaid", "past_due"):
             await queries.upsert_stripe_subscription(uid, customer_id, subscription_id, price_id or "", sub_status)
-            if sub_status in ("canceled", "unpaid"):
-                await queries.upgrade_user_tier(uid, "free")
+            if sub_status == "past_due":
+                await queries.suspend_user_keys(uid, product_line=product_line)
+                return {"result": "suspended_past_due", "status": sub_status}
+            elif sub_status in ("canceled", "unpaid"):
+                await queries.upgrade_user_tier(uid, "free", product_line=product_line)
                 return {"result": "downgraded_to_free", "status": sub_status}
         return {"result": f"no_tier_change_status={sub_status}"}
 
@@ -678,40 +829,53 @@ async def _stripe_handle(event: dict, settings) -> dict:
     elif event_type == "customer.subscription.deleted":
         customer_id = obj.get("customer", "")
         subscription_id = obj.get("id", "")
+        price_id = (obj.get("items", {}).get("data") or [{}])[0].get("price", {}).get("id", "")
+        tier = _stripe_tier_from_price(price_id)
+        product_line = "irl" if (tier or "").startswith("irl_") else "macropulse"
 
         user = await queries.get_user_by_stripe_customer(customer_id)
         if user:
-            await queries.upgrade_user_tier(user["id"], "free")
+            await queries.upgrade_user_tier(user["id"], "free", product_line=product_line)
             await queries.upsert_stripe_subscription(user["id"], customer_id, subscription_id, "", "canceled")
             return {"result": "deleted_downgraded_to_free"}
         return {"result": "user_not_found"}
 
     # ── invoice.paid ─────────────────────────────────────────────────
     elif event_type == "invoice.paid":
-        # Payment confirmed — ensure user is active (handles recovery from past_due)
+        # Payment confirmed — lift suspension and ensure correct tier (handles recovery from past_due)
         customer_id = obj.get("customer", "")
         subscription_id = obj.get("subscription", "")
         price_id = (obj.get("lines", {}).get("data") or [{}])[0].get("price", {}).get("id", "")
         tier = _stripe_tier_from_price(price_id)
+        product_line = "irl" if (tier or "").startswith("irl_") else "macropulse"
 
         user = await queries.get_user_by_stripe_customer(customer_id)
         if user and tier:
-            await queries.upgrade_user_tier(user["id"], tier)
+            await queries.reactivate_user_keys(user["id"], product_line=product_line)
+            await queries.upgrade_user_tier(user["id"], tier, product_line=product_line)
             await queries.upsert_stripe_subscription(user["id"], customer_id, subscription_id, price_id, "active")
-            return {"result": "payment_confirmed_access_active"}
+            return {"result": "payment_confirmed_access_restored"}
         return {"result": "invoice_paid_logged"}
 
     # ── invoice.payment_failed ───────────────────────────────────────
     elif event_type == "invoice.payment_failed":
         customer_id = obj.get("customer", "")
-        logger.warning("Stripe invoice.payment_failed for customer=%s — Stripe handles dunning", customer_id)
+        subscription_id = obj.get("subscription", "")
+        price_id = (obj.get("lines", {}).get("data") or [{}])[0].get("price", {}).get("id", "")
+        tier = _stripe_tier_from_price(price_id)
+        product_line = "irl" if (tier or "").startswith("irl_") else "macropulse"
+
+        logger.warning(
+            "Stripe invoice.payment_failed for customer=%s product_line=%s — suspending keys",
+            customer_id, product_line,
+        )
         user = await queries.get_user_by_stripe_customer(customer_id)
         if user:
+            await queries.suspend_user_keys(user["id"], product_line=product_line)
             await queries.upsert_stripe_subscription(
-                user["id"], customer_id,
-                obj.get("subscription", ""), "", "past_due"
+                user["id"], customer_id, subscription_id, price_id or "", "past_due"
             )
-        return {"result": "payment_failed_logged"}
+        return {"result": "payment_failed_keys_suspended"}
 
     # ── invoice.payment_action_required ─────────────────────────────
     elif event_type == "invoice.payment_action_required":

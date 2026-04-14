@@ -3,11 +3,12 @@ Regime change alert delivery.
 
 Called by the daily pipeline when a regime transition is detected.
 Sends email alerts to all Starter/Pro users and webhook POSTs to Pro users
-who have configured a webhook_url.
+who have configured a webhook_url.  Also posts to X and Discord.
 """
 from __future__ import annotations
 
 import logging
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -20,10 +21,10 @@ _REGIME_LABELS = {
 }
 
 _EXPOSURE = {
-    "expansion": "100%",
-    "recovery":  "75%",
+    "expansion":  "100%",
+    "recovery":   "75%",
     "tightening": "25%",
-    "risk_off":  "0%",
+    "risk_off":   "0%",
 }
 
 _REGIME_EMOJI = {
@@ -33,33 +34,159 @@ _REGIME_EMOJI = {
     "risk_off":   "🔴",
 }
 
+_REGIME_COLOR_HEX = {
+    "expansion":  "#22c55e",
+    "recovery":   "#3b82f6",
+    "tightening": "#f59e0b",
+    "risk_off":   "#ef4444",
+}
 
-def send_regime_change_alerts(prev_regime: str, new_regime: str, risk_score: float, date: str) -> None:
+_REGIME_BG = {
+    "expansion":  "rgba(34,197,94,0.08)",
+    "recovery":   "rgba(59,130,246,0.08)",
+    "tightening": "rgba(245,158,11,0.08)",
+    "risk_off":   "rgba(239,68,68,0.08)",
+}
+
+_WHAT_IT_MEANS = {
+    "expansion": (
+        "Fed liquidity is ample, credit spreads are tight, volatility is suppressed. "
+        "This is the highest-return macro environment across asset classes — "
+        "full equity exposure is warranted."
+    ),
+    "recovery": (
+        "Liquidity is re-injecting after stress. Risk appetite is healing but not fully "
+        "restored. Positive bias with elevated caution — 75% equity exposure."
+    ),
+    "tightening": (
+        "The Fed is draining liquidity or hiking. Credit spreads are widening. "
+        "Defensive positioning is appropriate — reduce duration and leveraged exposure. "
+        "25% equity exposure."
+    ),
+    "risk_off": (
+        "Acute stress or crisis conditions. Emergency liquidity injections, spiking spreads "
+        "and volatility. Capital preservation is the only objective — 0% equity exposure."
+    ),
+}
+
+
+async def send_regime_change_alerts(
+    prev_regime: str,
+    new_regime: str,
+    risk_score: float,
+    date: str,
+) -> None:
     """
     Notify all eligible users of a regime change.
-    Called by the pipeline after a regime transition is confirmed.
+
+    Async — must be awaited. Calls the async get_alert_recipients() query
+    and optionally posts to X and Discord for public visibility.
     """
     from database.queries import get_alert_recipients
 
     prev_label   = _REGIME_LABELS.get(prev_regime, prev_regime)
     new_label    = _REGIME_LABELS.get(new_regime, new_regime)
     new_exposure = _EXPOSURE.get(new_regime, "—")
-    emoji        = _REGIME_EMOJI.get(new_regime, "⚪")
+    new_emoji    = _REGIME_EMOJI.get(new_regime, "⚪")
+    prev_emoji   = _REGIME_EMOJI.get(prev_regime, "⚪")
+    accent_color = _REGIME_COLOR_HEX.get(new_regime, "#22c55e")
+    accent_bg    = _REGIME_BG.get(new_regime, "rgba(34,197,94,0.08)")
+    what_it_means = _WHAT_IT_MEANS.get(new_regime, "")
 
-    subject = f"{emoji} MacroPulse: Regime shift → {new_label}"
-    body_html = f"""
-<div style="font-family:monospace;background:#0a0a0a;color:#f0f0f0;padding:32px;max-width:560px;">
-  <div style="font-size:11px;color:#666;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">MacroPulse · Regime Alert · {date}</div>
-  <div style="font-size:22px;font-weight:700;margin-bottom:8px;">{prev_label} → {new_label}</div>
-  <div style="font-size:13px;color:#aaa;margin-bottom:24px;">Equity exposure: <strong style="color:#f0f0f0;">{new_exposure}</strong> &nbsp;·&nbsp; Risk score: <strong style="color:#f0f0f0;">{risk_score:+.1f}</strong></div>
-  <a href="https://api.macropulse.live" style="display:inline-block;background:#f0f0f0;color:#0a0a0a;padding:10px 24px;border-radius:6px;font-weight:600;text-decoration:none;font-size:13px;">Open Dashboard →</a>
-  <div style="margin-top:32px;font-size:11px;color:#444;border-top:1px solid #1f1f1f;padding-top:16px;">
-    MacroPulse · <a href="https://macropulse.live" style="color:#666;">macropulse.live</a>
-  </div>
-</div>
-"""
+    subject = f"{new_emoji} MacroPulse: Regime shift → {new_label}"
 
-    payload = {
+    body_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#080808;font-family:'Inter',system-ui,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#080808;padding:40px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+      <!-- Header -->
+      <tr><td style="padding-bottom:28px;">
+        <div style="font-size:11px;color:#555;letter-spacing:0.12em;text-transform:uppercase;font-family:'Courier New',monospace;">
+          MacroPulse · Regime Alert · {date}
+        </div>
+      </td></tr>
+
+      <!-- Shift card -->
+      <tr><td style="background:#0d0d0d;border:1px solid #1f1f1f;border-left:3px solid {accent_color};padding:28px 32px;margin-bottom:24px;">
+        <div style="font-size:12px;color:#666;letter-spacing:0.1em;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:12px;">
+          Regime Transition
+        </div>
+        <div style="font-size:28px;font-weight:700;color:#f0f0f0;letter-spacing:-0.03em;margin-bottom:4px;">
+          {prev_emoji}&nbsp;{prev_label} <span style="color:#444;font-weight:400;">→</span> {new_emoji}&nbsp;{new_label}
+        </div>
+        <div style="font-size:13px;color:#888;margin-top:10px;font-family:'Courier New',monospace;">
+          Risk score:&nbsp;<strong style="color:#f0f0f0;">{risk_score:+.1f}</strong>
+          &nbsp;&nbsp;·&nbsp;&nbsp;
+          Equity exposure:&nbsp;<strong style="color:{accent_color};">{new_exposure}</strong>
+        </div>
+      </td></tr>
+
+      <!-- Spacer -->
+      <tr><td style="height:20px;"></td></tr>
+
+      <!-- What it means -->
+      <tr><td style="background:#0d0d0d;border:1px solid #1f1f1f;padding:24px 32px;">
+        <div style="font-size:11px;color:#555;letter-spacing:0.1em;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:10px;">
+          What this means
+        </div>
+        <div style="font-size:14px;color:#b0b0b0;line-height:1.7;">
+          {what_it_means}
+        </div>
+      </td></tr>
+
+      <!-- Spacer -->
+      <tr><td style="height:28px;"></td></tr>
+
+      <!-- CTA -->
+      <tr><td>
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-right:12px;">
+              <a href="https://api.macropulse.live"
+                 style="display:inline-block;background:{accent_color};color:#000;
+                        padding:11px 26px;font-size:13px;font-weight:700;
+                        text-decoration:none;letter-spacing:0.01em;">
+                Open Dashboard →
+              </a>
+            </td>
+            <td>
+              <a href="https://macropulse.live"
+                 style="display:inline-block;background:transparent;color:#888;
+                        border:1px solid #2a2a2a;padding:10px 24px;
+                        font-size:13px;text-decoration:none;">
+                Full Signal
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="padding-top:40px;border-top:1px solid #1a1a1a;margin-top:40px;">
+        <div style="font-size:11px;color:#444;line-height:1.7;">
+          You're receiving this because you have an active MacroPulse Starter or Pro subscription.<br/>
+          <a href="https://api.macropulse.live" style="color:#555;">Manage alerts &amp; subscription →</a>
+        </div>
+        <div style="font-size:10px;color:#333;margin-top:8px;font-family:'Courier New',monospace;">
+          MacroPulse · api.macropulse.live · PCA + HMM · Updated 18:30 UTC daily
+        </div>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
+
+    webhook_payload = {
         "regime_change": {
             "from": prev_regime,
             "to": new_regime,
@@ -71,22 +198,19 @@ def send_regime_change_alerts(prev_regime: str, new_regime: str, risk_score: flo
         }
     }
 
+    # ── Fetch recipients (async) ─────────────────────────────────
     try:
-        recipients = get_alert_recipients()
+        recipients = await get_alert_recipients()
     except Exception as exc:
         logger.error("alerts: failed to fetch recipients: %s", exc)
-        return
+        recipients = []
 
     for user in recipients:
-        # Email alert — all starter/pro users
+        # Email — all starter/pro users
         try:
             from services.email import send_email
-            send_email(
-                to=user["email"],
-                subject=subject,
-                html=body_html,
-            )
-            logger.info("alert email sent to %s", user["email"])
+            send_email(to=user["email"], subject=subject, html=body_html)
+            logger.info("regime alert email → %s", user["email"])
         except Exception as exc:
             logger.warning("alert email failed for %s: %s", user["email"], exc)
 
@@ -95,13 +219,32 @@ def send_regime_change_alerts(prev_regime: str, new_regime: str, risk_score: flo
             try:
                 resp = httpx.post(
                     user["webhook_url"],
-                    json=payload,
+                    json=webhook_payload,
                     timeout=10.0,
                     headers={"User-Agent": "MacroPulse-Alerts/1.0", "Content-Type": "application/json"},
                 )
-                logger.info("webhook delivered to %s → %d", user["webhook_url"][:40], resp.status_code)
+                logger.info("webhook delivered → %s (%d)", user["webhook_url"][:40], resp.status_code)
             except Exception as exc:
                 logger.warning("webhook failed for user %s: %s", user["id"], exc)
+
+    # ── X (Twitter) — regime change post ────────────────────────
+    try:
+        from services.twitter import post_regime_change_tweet
+        post_regime_change_tweet(prev_regime, new_regime, risk_score, date)
+    except Exception as exc:
+        logger.warning("regime change tweet failed: %s", exc)
+
+    # ── Discord — regime change embed ───────────────────────────
+    try:
+        from services.discord import post_regime_change
+        post_regime_change(prev_regime, new_regime, risk_score, date)
+    except Exception as exc:
+        logger.warning("regime change Discord post failed: %s", exc)
+
+    logger.info(
+        "Regime change alerts dispatched: %s → %s (%d recipients)",
+        prev_regime, new_regime, len(recipients),
+    )
 
 
 def alert_drift_warning(

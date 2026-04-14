@@ -416,11 +416,83 @@ async def upsert_stripe_subscription(
         )
 
 
-async def upgrade_user_tier(user_id: int, tier: str) -> None:
-    """Set the tier on all active API keys for a user."""
-    sql = "UPDATE api_keys SET tier = $1 WHERE user_id = $2 AND is_active = TRUE;"
+async def upgrade_user_tier(
+    user_id: int,
+    tier: str,
+    product_line: str | None = None,
+) -> None:
+    """
+    Set the tier on active API keys for a user.
+
+    Pass product_line to scope the update to 'macropulse' or 'irl' keys only.
+    Without product_line, updates ALL active keys (legacy behaviour).
+    """
+    if product_line:
+        sql = """
+            UPDATE api_keys SET tier = $1
+            WHERE user_id = $2 AND is_active = TRUE AND product_line = $3;
+        """
+        async with get_db_conn() as conn:
+            await conn.execute(sql, tier, user_id, product_line)
+    else:
+        sql = "UPDATE api_keys SET tier = $1 WHERE user_id = $2 AND is_active = TRUE;"
+        async with get_db_conn() as conn:
+            await conn.execute(sql, tier, user_id)
+
+
+async def suspend_user_keys(user_id: int, product_line: str | None = None) -> None:
+    """
+    Mark API keys as payment-suspended (payment_status='suspended').
+
+    Keys remain is_active=TRUE so auth can return 402 instead of 403.
+    Scoped to product_line if provided; otherwise affects all active keys.
+    """
+    if product_line:
+        sql = """
+            UPDATE api_keys SET payment_status = 'suspended'
+            WHERE user_id = $1 AND is_active = TRUE AND product_line = $2;
+        """
+        async with get_db_conn() as conn:
+            await conn.execute(sql, user_id, product_line)
+    else:
+        sql = """
+            UPDATE api_keys SET payment_status = 'suspended'
+            WHERE user_id = $1 AND is_active = TRUE;
+        """
+        async with get_db_conn() as conn:
+            await conn.execute(sql, user_id)
+
+
+async def reactivate_user_keys(user_id: int, product_line: str | None = None) -> None:
+    """
+    Clear payment suspension — restore payment_status='active'.
+
+    Called on invoice.paid to re-enable access after a payment recovery.
+    """
+    if product_line:
+        sql = """
+            UPDATE api_keys SET payment_status = 'active'
+            WHERE user_id = $1 AND is_active = TRUE AND product_line = $2;
+        """
+        async with get_db_conn() as conn:
+            await conn.execute(sql, user_id, product_line)
+    else:
+        sql = """
+            UPDATE api_keys SET payment_status = 'active'
+            WHERE user_id = $1 AND is_active = TRUE;
+        """
+        async with get_db_conn() as conn:
+            await conn.execute(sql, user_id)
+
+
+async def update_agent_count(user_id: int, agent_count: int, product_line: str = "irl") -> None:
+    """Update the licensed agent count on IRL keys."""
+    sql = """
+        UPDATE api_keys SET agent_count = $1
+        WHERE user_id = $2 AND is_active = TRUE AND product_line = $3;
+    """
     async with get_db_conn() as conn:
-        await conn.execute(sql, tier, user_id)
+        await conn.execute(sql, agent_count, user_id, product_line)
 
 
 async def create_api_key(
@@ -428,15 +500,18 @@ async def create_api_key(
     key_hash: str,
     key_prefix: str,
     tier: str = "free",
+    product_line: str = "macropulse",
+    agent_count: int = 1,
 ) -> dict[str, Any]:
     """Store a hashed API key. Returns the created row (no plaintext)."""
     sql = """
-        INSERT INTO api_keys (user_id, key_hash, key_prefix, tier)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, user_id, key_prefix, tier, is_active, created_at;
+        INSERT INTO api_keys (user_id, key_hash, key_prefix, tier, product_line, agent_count)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, user_id, key_prefix, tier, is_active, payment_status,
+                  product_line, agent_count, created_at;
     """
     async with get_db_conn() as conn:
-        row = await conn.fetchrow(sql, user_id, key_hash, key_prefix, tier)
+        row = await conn.fetchrow(sql, user_id, key_hash, key_prefix, tier, product_line, agent_count)
         return dict(row)
 
 
@@ -445,10 +520,13 @@ async def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
     Look up a key by its SHA-256 hash.
 
     Returns the key row joined with the user email, or None if not found
-    or the key has been revoked.
+    or the key has been revoked (is_active=FALSE).
+    Suspended keys (payment_status='suspended') ARE returned so auth can
+    return a 402 instead of a generic 403.
     """
     sql = """
         SELECT k.id, k.user_id, k.key_prefix, k.tier, k.is_active,
+               k.payment_status, k.product_line, k.agent_count,
                k.created_at, k.last_used_at, u.email, u.name
         FROM api_keys k
         JOIN users u ON u.id = k.user_id
@@ -460,17 +538,38 @@ async def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
         return dict(row) if row else None
 
 
-async def get_active_keys_for_user(user_id: int) -> list[dict[str, Any]]:
-    """Return all active API key rows for a user (key_hash not exposed)."""
-    sql = """
-        SELECT id, user_id, key_prefix, tier, is_active, created_at
-        FROM api_keys
-        WHERE user_id = $1 AND is_active = TRUE
-        ORDER BY created_at ASC;
+async def get_active_keys_for_user(
+    user_id: int,
+    product_line: str | None = None,
+) -> list[dict[str, Any]]:
     """
-    async with get_db_conn() as conn:
-        rows = await conn.fetch(sql, user_id)
-        return [dict(r) for r in rows]
+    Return all active API key rows for a user (key_hash not exposed).
+
+    Pass product_line to scope the lookup to 'macropulse' or 'irl' — ensures
+    provisioning functions treat each product independently and never
+    cross-upgrade a MacroPulse key to an IRL tier or vice versa.
+    """
+    if product_line:
+        sql = """
+            SELECT id, user_id, key_prefix, tier, is_active,
+                   payment_status, product_line, agent_count, created_at
+            FROM api_keys
+            WHERE user_id = $1 AND is_active = TRUE AND product_line = $2
+            ORDER BY created_at ASC;
+        """
+        async with get_db_conn() as conn:
+            rows = await conn.fetch(sql, user_id, product_line)
+    else:
+        sql = """
+            SELECT id, user_id, key_prefix, tier, is_active,
+                   payment_status, product_line, agent_count, created_at
+            FROM api_keys
+            WHERE user_id = $1 AND is_active = TRUE
+            ORDER BY created_at ASC;
+        """
+        async with get_db_conn() as conn:
+            rows = await conn.fetch(sql, user_id)
+    return [dict(r) for r in rows]
 
 
 async def revoke_api_keys_for_user(user_id: int) -> None:
@@ -584,15 +683,35 @@ async def get_daily_usage(key_hash: str) -> int:
         return int(row["daily_requests"]) if row else 0
 
 
+async def get_daily_usage_by_prefix(key_prefix: str) -> int:
+    """Return today's request count for a key looked up by prefix."""
+    sql = """
+        SELECT daily_requests
+        FROM api_keys
+        WHERE key_prefix = $1
+          AND usage_date = CURRENT_DATE
+          AND is_active = TRUE
+        LIMIT 1;
+    """
+    async with get_db_conn() as conn:
+        row = await conn.fetchrow(sql, key_prefix)
+        return int(row["daily_requests"]) if row else 0
+
+
 async def get_alert_recipients() -> list[dict]:
-    """Return all active users on starter/pro tier for regime change alerts (owner excluded)."""
+    """Return all active paid users eligible for regime change alerts (owner excluded).
+
+    Includes MacroPulse starter/pro and IRL sidecar/audit — all paying tiers
+    receive regime change notifications. Owners are excluded (internal accounts).
+    """
     sql = """
         SELECT DISTINCT ON (u.id)
-            u.id, u.email, k.tier, u.webhook_url, u.alerts_enabled
+            u.id, u.email, k.tier, k.product_line, u.webhook_url, u.alerts_enabled
         FROM users u
         JOIN api_keys k ON k.user_id = u.id
         WHERE k.is_active = TRUE
-          AND k.tier IN ('starter', 'pro')
+          AND k.payment_status = 'active'
+          AND k.tier IN ('starter', 'pro', 'irl_sidecar', 'irl_audit')
           AND u.alerts_enabled = TRUE
         ORDER BY u.id, k.created_at DESC
     """

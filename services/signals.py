@@ -274,12 +274,23 @@ async def build_signal_package(
         "data_vintage": dt.datetime.now(dt.timezone.utc).isoformat(),
     }
 
+    # ── Narrative (Haiku / rule-based fallback) ───────────────────
+    narrative: str | None = None
+    try:
+        from services.narrative import generate_narrative
+        from services.scorecard import build_scorecard
+        scorecard = await build_scorecard()
+        narrative = generate_narrative(regime_row, scorecard)
+    except Exception as exc:
+        logger.warning("Narrative generation skipped: %s", exc)
+
     return {
         "date": target_date.isoformat() if hasattr(target_date, "isoformat") else str(target_date),
         "regime": regime_signal,
         "net_liquidity": net_liquidity,
         "pca_factors": pca_factors,
         "model_metadata": model_metadata,
+        "narrative": narrative,
     }
 
 

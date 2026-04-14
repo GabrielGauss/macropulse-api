@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MacroPulse · Account Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:   #080808;
+    --bg1:  #0d0d0d;
+    --bg2:  #111;
+    --ln:   #1a1a1a;
+    --ln2:  #252525;
+    --fg:   #f0f0f0;
+    --fg2:  #aaa;
+    --fg3:  #666;
+    --fg4:  #444;
+    --green:#22c55e;
+    --blue: #3b82f6;
+    --amber:#f59e0b;
+    --red:  #ef4444;
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'Courier Prime', 'Courier New', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--ln);
+    position: sticky;
+    top: 0;
+    background: rgba(8,8,8,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .logo span { color: var(--green); }
+  .header-nav { display: flex; gap: 24px; align-items: center; }
+  .header-nav a {
+    font-size: 12px;
+    color: var(--fg3);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .header-nav a:hover { color: var(--fg); }
+
+  /* ── Auth gate ── */
+  #auth-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 61px);
+    padding: 40px 24px;
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg1);
+    border: 1px solid var(--ln2);
+    border-top: 2px solid var(--green);
+    padding: 40px;
+  }
+  .auth-card h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .auth-card p {
+    font-size: 13px;
+    color: var(--fg3);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .input-group label { font-size: 11px; color: var(--fg3); letter-spacing: 0.08em; text-transform: uppercase; }
+  .input-group input {
+    background: var(--bg2);
+    border: 1px solid var(--ln2);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .input-group input:focus { border-color: var(--green); }
+  .input-group input::placeholder { color: var(--fg4); }
+  .btn-primary {
+    width: 100%;
+    background: var(--green);
+    color: #000;
+    border: none;
+    padding: 13px 24px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.4; cursor: default; }
+  .auth-error {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: #f87171;
+    font-size: 12px;
+    display: none;
+  }
+
+  /* ── Dashboard ── */
+  #dashboard { display: none; padding: 40px 32px; max-width: 900px; margin: 0 auto; }
+
+  .page-title {
+    font-size: 11px;
+    color: var(--fg3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+    margin-bottom: 32px;
+  }
+
+  /* Regime banner */
+  .regime-banner {
+    background: var(--bg1);
+    border: 1px solid var(--ln2);
+    border-left: 3px solid var(--green);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .regime-banner-left { display: flex; flex-direction: column; gap: 6px; }
+  .regime-label-small {
+    font-size: 11px;
+    color: var(--fg3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+  }
+  .regime-name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--fg);
+  }
+  .regime-meta { font-size: 13px; color: var(--fg3); font-family: var(--mono); }
+  .regime-meta strong { color: var(--fg); }
+  .exposure-badge {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border: 1px solid currentColor;
+  }
+
+  /* Grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--bg1);
+    border: 1px solid var(--ln2);
+    padding: 24px;
+  }
+  .card-label {
+    font-size: 11px;
+    color: var(--fg3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+    margin-bottom: 16px;
+  }
+  .card-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+  .card-sub { font-size: 12px; color: var(--fg3); line-height: 1.5; }
+
+  /* Key box */
+  .key-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--ln2);
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+  .key-prefix {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--fg);
+    flex: 1;
+    word-break: break-all;
+  }
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--ln2);
+    color: var(--fg3);
+    font-size: 11px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-copy:hover { border-color: var(--green); color: var(--green); }
+  .btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+  /* Usage bar */
+  .usage-bar-wrap { margin-top: 12px; }
+  .usage-bar-track {
+    height: 4px;
+    background: var(--ln2);
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  .usage-bar-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.4s ease;
+  }
+  .usage-numbers { font-size: 12px; color: var(--fg3); font-family: var(--mono); }
+
+  /* Features list */
+  .features-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .features-list li {
+    font-size: 13px;
+    color: var(--fg2);
+    padding-left: 18px;
+    position: relative;
+  }
+  .features-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--green);
+    font-size: 12px;
+  }
+
+  /* Status pill */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid;
+  }
+  .status-pill.active { color: var(--green); border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
+  .status-pill.suspended { color: var(--red); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* Action row */
+  .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--ln2);
+    color: var(--fg2);
+    padding: 10px 20px;
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--fg3); color: var(--fg); }
+
+  /* Scorecard */
+  .scorecard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .gauge-item { display: flex; flex-direction: column; gap: 6px; }
+  .gauge-name { font-size: 11px; color: var(--fg3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+  .gauge-bar-track { height: 3px; background: var(--ln2); position: relative; }
+  .gauge-bar-fill-pos { height: 100%; background: var(--green); position: absolute; left: 50%; }
+  .gauge-bar-fill-neg { height: 100%; background: var(--red); position: absolute; right: 50%; }
+  .gauge-val { font-size: 12px; color: var(--fg2); font-family: var(--mono); }
+
+  /* Timeline chart */
+  .timeline-wrap { margin-top: 12px; }
+  .timeline-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 52px;
+    width: 100%;
+  }
+  .tl-bar {
+    flex: 1;
+    min-width: 3px;
+    border-radius: 1px 1px 0 0;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    position: relative;
+  }
+  .tl-bar:hover { opacity: 0.75; }
+  .tl-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    border: 1px solid var(--ln2);
+    color: var(--fg2);
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 4px 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+  }
+  .tl-bar:hover .tl-tooltip { display: block; }
+  .timeline-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .tl-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--fg3);
+    font-family: var(--mono);
+  }
+  .tl-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .timeline-dates {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--fg4);
+    font-family: var(--mono);
+  }
+
+  /* Divider */
+  .section-divider { height: 1px; background: var(--ln); margin: 32px 0; }
+
+  /* Logout */
+  .logout-btn {
+    background: none;
+    border: none;
+    color: var(--fg4);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--sans);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+    padding: 0;
+  }
+  .logout-btn:hover { color: var(--fg2); }
+
+  /* Loading spinner */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--ln2);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    #dashboard { padding: 24px 16px; }
+    .header { padding: 16px 20px; }
+    .regime-banner { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="https://macropulse.live" class="logo">MACRO<span>PULSE</span></a>
+  <nav class="header-nav">
+    <a href="https://macropulse.live/api-docs">Docs</a>
+    <a href="https://macropulse.live">Home</a>
+    <button class="logout-btn" id="logout-btn" style="display:none" onclick="logout()">Sign out</button>
+  </nav>
+</header>
+
+<!-- Auth gate -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <h1>Account Portal</h1>
+    <p>Enter your MacroPulse API key to view your subscription, live regime signal, and usage.</p>
+    <div class="input-group">
+      <label>API Key</label>
+      <input type="password" id="api-key-input" placeholder="mp_…" autocomplete="off"
+             onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="login()">Access My Account</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- Dashboard (hidden until authenticated) -->
+<div id="dashboard">
+  <div class="page-title">MacroPulse · Account Portal</div>
+
+  <!-- Live regime signal -->
+  <div class="regime-banner" id="regime-banner">
+    <div class="regime-banner-left">
+      <div class="regime-label-small">Current Macro Regime</div>
+      <div class="regime-name" id="regime-name">—</div>
+      <div class="regime-meta" id="regime-meta"></div>
+    </div>
+    <div id="exposure-badge" class="exposure-badge" style="color:var(--green)">—</div>
+  </div>
+
+  <!-- Account overview -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label">Subscription</div>
+      <div class="card-value" id="tier-label">—</div>
+      <div class="card-sub" id="product-label" style="margin-bottom:12px"></div>
+      <div id="payment-status-pill"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">API Key</div>
+      <div class="key-box">
+        <span class="key-prefix" id="key-prefix-display">—</span>
+        <button class="btn-copy" id="copy-btn" onclick="copyKey()">Copy</button>
+      </div>
+      <div class="card-sub" style="margin-top:10px">
+        Keep this key secret — it grants full API access.
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage + Features -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label">Daily Usage</div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-track"><div class="usage-bar-fill" id="usage-fill" style="width:0%"></div></div>
+        <div class="usage-numbers" id="usage-numbers">0 / 0 requests today</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Plan Features</div>
+      <ul class="features-list" id="features-list"></ul>
+    </div>
+  </div>
+
+  <!-- Scorecard (visible for starter+) -->
+  <div class="card" id="scorecard-card" style="display:none; margin-bottom:24px;">
+    <div class="card-label">Signal Scorecard</div>
+    <div class="scorecard-grid" id="scorecard-grid"></div>
+  </div>
+
+  <!-- Regime timeline -->
+  <div class="card" id="timeline-card" style="display:none; margin-bottom:24px;">
+    <div class="card-label">90-Day Regime History</div>
+    <div class="timeline-wrap">
+      <div class="timeline-bars" id="timeline-bars"></div>
+      <div class="timeline-dates" id="timeline-dates"></div>
+      <div class="timeline-legend">
+        <div class="tl-legend-item"><div class="tl-legend-dot" style="background:#22c55e"></div>Expansion</div>
+        <div class="tl-legend-item"><div class="tl-legend-dot" style="background:#3b82f6"></div>Recovery</div>
+        <div class="tl-legend-item"><div class="tl-legend-dot" style="background:#f59e0b"></div>Tightening</div>
+        <div class="tl-legend-item"><div class="tl-legend-dot" style="background:#ef4444"></div>Risk-Off</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="section-divider"></div>
+  <div class="action-row">
+    <a href="https://macropulse.live/api-docs" class="btn-secondary" target="_blank">
+      API Documentation →
+    </a>
+    <a href="https://macropulse.live" class="btn-secondary" target="_blank">
+      Marketing Site →
+    </a>
+    <button id="billing-portal-btn" class="btn-secondary" onclick="openBillingPortal()" style="display:none">
+      Manage Billing →
+    </button>
+  </div>
+</div>
+
+<script>
+  const API = 'https://api.macropulse.live';
+
+  const _REGIME_EMOJI = { expansion:'🟢', recovery:'🔵', tightening:'🟡', risk_off:'🔴' };
+  const _EXPOSURE     = { expansion:'100%', recovery:'75%', tightening:'25%', risk_off:'0%' };
+  const _ACCENT       = { expansion:'var(--green)', recovery:'var(--blue)', tightening:'var(--amber)', risk_off:'var(--red)' };
+
+  let _apiKey = null;
+
+  function saveKey(k) {
+    try { sessionStorage.setItem('mp_key', k); } catch {}
+  }
+  function loadKey() {
+    try { return sessionStorage.getItem('mp_key'); } catch { return null; }
+  }
+
+  async function login() {
+    const input = document.getElementById('api-key-input');
+    const key = input.value.trim();
+    if (!key) return;
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    clearError();
+    try {
+      const res = await fetch(`${API}/v1/account`, {
+        headers: { 'X-MacroPulse-Key': key }
+      });
+      if (res.status === 401 || res.status === 403) {
+        showError('Invalid API key. Check your key and try again.');
+        return;
+      }
+      if (res.status === 402) {
+        showError('Your account is suspended due to a payment issue. Update your billing at macropulse.live/dashboard.');
+        return;
+      }
+      if (!res.ok) {
+        showError(`Error ${res.status} — please try again.`);
+        return;
+      }
+      const data = await res.json();
+      _apiKey = key;
+      saveKey(key);
+      showDashboard(data);
+    } catch (e) {
+      showError('Could not connect to the API. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Access My Account';
+    }
+  }
+
+  async function loadRegime() {
+    if (!_apiKey) return;
+    try {
+      const res = await fetch(`${API}/v1/signals/latest`, {
+        headers: { 'X-MacroPulse-Key': _apiKey }
+      });
+      if (!res.ok) return;
+      const d = await res.json();
+      const regime  = (d.macro_regime || d.regime || '').toLowerCase();
+      const score   = d.risk_score ?? 0;
+      const ts      = (d.timestamp || d.time || '').slice(0, 10);
+      const emoji   = _REGIME_EMOJI[regime] || '⚪';
+      const label   = regime.replace('_', '-').replace(/\b\w/g, c => c.toUpperCase());
+      const exposure = _EXPOSURE[regime] || '—';
+      const accent  = _ACCENT[regime] || 'var(--green)';
+
+      document.getElementById('regime-name').textContent = `${emoji} ${label}`;
+      document.getElementById('regime-meta').innerHTML =
+        `Risk Score: <strong>${score >= 0 ? '+' : ''}${score.toFixed(1)}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;Updated ${ts}`;
+      const badge = document.getElementById('exposure-badge');
+      badge.textContent = `Equity ${exposure}`;
+      badge.style.color = accent;
+      badge.style.borderColor = accent;
+      document.getElementById('regime-banner').style.borderLeftColor = accent;
+
+      // Scorecard
+      const scorecard = d.scorecard || d.signals;
+      if (scorecard) {
+        renderScorecard(scorecard);
+        document.getElementById('scorecard-card').style.display = 'block';
+      }
+    } catch {}
+  }
+
+  function renderScorecard(sc) {
+    const grid = document.getElementById('scorecard-grid');
+    const map = {
+      'Growth':    sc.growth_momentum,
+      'Inflation': sc.inflation_momentum,
+      'Liquidity': sc.liquidity,
+      'Stress':    sc.financial_stress,
+      'Dollar':    sc.dollar_strength,
+    };
+    grid.innerHTML = Object.entries(map).filter(([,v]) => v != null).map(([name, val]) => {
+      const v = parseFloat(val);
+      const pct = Math.abs(v) * 50;
+      const pos = v >= 0;
+      const fill = pos
+        ? `<div class="gauge-bar-fill-pos" style="width:${pct}%;background:var(--green)"></div>`
+        : `<div class="gauge-bar-fill-neg" style="width:${pct}%;background:var(--red)"></div>`;
+      return `<div class="gauge-item">
+        <div class="gauge-name">${name}</div>
+        <div class="gauge-bar-track">${fill}</div>
+        <div class="gauge-val">${v >= 0 ? '+' : ''}${v.toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const _REGIME_COLOR = {
+    expansion:  '#22c55e',
+    recovery:   '#3b82f6',
+    tightening: '#f59e0b',
+    risk_off:   '#ef4444',
+  };
+  const _REGIME_LABEL = {
+    expansion:  'Expansion',
+    recovery:   'Recovery',
+    tightening: 'Tightening',
+    risk_off:   'Risk-Off',
+  };
+
+  async function loadHistory() {
+    if (!_apiKey) return;
+    try {
+      const res = await fetch(`${API}/v1/signals/history?days=90`, {
+        headers: { 'X-MacroPulse-Key': _apiKey }
+      });
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!rows || rows.length === 0) return;
+      renderTimeline(rows);
+      document.getElementById('timeline-card').style.display = 'block';
+    } catch {}
+  }
+
+  function renderTimeline(rows) {
+    // rows are newest-first; reverse for left-to-right chronological display
+    const sorted = [...rows].reverse();
+    const barsEl  = document.getElementById('timeline-bars');
+    const datesEl = document.getElementById('timeline-dates');
+
+    // Score range for proportional bar heights
+    const scores  = sorted.map(r => Math.abs(r.risk_score));
+    const maxScore = Math.max(...scores, 1);
+
+    barsEl.innerHTML = sorted.map(r => {
+      const color  = _REGIME_COLOR[r.regime] || '#888';
+      const label  = _REGIME_LABEL[r.regime] || r.regime;
+      const score  = r.risk_score >= 0 ? `+${r.risk_score.toFixed(1)}` : r.risk_score.toFixed(1);
+      const height = Math.max(20, (Math.abs(r.risk_score) / maxScore) * 100);
+      return `<div class="tl-bar" style="background:${color};height:${height}%">
+        <div class="tl-tooltip">${r.date}<br>${label} · ${score}</div>
+      </div>`;
+    }).join('');
+
+    // Date labels: first and last
+    const first = sorted[0]?.date?.slice(0, 7) || '';
+    const last  = sorted[sorted.length - 1]?.date?.slice(0, 7) || '';
+    datesEl.innerHTML = `<span>${first}</span><span>${last}</span>`;
+  }
+
+  async function openBillingPortal() {
+    const btn = document.getElementById('billing-portal-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Loading…';
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${API}/v1/billing/stripe/portal`, {
+        headers: { 'X-MacroPulse-Key': _apiKey }
+      });
+      if (res.status === 404) {
+        // No Stripe subscription — redirect to pricing page
+        window.open('https://macropulse.live/#pricing', '_blank');
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { portal_url } = await res.json();
+      window.location.href = portal_url;
+    } catch {
+      window.open('https://macropulse.live/dashboard', '_blank');
+    } finally {
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  }
+
+  function showDashboard(data) {
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('logout-btn').style.display = 'inline';
+
+    // Tier + product
+    document.getElementById('tier-label').textContent = data.tier_label || data.tier;
+    document.getElementById('product-label').textContent = data.product || '';
+
+    // Payment status pill
+    const isPaid = data.payment_status !== 'suspended';
+    document.getElementById('payment-status-pill').innerHTML =
+      `<div class="status-pill ${isPaid ? 'active' : 'suspended'}">
+        <div class="status-dot"></div>${isPaid ? 'Active' : 'Suspended — update payment'}
+      </div>`;
+
+    // Key prefix
+    const kp = (data.key_prefix || '');
+    document.getElementById('key-prefix-display').textContent = kp ? `${kp}…` : '(legacy key)';
+
+    // Usage
+    const used  = data.usage?.daily_requests || 0;
+    const limit = data.usage?.daily_limit || 0;
+    if (limit > 0) {
+      const pct = Math.min((used / limit) * 100, 100);
+      document.getElementById('usage-fill').style.width = `${pct}%`;
+      if (pct > 85) document.getElementById('usage-fill').style.background = 'var(--amber)';
+      document.getElementById('usage-numbers').textContent = `${used.toLocaleString()} / ${limit.toLocaleString()} requests today`;
+    } else {
+      document.getElementById('usage-numbers').textContent = `${used.toLocaleString()} requests today`;
+    }
+
+    // Features
+    const feats = data.features || [];
+    document.getElementById('features-list').innerHTML =
+      feats.map(f => `<li>${f}</li>`).join('') || '<li>Standard access</li>';
+
+    // Show billing button for paid tiers (owner uses dev flow, no Stripe needed)
+    if (data.tier !== 'free' && data.tier !== 'owner') {
+      document.getElementById('billing-portal-btn').style.display = 'inline-flex';
+    }
+
+    // Load live regime signal + history in parallel
+    loadRegime();
+    loadHistory();
+  }
+
+  function copyKey() {
+    if (!_apiKey) return;
+    navigator.clipboard.writeText(_apiKey).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function logout() {
+    _apiKey = null;
+    try { sessionStorage.removeItem('mp_key'); } catch {}
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.getElementById('logout-btn').style.display = 'none';
+    document.getElementById('api-key-input').value = '';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearError() {
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  // Auto-login if key was stored in session
+  window.addEventListener('DOMContentLoaded', () => {
+    const stored = loadKey();
+    if (stored) {
+      document.getElementById('api-key-input').value = stored;
+      login();
+    }
+  });
+</script>
+</body>
+</html>

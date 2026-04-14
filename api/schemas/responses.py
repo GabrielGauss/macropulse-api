@@ -192,6 +192,7 @@ class SignalPackageResponse(BaseModel):
     net_liquidity: NetLiquiditySignal
     pca_factors: PCAFactorsSignal
     model_metadata: ModelMetadata
+    narrative: str | None = None  # Haiku-generated daily macro interpretation
 
 
 # ── User / Auth ───────────────────────────────────────────────────────
